@@ -1,0 +1,88 @@
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { AsyncPipe, NgFor, NgIf } from '@angular/common';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
+import { combineLatest, map } from 'rxjs';
+import { loadProducts } from '../../store/products/products.actions';
+import { selectAllProducts, selectProductsLoading } from '../../store/products/products.selectors';
+import { addToCart, openCart } from '../../store/cart/cart.actions';
+import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
+import { CartDrawerComponent } from '../cart/cart-drawer.component';
+import { ToastComponent } from '../../shared/components/toast/toast.component';
+import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
+import { CartItem } from '../../core/models/cart-item.model';
+import { Product } from '../../core/models/product.model';
+
+@Component({
+  selector: 'app-catalog',
+  standalone: true,
+  imports: [AsyncPipe, NgFor, NgIf, RouterLink, NavbarComponent, CartDrawerComponent, ToastComponent, CurrencyCopPipe],
+  templateUrl: './catalog.component.html',
+  styleUrl: './catalog.component.scss',
+})
+export class CatalogComponent implements OnInit {
+  private store = inject(Store);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
+  loading$ = this.store.select(selectProductsLoading);
+  toastMessage = signal('');
+
+  filteredProducts$ = combineLatest([
+    this.store.select(selectAllProducts),
+    this.route.queryParams,
+  ]).pipe(
+    map(([products, params]) => {
+      let result = products;
+      if (params['cat']) {
+        result = result.filter(p => p.cat === params['cat']);
+      }
+      if (params['q']) {
+        const q = (params['q'] as string).toLowerCase();
+        result = result.filter(p =>
+          p.name.toLowerCase().includes(q) ||
+          p.brand.toLowerCase().includes(q) ||
+          p.desc.toLowerCase().includes(q)
+        );
+      }
+      return result;
+    })
+  );
+
+  activeFilter$ = this.route.queryParams.pipe(
+    map(params => {
+      if (params['q'])   return `Búsqueda: "${params['q']}"`;
+      if (params['cat']) return `Categoría: ${params['cat']}`;
+      return null;
+    })
+  );
+
+  ngOnInit() {
+    this.store.dispatch(loadProducts());
+  }
+
+  clearFilter() {
+    this.router.navigate(['/']);
+  }
+
+  goToProduct(id: number) {
+    this.router.navigate(['/product', id]);
+  }
+
+  addToCart(product: Product, event: Event) {
+    event.stopPropagation();
+    const key = String(product.id);
+    const item: CartItem = {
+      key, id: product.id, name: product.name,
+      emoji: product.emoji, price: product.price,
+      qty: 1, size: null, color: null,
+    };
+    this.store.dispatch(addToCart({ item }));
+    this.store.dispatch(openCart());
+    this.toastMessage.set('Producto agregado 🎾 — ' + Date.now());
+  }
+
+  hasVariations(p: Product): boolean {
+    return !!(p.variations?.sizes?.length || p.variations?.colors?.length);
+  }
+}

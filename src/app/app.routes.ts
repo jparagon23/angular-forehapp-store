@@ -1,0 +1,43 @@
+import { Routes } from '@angular/router';
+
+export const routes: Routes = [
+  {
+    path: '',
+    loadComponent: () => import('./features/catalog/catalog.component').then(m => m.CatalogComponent),
+  },
+  {
+    path: 'product/:id',
+    loadComponent: () => import('./features/product-detail/product-detail.component').then(m => m.ProductDetailComponent),
+  },
+  {
+    path: 'gracias',
+    loadComponent: () => import('./features/thanks/thanks.component').then(m => m.ThanksComponent),
+  },
+  {
+    path: 'login',
+    loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent),
+  },
+  {
+    path: 'register',
+    loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent),
+  },
+  {
+    path: 'checkout',
+    loadComponent: () => import('./features/checkout/checkout.component').then(m => m.CheckoutComponent),
+  },
+  {
+    path: 'admin',
+    loadComponent: () => import('./features/admin/admin.component').then(m => m.AdminComponent),
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'dashboard', loadComponent: () => import('./features/admin/dashboard/dashboard.component').then(m => m.DashboardComponent) },
+      { path: 'orders', loadComponent: () => import('./features/admin/orders/orders-admin.component').then(m => m.OrdersAdminComponent) },
+      { path: 'products', loadComponent: () => import('./features/admin/products/products-admin.component').then(m => m.ProductsAdminComponent) },
+      { path: 'inventory', loadComponent: () => import('./features/admin/inventory/inventory.component').then(m => m.InventoryComponent) },
+      { path: 'analytics', loadComponent: () => import('./features/admin/analytics/analytics.component').then(m => m.AnalyticsComponent) },
+      { path: 'customers', loadComponent: () => import('./features/admin/customers/customers-admin.component').then(m => m.CustomersAdminComponent) },
+      { path: 'discounts', loadComponent: () => import('./features/admin/discounts/discounts-admin.component').then(m => m.DiscountsAdminComponent) },
+    ]
+  },
+  { path: '**', redirectTo: '' },
+];

@@ -1,0 +1,47 @@
+<app-admin-topbar title="Inventario"></app-admin-topbar>
+
+<div class="content">
+  <div class="alert alert-warn" *ngIf="(lowStock$ | async)?.length">
+    ⚠️ Productos con stock bajo (≤5 unidades). Revisa el listado a continuación.
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>Control de inventario</h3></div>
+    <table>
+      <thead>
+        <tr><th>Producto</th><th>Categoría</th><th>Stock actual</th><th>Estado</th><th>Ajustar</th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of products$ | async">
+          <td><span>{{ p.emoji }}</span> <strong>{{ p.name }}</strong></td>
+          <td>{{ p.cat }}</td>
+          <td style="font-size:1.1rem;font-weight:700">{{ p.stock }}</td>
+          <td><span class="stock-badge" [class]="stockClass(p.stock)">{{ p.stock === 0 ? '⛔ Sin stock' : p.stock <= 5 ? '⚠️ Bajo' : '✅ OK' }}</span></td>
+          <td><button class="btn btn-green btn-sm" (click)="openModal(p)">Ajustar stock</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal-overlay" [class.open]="modalOpen()">
+  <div class="modal" style="max-width:360px">
+    <h2>Ajustar inventario</h2>
+    <div style="margin-bottom:18px">
+      <div style="font-weight:700">{{ adjustingProduct()?.emoji }} {{ adjustingProduct()?.name }}</div>
+      <div style="color:var(--muted);font-size:.85rem;margin-top:4px">Stock actual: {{ adjustingProduct()?.stock }} unidades</div>
+    </div>
+    <div class="form-group">
+      <label>Nuevo stock</label>
+      <input type="number" [ngModel]="newStock()" (ngModelChange)="newStock.set($event)" min="0" />
+    </div>
+    <div class="form-group" style="margin-top:12px">
+      <label>Motivo del ajuste</label>
+      <select><option *ngFor="let r of reasons">{{ r }}</option></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" (click)="modalOpen.set(false)">Cancelar</button>
+      <button class="btn btn-green" (click)="apply()">Actualizar stock</button>
+    </div>
+  </div>
+</div>

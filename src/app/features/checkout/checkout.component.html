@@ -1,0 +1,98 @@
+<div class="checkout-page">
+
+  <div class="checkout-wrap">
+
+    <!-- Left: order summary -->
+    <div class="order-card">
+      <h1 class="card-title">Resumen del pedido</h1>
+
+      <div class="items-list">
+        <div class="order-item" *ngFor="let item of items$ | async">
+          <div class="oi-thumb">{{ item.emoji }}</div>
+          <div class="oi-info">
+            <p class="oi-name">{{ item.name }}</p>
+            <p class="oi-variant" *ngIf="item.size || item.color">{{ varInfo(item.size, item.color) }}</p>
+            <p class="oi-unit">{{ item.price | currencyCop }} × {{ item.qty }}</p>
+          </div>
+          <div class="oi-total">{{ item.price * item.qty | currencyCop }}</div>
+        </div>
+      </div>
+
+      <div class="summary-rows">
+        <div class="sum-row">
+          <span>Subtotal ({{ count$ | async }} artículos)</span>
+          <span>{{ total$ | async | currencyCop }}</span>
+        </div>
+        <div class="sum-row">
+          <span>Envío</span>
+          <span class="free">Gratis</span>
+        </div>
+      </div>
+
+      <div class="total-row">
+        <span>Total del pedido</span>
+        <strong class="total-val">{{ total$ | async | currencyCop }}</strong>
+      </div>
+    </div>
+
+    <!-- Right: payment panel -->
+    <div class="pay-card">
+
+      <h2 class="card-title">Pago</h2>
+
+      <!-- User info -->
+      <div class="user-info" *ngIf="authUser$ | async as user">
+        <div class="ui-avatar">{{ user.name.charAt(0) | uppercase }}</div>
+        <div>
+          <p class="ui-name">{{ user.name }}</p>
+          <p class="ui-email">{{ user.email }}</p>
+        </div>
+      </div>
+
+      <!-- Mock payment form -->
+      <div class="pay-form">
+        <div class="form-group">
+          <label>Número de tarjeta</label>
+          <div class="mock-input">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+              <line x1="1" y1="10" x2="23" y2="10"/>
+            </svg>
+            <span>•••• •••• •••• 4242</span>
+          </div>
+        </div>
+        <div class="pay-row">
+          <div class="form-group">
+            <label>Vence</label>
+            <div class="mock-input"><span>12 / 27</span></div>
+          </div>
+          <div class="form-group">
+            <label>CVV</label>
+            <div class="mock-input"><span>•••</span></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Nombre en la tarjeta</label>
+          <div class="mock-input"><span *ngIf="authUser$ | async as u">{{ u.name }}</span></div>
+        </div>
+      </div>
+
+      <div class="secure-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        Pago 100% seguro y encriptado
+      </div>
+
+      <button class="btn-confirm" (click)="confirm()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Confirmar pedido · {{ total$ | async | currencyCop }}
+      </button>
+
+      <a routerLink="/" class="back-link">← Seguir comprando</a>
+    </div>
+
+  </div>
+</div>

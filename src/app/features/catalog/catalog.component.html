@@ -1,0 +1,65 @@
+<app-navbar></app-navbar>
+
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">🎾 Tu tienda de tenis</div>
+    <h1>Equípate con lo<br><span>mejor del juego</span></h1>
+    <p>Raquetas, zapatillas, ropa y accesorios de las mejores marcas del mundo</p>
+  </div>
+</section>
+
+<ng-container *ngIf="activeFilter$ | async as filter">
+  <div class="filter-bar" *ngIf="filter">
+    <span class="filter-label">{{ filter }}</span>
+    <button class="filter-clear" (click)="clearFilter()">✕ Limpiar filtro</button>
+  </div>
+</ng-container>
+
+<h2 class="section-title">Catálogo de <span>Productos</span></h2>
+<p class="section-sub">Selecciona los productos y agrégalos al carrito</p>
+
+<ng-container *ngIf="!(loading$ | async); else loader">
+  <div class="catalog" *ngIf="filteredProducts$ | async as products">
+    <ng-container *ngIf="products.length > 0; else noResults">
+      <div class="card" *ngFor="let product of products" (click)="goToProduct(product.id)">
+        <div class="card-img">
+          {{ product.emoji }}
+          <div class="card-img-overlay">Ver producto →</div>
+        </div>
+        <div class="card-body">
+          <div class="card-brand">{{ product.brand }}</div>
+          <div class="card-name">{{ product.name }}</div>
+          <div class="card-desc">{{ product.desc }}</div>
+          <div class="card-price">{{ product.price | currencyCop }}</div>
+          <button *ngIf="!hasVariations(product)" class="add-btn"
+            (click)="addToCart(product, $event)">
+            + Agregar al carrito
+          </button>
+          <button *ngIf="hasVariations(product)" class="add-btn add-btn--var"
+            (click)="goToProduct(product.id); $event.stopPropagation()">
+            Elegir opciones →
+          </button>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-template #noResults>
+      <div class="no-results">
+        <p>🔍 No encontramos productos con ese filtro.</p>
+        <button class="filter-clear" (click)="clearFilter()">Ver todos los productos</button>
+      </div>
+    </ng-template>
+  </div>
+</ng-container>
+
+<ng-template #loader>
+  <div class="loader">Cargando productos...</div>
+</ng-template>
+
+<footer class="site-footer">
+  &copy; 2026 <span>Forehapp Store</span> — Todos los derechos reservados
+  &nbsp;·&nbsp; <a routerLink="/admin">Panel Admin →</a>
+</footer>
+
+<app-cart-drawer></app-cart-drawer>
+<app-toast [message]="toastMessage()"></app-toast>

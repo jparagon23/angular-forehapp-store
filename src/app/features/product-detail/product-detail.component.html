@@ -1,0 +1,170 @@
+<app-navbar></app-navbar>
+
+<nav class="breadcrumb">
+  <a routerLink="/">← Volver al catálogo</a>
+</nav>
+
+<ng-container *ngIf="product$ | async as product; else notFound">
+
+  <!-- MAIN PRODUCT LAYOUT -->
+  <div class="product-layout">
+
+    <!-- CAROUSEL -->
+    <div class="carousel-wrap">
+      <div class="carousel-main">
+        <button class="carousel-btn prev" (click)="prevSlide()">&#8249;</button>
+        <div class="carousel-slide" [style.background]="slideBackgrounds[currentSlide()]">
+          <span class="carousel-emoji">{{ product.emoji }}</span>
+        </div>
+        <button class="carousel-btn next" (click)="nextSlide()">&#8250;</button>
+      </div>
+      <div class="carousel-thumbs">
+        <button
+          *ngFor="let bg of slideBackgrounds; let i = index"
+          class="carousel-thumb"
+          [class.active]="currentSlide() === i"
+          [style.background]="bg"
+          (click)="setSlide(i)">
+          <span>{{ product.emoji }}</span>
+        </button>
+      </div>
+      <div class="carousel-dots">
+        <button
+          *ngFor="let bg of slideBackgrounds; let i = index"
+          class="dot"
+          [class.active]="currentSlide() === i"
+          (click)="setSlide(i)">
+        </button>
+      </div>
+    </div>
+
+    <!-- PRODUCT INFO -->
+    <div class="product-info">
+      <div class="product-brand-badge">{{ product.brand }}</div>
+      <h1 class="product-name">{{ product.name }}</h1>
+      <p class="product-desc">{{ product.desc }}</p>
+      <div class="product-price">{{ product.price | currencyCop }}</div>
+
+      <div class="divider" *ngIf="product.variations?.sizes?.length || product.variations?.colors?.length"></div>
+
+      <div class="var-group" *ngIf="product.variations?.sizes?.length">
+        <div class="var-label">
+          Talla <span class="sel-val" *ngIf="selectedSize()">— {{ selectedSize() }}</span>
+        </div>
+        <div class="size-opts">
+          <button *ngFor="let s of product.variations!.sizes"
+            class="size-opt" [class.active]="selectedSize() === s"
+            (click)="selectSize(s)">{{ s }}</button>
+        </div>
+      </div>
+
+      <div class="var-group" *ngIf="product.variations?.colors?.length">
+        <div class="var-label">
+          Color <span class="sel-val" *ngIf="selectedColor()">— {{ selectedColor() }}</span>
+        </div>
+        <div class="color-opts">
+          <button *ngFor="let c of product.variations!.colors"
+            class="color-opt"
+            [class.active]="selectedColor() === c"
+            [style.background]="colorHex[c] || '#ccc'"
+            [title]="c"
+            (click)="selectColor(c)">
+          </button>
+        </div>
+      </div>
+
+      <div class="divider" *ngIf="product.variations?.sizes?.length || product.variations?.colors?.length"></div>
+
+      <div class="qty-wrap">
+        <span class="qty-lbl">Cantidad</span>
+        <div class="qty-ctrl">
+          <button (click)="changeQty(-1)">−</button>
+          <span class="qty-num">{{ qty() }}</span>
+          <button (click)="changeQty(1)">+</button>
+        </div>
+      </div>
+
+      <button class="add-btn-main"
+        [disabled]="!canAdd(product)"
+        (click)="addToCart(product)">
+        + Agregar al carrito
+      </button>
+
+      <div class="var-hint" *ngIf="!canAdd(product) && hintText(product)">
+        {{ hintText(product) }}
+      </div>
+    </div>
+  </div>
+
+  <!-- REVIEWS SECTION -->
+  <section class="reviews-section" *ngIf="reviews$ | async as reviews">
+    <div class="section-inner">
+      <h2 class="section-title">Reseñas de clientes</h2>
+
+      <ng-container *ngIf="reviews.length > 0; else noReviews">
+        <div class="rating-summary">
+          <div class="avg-block">
+            <span class="avg-num">{{ avgRating(reviews) }}</span>
+            <div class="avg-stars">
+              <span *ngFor="let s of starsArray(avgRating(reviews))" class="star">{{ s }}</span>
+            </div>
+            <span class="avg-count">{{ reviews.length }} reseña{{ reviews.length !== 1 ? 's' : '' }}</span>
+          </div>
+        </div>
+
+        <div class="review-list">
+          <div class="review-card" *ngFor="let r of reviews">
+            <div class="review-header">
+              <div class="reviewer-avatar">{{ r.author[0] }}</div>
+              <div class="reviewer-meta">
+                <span class="reviewer-name">{{ r.author }}</span>
+                <span class="verified-badge" *ngIf="r.verified">✓ Compra verificada</span>
+              </div>
+              <span class="review-date">{{ r.date | date:'MMM d, y' }}</span>
+            </div>
+            <div class="review-stars">
+              <span *ngFor="let s of starsArray(r.rating)" class="star">{{ s }}</span>
+            </div>
+            <p class="review-text">{{ r.comment }}</p>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-template #noReviews>
+        <p class="no-reviews">Aún no hay reseñas para este producto. ¡Sé el primero en compartir tu experiencia!</p>
+      </ng-template>
+    </div>
+  </section>
+
+  <!-- RELATED PRODUCTS SECTION -->
+  <section class="related-section" *ngIf="relatedProducts$ | async as related">
+    <div class="section-inner" *ngIf="related.length > 0">
+      <h2 class="section-title">Productos relacionados</h2>
+      <div class="related-grid">
+        <a class="related-card" *ngFor="let rp of related" [routerLink]="['/product', rp.id]">
+          <div class="related-img" [style.background]="slideBackgrounds[0]">{{ rp.emoji }}</div>
+          <div class="related-info">
+            <span class="related-brand">{{ rp.brand }}</span>
+            <span class="related-name">{{ rp.name }}</span>
+            <span class="related-price">{{ rp.price | currencyCop }}</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+</ng-container>
+
+<ng-template #notFound>
+  <div *ngIf="!(loading$ | async)" class="not-found">
+    <h2>Producto no encontrado</h2>
+    <p>El producto que buscas no existe. <a routerLink="/">Volver al catálogo →</a></p>
+  </div>
+</ng-template>
+
+<footer class="site-footer">
+  &copy; 2026 <span>Forehapp Store</span> — Todos los derechos reservados
+</footer>
+
+<app-cart-drawer></app-cart-drawer>
+<app-toast [message]="toastMessage()"></app-toast>

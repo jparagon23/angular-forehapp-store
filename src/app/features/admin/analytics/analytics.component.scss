@@ -1,0 +1,7 @@
+@use '../shared/admin-styles';
+
+.info-card {
+  background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 28px 32px;
+  p { font-size: 1rem; color: var(--dark); margin-bottom: 16px; }
+  ul { list-style: disc; padding-left: 20px; color: var(--muted); line-height: 2; }
+}

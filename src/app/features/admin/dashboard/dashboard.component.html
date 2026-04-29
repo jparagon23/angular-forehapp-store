@@ -1,0 +1,37 @@
+<app-admin-topbar title="Dashboard"></app-admin-topbar>
+
+<div class="content">
+  <div class="kpi-grid">
+    <div class="kpi-card" *ngFor="let k of kpis">
+      <div class="kpi-top">
+        <span class="kpi-icon">{{ k.icon }}</span>
+        <span class="kpi-badge" [class.up]="k.up" [class.down]="!k.up">{{ k.badge }}</span>
+      </div>
+      <div class="kpi-val">{{ k.val }}</div>
+      <div class="kpi-label">{{ k.label }}</div>
+    </div>
+  </div>
+
+  <div class="alert alert-warn" *ngIf="(lowStock$ | async)?.length">
+    ⚠️ {{ (lowStock$ | async)?.length }} productos con stock bajo.
+    <a routerLink="../inventory">Ver inventario →</a>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>Pedidos recientes</h3></div>
+    <table>
+      <thead>
+        <tr><th>Orden</th><th>Cliente</th><th>Fecha</th><th>Total</th><th>Estado</th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let o of recentOrders$ | async">
+          <td><strong>{{ o.id }}</strong></td>
+          <td>{{ o.customer }}</td>
+          <td>{{ o.date }}</td>
+          <td>{{ o.total }}</td>
+          <td><span class="status-badge" [class]="statusClass(o.status)">{{ o.status }}</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,125 @@
+.checkout-page {
+  min-height: calc(100vh - 100px);
+  background: var(--bg);
+  padding: 36px 20px 60px;
+}
+
+.checkout-wrap {
+  max-width: 960px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 380px; gap: 24px;
+  align-items: start;
+
+  @media (max-width: 760px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ── Shared card ───────────────────────────────────────────
+.order-card,
+.pay-card {
+  background: #fff; border: 1px solid #dde8dd;
+  border-radius: 12px; padding: 28px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+}
+.card-title {
+  font-size: 1.15rem; font-weight: 800; color: var(--dark);
+  margin-bottom: 20px; padding-bottom: 14px;
+  border-bottom: 1px solid #eaf2ea;
+}
+
+// ── Order items ───────────────────────────────────────────
+.items-list {
+  display: flex; flex-direction: column; gap: 14px;
+  margin-bottom: 20px;
+}
+.order-item {
+  display: flex; align-items: center; gap: 14px;
+}
+.oi-thumb {
+  font-size: 2rem; width: 48px; height: 48px; flex-shrink: 0;
+  background: #f0faf0; border: 1px solid #ddeedd;
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+}
+.oi-info { flex: 1; min-width: 0; }
+.oi-name { font-weight: 700; font-size: .92rem; color: var(--dark); }
+.oi-variant { font-size: .77rem; color: #999; margin-top: 1px; }
+.oi-unit { font-size: .77rem; color: #aaa; margin-top: 1px; }
+.oi-total { font-weight: 800; font-size: .97rem; color: var(--dark); white-space: nowrap; }
+
+// ── Summary rows ──────────────────────────────────────────
+.summary-rows {
+  border-top: 1px solid #eaf2ea;
+  padding-top: 14px; margin-bottom: 14px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.sum-row {
+  display: flex; justify-content: space-between;
+  font-size: .88rem; color: #666;
+}
+.free { color: var(--green); font-weight: 700; }
+
+.total-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  border-top: 2px solid #daeada; padding-top: 14px;
+  font-size: 1rem; font-weight: 600; color: #333;
+}
+.total-val { font-size: 1.4rem; font-weight: 900; color: var(--dark); }
+
+// ── User info ─────────────────────────────────────────────
+.user-info {
+  display: flex; align-items: center; gap: 12px;
+  background: #f4fbf4; border: 1px solid #d8eed8;
+  border-radius: 10px; padding: 12px 14px; margin-bottom: 20px;
+}
+.ui-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--green); color: #fff;
+  font-size: 1.1rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.ui-name  { font-weight: 700; font-size: .92rem; color: var(--dark); text-transform: capitalize; }
+.ui-email { font-size: .78rem; color: #888; margin-top: 1px; }
+
+// ── Mock payment form ─────────────────────────────────────
+.pay-form { display: flex; flex-direction: column; gap: 14px; margin-bottom: 16px; }
+.pay-row  { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-group {
+  display: flex; flex-direction: column; gap: 5px;
+  label { font-size: .82rem; font-weight: 600; color: #555; }
+}
+.mock-input {
+  height: 42px; padding: 0 12px;
+  border: 1px solid #c8d8c8; border-radius: 8px;
+  background: #fafdf9; color: #aaa;
+  display: flex; align-items: center; gap: 8px;
+  font-size: .9rem;
+  svg { width: 18px; height: 18px; stroke: #ccc; flex-shrink: 0; }
+}
+
+.secure-badge {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: .78rem; color: #aaa; margin-bottom: 16px;
+  svg { width: 14px; height: 14px; stroke: var(--green); }
+}
+
+// ── Confirm button ────────────────────────────────────────
+.btn-confirm {
+  width: 100%; height: 52px;
+  background: linear-gradient(135deg, var(--green), var(--green-light));
+  color: #fff; border: none; border-radius: 10px;
+  font-size: 1rem; font-weight: 800; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 4px 16px rgba(66,170,20,.35);
+  transition: opacity .18s, transform .15s;
+  svg { width: 18px; height: 18px; }
+  &:hover { opacity: .9; transform: translateY(-1px); }
+  &:active { transform: translateY(0); }
+}
+
+.back-link {
+  display: block; text-align: center; margin-top: 14px;
+  font-size: .85rem; color: #888;
+  transition: color .15s;
+  &:hover { color: var(--green); }
+}

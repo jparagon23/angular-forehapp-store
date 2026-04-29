@@ -1,0 +1,114 @@
+.hero {
+  background: linear-gradient(135deg, var(--dark) 0%, var(--dark2) 55%, #1a3a1e 100%);
+  color: #fff;
+  text-align: center;
+  padding: 90px 20px;
+  position: relative;
+  overflow: hidden;
+  &::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 70% 50%, rgba(66,170,20,.18) 0%, transparent 70%);
+  }
+  .hero-content { position: relative; z-index: 1; }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(66,170,20,.2);
+    border: 1px solid rgba(66,170,20,.5);
+    color: var(--green-light);
+    font-size: .8rem; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; padding: 6px 18px; border-radius: 30px; margin-bottom: 20px;
+  }
+  h1 { font-size: 2.9rem; font-weight: 900; margin-bottom: 14px; line-height: 1.1; }
+  h1 span { color: var(--green); }
+  p { font-size: 1.1rem; opacity: .75; max-width: 500px; margin: 0 auto; }
+}
+
+.section-title {
+  text-align: center; font-size: 1.8rem; font-weight: 800;
+  padding: 52px 20px 8px; color: var(--dark);
+  span { color: var(--green); }
+}
+.section-sub { text-align: center; color: #777; margin-bottom: 36px; }
+
+.catalog {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 26px;
+  max-width: 1200px; margin: 0 auto; padding: 0 30px 70px;
+}
+
+.card {
+  background: #fff; border-radius: 18px; overflow: hidden;
+  box-shadow: 0 4px 18px rgba(0,0,0,.07);
+  transition: transform .22s, box-shadow .22s;
+  display: flex; flex-direction: column;
+  border: 1px solid #e8f4e8; cursor: pointer;
+  &:hover {
+    transform: translateY(-7px);
+    box-shadow: 0 14px 34px rgba(66,170,20,.15);
+    .card-img-overlay { opacity: 1; }
+  }
+}
+.card-img {
+  width: 100%; height: 200px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 5rem;
+  background: linear-gradient(135deg, #edf7ea, #f5faf5);
+  position: relative; overflow: hidden;
+}
+.card-img-overlay {
+  position: absolute; inset: 0;
+  background: rgba(21,31,33,.75); color: #fff;
+  font-weight: 700; font-size: .95rem; letter-spacing: .5px;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .2s;
+}
+.card-body { padding: 18px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.card-brand { font-size: .72rem; text-transform: uppercase; letter-spacing: 1.8px; color: var(--green); font-weight: 700; }
+.card-name { font-size: 1.05rem; font-weight: 700; color: var(--dark); }
+.card-desc { font-size: .87rem; color: #666; line-height: 1.45; flex: 1; }
+.card-price { font-size: 1.3rem; font-weight: 800; color: var(--dark); margin-top: 4px; }
+
+.add-btn {
+  margin-top: 10px; background: var(--green); color: #fff;
+  border: none; padding: 12px; border-radius: 10px;
+  font-size: .95rem; font-weight: 700; cursor: pointer;
+  transition: background .2s, transform .12s; width: 100%;
+  &:hover { background: var(--green-dark); }
+  &:active { transform: scale(.97); }
+  &.add-btn--var {
+    background: transparent; color: var(--green-dark); border: 2px solid var(--green);
+    &:hover { background: var(--green); color: #fff; }
+  }
+}
+
+.filter-bar {
+  max-width: 1200px; margin: 24px auto 0; padding: 0 30px;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+}
+.filter-label {
+  background: rgba(66,170,20,.12); color: var(--green-dark);
+  border: 1px solid rgba(66,170,20,.35); border-radius: 20px;
+  padding: 6px 16px; font-size: .88rem; font-weight: 600;
+}
+.filter-clear {
+  background: none; border: 1px solid #ccc; border-radius: 20px;
+  padding: 6px 16px; font-size: .85rem; color: #666; cursor: pointer;
+  transition: border-color .15s, color .15s;
+  &:hover { border-color: var(--red); color: var(--red); }
+}
+
+.no-results {
+  grid-column: 1 / -1; text-align: center; padding: 80px 20px;
+  p { font-size: 1.1rem; color: #888; margin-bottom: 20px; }
+}
+
+.loader { text-align: center; padding: 80px; color: var(--muted); font-size: 1.1rem; }
+
+.site-footer {
+  background: var(--dark); color: #aaa;
+  text-align: center; padding: 26px; font-size: .85rem;
+  span { color: var(--green); }
+  a { color: var(--green); text-decoration: none; font-weight: 700; }
+}

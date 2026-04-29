@@ -1,0 +1,33 @@
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div>
+        <div class="sidebar-logo-text">Forehapp <span>Store</span></div>
+        <span class="sidebar-badge">ADMIN</span>
+      </div>
+    </div>
+
+    <div class="nav-section">Principal</div>
+    <a class="nav-item" routerLink="dashboard" routerLinkActive="active"><span class="nav-icon">📊</span> Dashboard</a>
+    <a class="nav-item" routerLink="orders" routerLinkActive="active"><span class="nav-icon">📦</span> Pedidos</a>
+
+    <div class="nav-section">Catálogo</div>
+    <a class="nav-item" routerLink="products" routerLinkActive="active"><span class="nav-icon">🎾</span> Productos</a>
+    <a class="nav-item" routerLink="inventory" routerLinkActive="active"><span class="nav-icon">🗃️</span> Inventario</a>
+
+    <div class="nav-section">Análisis</div>
+    <a class="nav-item" routerLink="analytics" routerLinkActive="active"><span class="nav-icon">📈</span> Ventas</a>
+    <a class="nav-item" routerLink="customers" routerLinkActive="active"><span class="nav-icon">👥</span> Clientes</a>
+
+    <div class="nav-section">Sistema</div>
+    <a class="nav-item" routerLink="discounts" routerLinkActive="active"><span class="nav-icon">🏷️</span> Descuentos</a>
+
+    <div class="sidebar-footer">
+      <a routerLink="/" class="back-store">← Ver tienda</a>
+    </div>
+  </aside>
+
+  <div class="main">
+    <router-outlet></router-outlet>
+  </div>
+</div>

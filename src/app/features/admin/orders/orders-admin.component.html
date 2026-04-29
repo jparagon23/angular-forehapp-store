@@ -1,0 +1,38 @@
+<app-admin-topbar title="Pedidos"></app-admin-topbar>
+
+<div class="content">
+  <div class="mini-stats">
+    <div class="mini-stat"><div class="val">134</div><div class="lbl">Total pedidos</div></div>
+    <div class="mini-stat"><div class="val">18</div><div class="lbl">Pendientes</div></div>
+    <div class="mini-stat"><div class="val">32</div><div class="lbl">Enviados</div></div>
+    <div class="mini-stat"><div class="val">79</div><div class="lbl">Entregados</div></div>
+    <div class="mini-stat"><div class="val">5</div><div class="lbl">Cancelados</div></div>
+  </div>
+  <div class="table-card">
+    <div class="table-header">
+      <h3>Todos los pedidos</h3>
+      <input class="search-box" placeholder="🔍 Buscar pedido..."
+        (input)="filter.set($any($event.target).value)" />
+    </div>
+    <table>
+      <thead>
+        <tr><th>Orden</th><th>Cliente</th><th>Fecha</th><th>Items</th><th>Total</th><th>Estado</th><th>Acciones</th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let o of filtered(orders$ | async)">
+          <td><strong>{{ o.id }}</strong></td>
+          <td>{{ o.customer }}</td><td>{{ o.date }}</td>
+          <td style="text-align:center">{{ o.items }}</td>
+          <td>{{ o.total }}</td>
+          <td><span class="status-badge" [class]="statusClass(o.status)">{{ o.status }}</span></td>
+          <td>
+            <div class="action-btns">
+              <button class="btn btn-outline btn-sm">Ver</button>
+              <button class="btn btn-outline btn-sm">🖨️</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

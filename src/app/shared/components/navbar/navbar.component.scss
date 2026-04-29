@@ -1,0 +1,253 @@
+$dark:  #151F21;
+$dark2: #1b2a2d;
+$green: #42AA14;
+$green-h: #4fc217;
+
+// ── WRAPPER ───────────────────────────────────────────────
+.navbar {
+  background: $dark;
+  position: sticky; top: 0; z-index: 200;
+  box-shadow: 0 3px 14px rgba(0,0,0,.55);
+  user-select: none;
+}
+
+// ── TOP ROW ───────────────────────────────────────────────
+.nb-top {
+  display: flex; align-items: center; gap: 2px;
+  padding: 8px 14px; min-height: 62px;
+}
+
+// hover-border mixin (Amazon style)
+%nb-hover {
+  border: 1px solid transparent; border-radius: 3px;
+  transition: border-color .12s;
+  &:hover { border-color: #fff; }
+}
+
+// ── Logo
+.nb-logo {
+  @extend %nb-hover;
+  display: flex; align-items: center; gap: 9px;
+  padding: 5px 8px; flex-shrink: 0; color: #fff;
+}
+.nb-logo-svg { width: 32px; height: auto; }
+.nb-logo-text {
+  font-size: 1.3rem; font-weight: 900; letter-spacing: .3px; color: #fff; white-space: nowrap;
+  span { color: $green; }
+  @media (max-width: 560px) { display: none; }
+}
+
+// ── Location
+.nb-location {
+  @extend %nb-hover;
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 9px; flex-shrink: 0; cursor: default;
+  @media (max-width: 880px) { display: none; }
+}
+.nb-loc-pin {
+  width: 18px; height: 18px; color: #ccc; margin-top: 10px; flex-shrink: 0;
+}
+.nb-loc-text { display: flex; flex-direction: column; line-height: 1.25; }
+
+// ── Shared sub/main text inside blocks
+.nb-top-sup  { font-size: .67rem; color: #ccc; }
+.nb-top-main { font-size: .87rem; font-weight: 700; color: #fff; white-space: nowrap; }
+
+// ── Search bar
+.nb-search {
+  flex: 1; display: flex; border-radius: 7px; overflow: hidden;
+  min-width: 0; margin: 0 8px;
+  box-shadow: 0 0 0 2px transparent; transition: box-shadow .15s;
+  &:focus-within { box-shadow: 0 0 0 2px $green; }
+}
+.nb-search-input {
+  flex: 1; padding: 0 16px; height: 44px; font-size: .97rem;
+  border: none; outline: none; color: #111; background: #fff; min-width: 0;
+  &::placeholder { color: #999; }
+}
+.nb-search-btn {
+  background: $green; border: none; padding: 0 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  transition: background .15s;
+  &:hover { background: $green-h; }
+  svg { width: 21px; height: 21px; stroke: #fff; }
+}
+
+// ── Generic text block (account, orders)
+.nb-block {
+  @extend %nb-hover;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 5px 10px; cursor: default; flex-shrink: 0;
+  @media (max-width: 740px) { display: none; }
+}
+
+// ── Cart
+.nb-cart {
+  @extend %nb-hover;
+  display: flex; align-items: center; gap: 5px;
+  background: none; color: #fff; padding: 5px 10px; flex-shrink: 0; cursor: pointer;
+}
+.nb-cart-icon-wrap {
+  position: relative; display: flex; align-items: center;
+}
+.nb-cart-icon {
+  width: 32px; height: 32px; stroke: #fff;
+}
+.nb-cart-count {
+  position: absolute; top: -8px; right: -9px;
+  background: $green; color: #fff;
+  font-size: .7rem; font-weight: 800;
+  min-width: 20px; height: 20px; border-radius: 10px; padding: 0 5px;
+  display: flex; align-items: center; justify-content: center;
+  animation: pop .2s ease;
+}
+@keyframes pop {
+  0%   { transform: scale(.7); }
+  60%  { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+.nb-cart-label {
+  font-size: .88rem; font-weight: 700; color: #fff;
+  @media (max-width: 560px) { display: none; }
+}
+
+// ── BOTTOM ROW ────────────────────────────────────────────
+.nb-bottom {
+  background: $dark2; display: flex; align-items: center;
+  padding: 0 12px; border-top: 1px solid rgba(255,255,255,.06);
+  overflow-x: auto; scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.nb-all {
+  @extend %nb-hover;
+  display: flex; align-items: center; gap: 7px;
+  background: none; color: #fff; font-size: .88rem; font-weight: 700;
+  padding: 9px 11px; cursor: pointer; flex-shrink: 0; white-space: nowrap;
+}
+
+.nb-divider {
+  width: 1px; height: 22px; background: rgba(255,255,255,.15); margin: 0 4px; flex-shrink: 0;
+}
+
+.nb-cat {
+  @extend %nb-hover;
+  color: #e8e8e8; font-size: .87rem; font-weight: 400;
+  padding: 9px 12px; background: none; cursor: pointer;
+  white-space: nowrap; flex-shrink: 0; display: block;
+  transition: color .12s, border-color .12s;
+  &:hover { color: #fff; }
+  &.active { border-color: #fff !important; color: #fff; font-weight: 600; }
+}
+
+.nb-sep { flex: 1; min-width: 12px; }
+
+.nb-promo {
+  color: #ffd766 !important; font-weight: 600;
+}
+
+.nb-admin {
+  color: #888 !important; font-size: .78rem !important;
+  &:hover { color: #bbb !important; }
+}
+
+// ── Account dropdown ───────────────────────────────────────
+.nb-account-wrap {
+  position: relative;
+
+  // Puente invisible que cubre el hueco entre el botón y el dropdown
+  // así mouseleave no se dispara mientras el mouse baja hacia el menú
+  &::after {
+    content: '';
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    height: 10px;
+  }
+}
+
+.nb-account-drop {
+  display: none;
+  position: absolute; top: calc(100% + 6px); right: 0;
+  width: 220px; background: #fff;
+  border: 1px solid #ccc; border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.22);
+  z-index: 400;
+  overflow: hidden;
+
+  &.open { display: block; }
+}
+
+.nb-drop-arrow {
+  position: absolute; top: -8px; right: 28px;
+  width: 14px; height: 8px;
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  background: #fff;
+  filter: drop-shadow(0 -2px 2px rgba(0,0,0,.12));
+}
+
+.nb-drop-top {
+  padding: 16px 16px 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+
+.nb-drop-signin {
+  width: 100%; padding: 9px 0;
+  background: $green; color: #fff;
+  border: none; border-radius: 5px;
+  font-size: .92rem; font-weight: 700; cursor: pointer;
+  transition: background .14s;
+  &:hover { background: $green-h; }
+}
+
+.nb-drop-new {
+  font-size: .8rem; color: #555;
+  text-align: center;
+}
+
+.nb-drop-link {
+  color: $green; font-weight: 600;
+  &:hover { text-decoration: underline; }
+}
+
+.nb-drop-divider {
+  height: 1px; background: #e8e8e8; margin: 0 12px;
+}
+
+.nb-drop-section {
+  padding: 12px 16px 14px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+
+.nb-drop-heading {
+  font-size: .72rem; font-weight: 700; text-transform: uppercase;
+  color: #888; letter-spacing: .5px; margin-bottom: 2px;
+}
+
+.nb-drop-item {
+  font-size: .85rem; color: #222;
+  padding: 3px 0;
+  transition: color .12s;
+  &:hover { color: $green; text-decoration: underline; }
+}
+
+.nb-drop-user {
+  padding: 14px 16px 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.nb-drop-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: $green; color: #fff;
+  font-size: 1rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.nb-drop-uname  { font-size: .87rem; font-weight: 700; color: #111; text-transform: capitalize; }
+.nb-drop-uemail { font-size: .75rem; color: #888; margin-top: 1px; }
+
+.nb-drop-logout {
+  width: 100%; text-align: left; background: none; border: none;
+  font-size: .85rem; color: #e53e3e; font-weight: 600;
+  cursor: pointer; padding: 4px 0;
+  transition: color .12s;
+  &:hover { text-decoration: underline; }
+}

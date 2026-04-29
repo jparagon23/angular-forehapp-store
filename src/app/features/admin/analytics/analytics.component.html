@@ -1,0 +1,23 @@
+<app-admin-topbar title="Análisis de Ventas"></app-admin-topbar>
+
+<div class="content">
+  <div class="kpi-grid">
+    <div class="kpi-card" *ngFor="let k of kpis">
+      <div class="kpi-top">
+        <span class="kpi-icon">{{ k.icon }}</span>
+        <span class="kpi-badge" [class.up]="k.up" [class.down]="!k.up">{{ k.badge }}</span>
+      </div>
+      <div class="kpi-val">{{ k.val }}</div>
+      <div class="kpi-label">{{ k.label }}</div>
+    </div>
+  </div>
+
+  <div class="info-card">
+    <p>📊 Los gráficos de analytics estarán disponibles cuando se integre el servicio real de datos.</p>
+    <ul>
+      <li>Pedidos por día (últimas 2 semanas)</li>
+      <li>Producto más vendido por mes</li>
+      <li>Ingresos vs Meta mensual</li>
+    </ul>
+  </div>
+</div>

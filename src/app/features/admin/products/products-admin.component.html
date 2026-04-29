@@ -1,0 +1,58 @@
+<app-admin-topbar title="Productos"></app-admin-topbar>
+
+<div class="content">
+  <div class="table-card">
+    <div class="table-header">
+      <h3>Catálogo de productos</h3>
+      <div style="display:flex;gap:10px;">
+        <input class="search-box" placeholder="🔍 Buscar producto..."
+          (input)="filter.set($any($event.target).value)" />
+        <button class="btn btn-green" (click)="openNew()">+ Nuevo producto</button>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Producto</th><th>Marca</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Estado</th><th>Acciones</th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of filtered(products$ | async)">
+          <td><span>{{ p.emoji }}</span> <strong>{{ p.name }}</strong></td>
+          <td>{{ p.brand }}</td><td>{{ p.cat }}</td>
+          <td>{{ p.price | currencyCop }}</td>
+          <td><span class="stock-badge" [class]="stockClass(p.stock)">{{ p.stock }} uds.</span></td>
+          <td><span class="stock-badge" [class]="p.status === 'Activo' ? 'stock-ok' : 'stock-low'">{{ p.status }}</span></td>
+          <td>
+            <div class="action-btns">
+              <button class="btn btn-outline btn-sm" (click)="openEdit(p)">✏️ Editar</button>
+              <button class="btn btn-red btn-sm" (click)="delete(p.id)">🗑</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal-overlay" [class.open]="modalOpen()">
+  <div class="modal">
+    <h2>{{ editing() ? 'Editar producto' : 'Nuevo producto' }}</h2>
+    <div class="form-grid">
+      <div class="form-group full"><label>Nombre</label><input [(ngModel)]="form.name" placeholder="Pro Staff RF97" /></div>
+      <div class="form-group"><label>Marca</label><input [(ngModel)]="form.brand" placeholder="Wilson" /></div>
+      <div class="form-group"><label>Categoría</label>
+        <select [(ngModel)]="form.cat"><option *ngFor="let c of cats" [value]="c">{{ c }}</option></select>
+      </div>
+      <div class="form-group"><label>Precio (COP)</label><input type="number" [(ngModel)]="form.price" /></div>
+      <div class="form-group"><label>Stock</label><input type="number" [(ngModel)]="form.stock" /></div>
+      <div class="form-group full"><label>Descripción</label><textarea [(ngModel)]="form.desc" rows="3"></textarea></div>
+      <div class="form-group"><label>Emoji</label><input [(ngModel)]="form.emoji" maxlength="4" /></div>
+      <div class="form-group"><label>Estado</label>
+        <select [(ngModel)]="form.status"><option>Activo</option><option>Borrador</option><option>Agotado</option></select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" (click)="modalOpen.set(false)">Cancelar</button>
+      <button class="btn btn-green" (click)="save()">Guardar</button>
+    </div>
+  </div>
+</div>

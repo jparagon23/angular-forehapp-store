@@ -1,0 +1,52 @@
+<div class="auth-page">
+  <div class="auth-card">
+
+    <a routerLink="/" class="auth-brand">
+      <span class="auth-brand-name">Forehapp <span>Store</span></span>
+    </a>
+
+    <h1 class="auth-title">Iniciar sesión</h1>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+
+      <div class="form-group">
+        <label for="email">Correo electrónico</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          [class.invalid]="submitted && email.invalid"
+          autocomplete="email"
+        />
+        <span class="form-error" *ngIf="submitted && email.hasError('required')">Ingresa tu correo.</span>
+        <span class="form-error" *ngIf="submitted && email.hasError('email')">Correo no válido.</span>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <div class="input-wrap">
+          <input
+            id="password"
+            [type]="showPass ? 'text' : 'password'"
+            formControlName="password"
+            [class.invalid]="submitted && password.invalid"
+            autocomplete="current-password"
+          />
+          <button type="button" class="toggle-pass" (click)="showPass = !showPass">
+            {{ showPass ? 'Ocultar' : 'Mostrar' }}
+          </button>
+        </div>
+        <span class="form-error" *ngIf="submitted && password.hasError('required')">Ingresa tu contraseña.</span>
+        <span class="form-error" *ngIf="submitted && password.hasError('minlength')">Mínimo 6 caracteres.</span>
+      </div>
+
+      <button type="submit" class="btn-primary">Iniciar sesión</button>
+
+    </form>
+
+    <div class="auth-divider"><span>¿Eres nuevo en Forehapp?</span></div>
+
+    <a routerLink="/register" class="btn-secondary">Crear tu cuenta Forehapp</a>
+
+  </div>
+</div>

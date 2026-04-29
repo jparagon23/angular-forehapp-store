@@ -1,0 +1,30 @@
+<app-admin-topbar title="Clientes"></app-admin-topbar>
+
+<div class="content">
+  <div class="mini-stats">
+    <div class="mini-stat"><div class="val">412</div><div class="lbl">Total clientes</div></div>
+    <div class="mini-stat"><div class="val">87</div><div class="lbl">Nuevos este mes</div></div>
+    <div class="mini-stat"><div class="val">128</div><div class="lbl">Recurrentes</div></div>
+    <div class="mini-stat"><div class="val">4.8 ⭐</div><div class="lbl">Satisfacción prom.</div></div>
+  </div>
+  <div class="table-card">
+    <div class="table-header"><h3>Listado de clientes</h3></div>
+    <table>
+      <thead>
+        <tr><th>Cliente</th><th>Email</th><th>Pedidos</th><th>Total gastado</th><th>Último pedido</th><th>Tipo</th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of customers$ | async">
+          <td><strong>{{ c.name }}</strong></td>
+          <td style="color:var(--muted)">{{ c.email }}</td>
+          <td style="text-align:center">{{ c.orders }}</td>
+          <td>{{ c.total }}</td><td>{{ c.last }}</td>
+          <td>
+            <span *ngIf="c.vip" class="stock-badge stock-ok">⭐ VIP</span>
+            <span *ngIf="!c.vip" class="stock-badge" style="background:#eee;color:#555">Regular</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
