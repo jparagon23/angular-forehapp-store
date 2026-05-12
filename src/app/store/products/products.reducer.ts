@@ -20,8 +20,15 @@ const initialState: ProductsState = adapter.getInitialState({
 export const productsReducer = createReducer(
   initialState,
   on(ProductsActions.loadProducts, state => ({ ...state, loading: true, error: null })),
-  on(ProductsActions.loadProductsSuccess, (state, { products }) =>
-    adapter.setAll(products, { ...state, loading: false })),
+  on(ProductsActions.loadProductsSuccess, (state, { products }) => {
+    // Preserva variants/image de un loadProduct detallado previo que setAll sobrescribiría
+    const enriched = products.map(p => ({
+      ...p,
+      variants: state.entities[p.id]?.variants ?? p.variants,
+      image:    state.entities[p.id]?.image    || p.image,
+    }));
+    return adapter.setAll(enriched, { ...state, loading: false });
+  }),
   on(ProductsActions.loadProductsFailure, (state, { error }) =>
     ({ ...state, loading: false, error })),
 

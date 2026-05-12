@@ -1,8 +1,9 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { AsyncPipe, DatePipe, NgFor, NgIf } from '@angular/common';
 import { Observable, combineLatest, map } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { loadProduct, loadProducts } from '../../store/products/products.actions';
 import { selectSelectedProduct, selectProductsLoading, selectAllProducts } from '../../store/products/products.selectors';
 import { addToCart, openCart } from '../../store/cart/cart.actions';
@@ -11,7 +12,7 @@ import { CartDrawerComponent } from '../cart/cart-drawer.component';
 import { ToastComponent } from '../../shared/components/toast/toast.component';
 import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
 import { CartItem } from '../../core/models/cart-item.model';
-import { Product } from '../../core/models/product.model';
+import { DetailVariant, Product } from '../../core/models/product.model';
 import { Review } from '../../core/models/review.model';
 import { ProductService } from '../../core/services/product.service';
 
@@ -38,9 +39,8 @@ export class ProductDetailComponent implements OnInit {
   reviews$!: Observable<Review[]>;
   relatedProducts$!: Observable<Product[]>;
 
-  selectedSize = signal<string | null>(null);
-  selectedColor = signal<string | null>(null);
-  qty = signal(1);
+  selectedAttributes = signal<Record<string, string>>({});
+  qty          = signal(1);
   toastMessage = signal('');
   currentSlide = signal(0);
 
@@ -52,14 +52,29 @@ export class ProductDetailComponent implements OnInit {
     'linear-gradient(135deg, #fde8f2, #faf0f6)',
   ];
 
+  private productSignal = toSignal(this.store.select(selectSelectedProduct));
+
+  // Atributos dinámicos: computed síncrono, se recalcula cuando cambia el producto
+  attributeGroups = computed(() => {
+    const p = this.productSignal();
+    if (!p?.variants?.length) return [];
+    const map = new Map<string, Set<string>>();
+    for (const v of p.variants) {
+      for (const a of v.attributes) {
+        if (!map.has(a.attribute)) map.set(a.attribute, new Set());
+        map.get(a.attribute)!.add(a.value);
+      }
+    }
+    return [...map.entries()].map(([name, vals]) => ({ name, values: [...vals] }));
+  });
+
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.store.dispatch(loadProducts());
+    this.store.dispatch(loadProducts({}));
     this.store.dispatch(loadProduct({ id }));
     this.currentSlide.set(0);
-    this.selectedSize.set(null);
-    this.selectedColor.set(null);
     this.qty.set(1);
+    this.selectedAttributes.set({});
 
     this.reviews$ = this.productService.getReviews(id);
 
@@ -77,37 +92,49 @@ export class ProductDetailComponent implements OnInit {
   prevSlide() { this.currentSlide.update(i => (i - 1 + this.slideBackgrounds.length) % this.slideBackgrounds.length); }
   nextSlide() { this.currentSlide.update(i => (i + 1) % this.slideBackgrounds.length); }
 
-  selectSize(size: string) { this.selectedSize.set(size); }
-  selectColor(color: string) { this.selectedColor.set(color); }
-
-  changeQty(delta: number) {
-    this.qty.set(Math.max(1, this.qty() + delta));
+  selectAttribute(name: string, value: string) {
+    this.selectedAttributes.update(attrs => ({ ...attrs, [name]: value }));
   }
 
-  canAdd(product: any): boolean {
-    const needSize = product.variations?.sizes?.length > 0;
-    const needColor = product.variations?.colors?.length > 0;
-    return (!needSize || !!this.selectedSize()) && (!needColor || !!this.selectedColor());
+  changeQty(delta: number) { this.qty.set(Math.max(1, this.qty() + delta)); }
+
+  selectedVariant(product: Product): DetailVariant | null {
+    if (!product.variants?.length) return null;
+    const sel = this.selectedAttributes();
+    return product.variants.find(v =>
+      v.attributes.every(a => sel[a.attribute] === a.value)
+    ) ?? null;
   }
 
-  hintText(product: any): string {
-    const parts: string[] = [];
-    if (product.variations?.sizes?.length) parts.push('talla');
-    if (product.variations?.colors?.length) parts.push('color');
-    return parts.length ? `* Selecciona ${parts.join(' y ')} para continuar` : '';
+  canAdd(product: Product): boolean {
+    const groups = this.attributeGroups();
+    if (!groups.length) return true;
+    const sel = this.selectedAttributes();
+    return groups.every(g => !!sel[g.name]);
   }
 
-  addToCart(product: any) {
-    const size = this.selectedSize();
-    const color = this.selectedColor();
-    let key = String(product.id);
-    if (size) key += '_' + size.replace(/\s+/g, '');
-    if (color) key += '_' + color.replace(/\s+/g, '');
+  hintText(): string {
+    const groups = this.attributeGroups();
+    const sel = this.selectedAttributes();
+    const missing = groups.filter(g => !sel[g.name]).map(g => g.name);
+    return missing.length ? `* Selecciona: ${missing.join(', ')}` : '';
+  }
+
+  addToCart(product: Product) {
+    const variant = this.selectedVariant(product);
+    const attrKey = Object.entries(this.selectedAttributes())
+      .map(([, v]) => v.replace(/\s+/g, ''))
+      .join('_');
+    const key = attrKey ? `${product.id}_${attrKey}` : String(product.id);
+    const attrDesc = Object.entries(this.selectedAttributes())
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(' · ') || null;
 
     const item: CartItem = {
       key, id: product.id, name: product.name,
-      emoji: product.emoji, price: product.price,
-      qty: this.qty(), size, color,
+      emoji: product.emoji,
+      price: variant?.price ?? product.price,
+      qty: this.qty(), size: attrDesc, color: null,
     };
     this.store.dispatch(addToCart({ item }));
     this.store.dispatch(openCart());

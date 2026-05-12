@@ -94,7 +94,63 @@
   border: 1px solid #eee;
 }
 .sp-product-name  { display: block; font-weight: 700; color: #222; }
+.sp-row-clickable { cursor: pointer; }
+.sp-expand-icon   { font-size: .65rem; color: #aaa; }
 .sp-product-brand { display: block; font-size: .78rem; color: #999; margin-top: 2px; }
+
+.sp-row-expanded td { background: #f7fbf7 !important; }
+
+.sp-variants-row td { padding: 0; border-bottom: 2px solid #e8f5e9; }
+
+.sp-variants-detail {
+  padding: 16px 20px 20px;
+  background: #f7fbf7;
+}
+
+.sp-no-variants {
+  padding: 14px 20px;
+  font-size: .85rem;
+  color: #999;
+  background: #f7fbf7;
+  a { color: #4caf50; }
+}
+
+.sp-variants-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .82rem;
+
+  th {
+    padding: 7px 12px;
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: #aaa;
+    text-align: left;
+    border-bottom: 1px solid #e0f0e0;
+  }
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #edf7ed;
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+}
+
+.sp-sku { font-family: monospace; font-size: .8rem; color: #555; }
+
+.sp-attr-pill {
+  display: inline-block;
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: .76rem;
+  margin: 2px 3px 2px 0;
+}
+
+.sp-stock-warn { color: #c62828; font-weight: 700; }
 
 .sp-badge {
   display: inline-block;

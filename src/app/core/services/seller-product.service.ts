@@ -17,8 +17,9 @@ export class SellerProductService {
     return this.http.get<Brand[]>(`${this.BASE}/brands`);
   }
 
-  getBrandLines(brandId: number): Observable<BrandLine[]> {
-    return this.http.get<BrandLine[]>(`${this.BASE}/brands/${brandId}/lines`);
+  getBrandLines(brandId: number, categoryId?: number): Observable<BrandLine[]> {
+    const params: Record<string, string> = categoryId ? { categoryId: String(categoryId) } : {};
+    return this.http.get<BrandLine[]>(`${this.BASE}/brands/${brandId}/lines`, { params });
   }
 
   getCategories(): Observable<Category[]> {

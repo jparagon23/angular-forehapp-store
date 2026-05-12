@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AsyncPipe, CurrencyPipe, DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -28,7 +28,13 @@ export class SellerProductsComponent implements OnInit {
   loading$  = this.store.select(selectSellerLoading);
   error$    = this.store.select(selectSellerError);
 
+  expandedId = signal<number | null>(null);
+
   ngOnInit() { this.store.dispatch(loadSellerProducts()); }
+
+  toggleExpand(id: number) {
+    this.expandedId.update(cur => cur === id ? null : id);
+  }
 
   statusLabel(s: ProductStatus): string {
     const map: Record<ProductStatus, string> = {

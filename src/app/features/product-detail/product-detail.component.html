@@ -48,37 +48,32 @@
       <div class="product-brand-badge">{{ product.brand }}</div>
       <h1 class="product-name">{{ product.name }}</h1>
       <p class="product-desc">{{ product.desc }}</p>
-      <div class="product-price">{{ product.price | currencyCop }}</div>
-
-      <div class="divider" *ngIf="product.variations?.sizes?.length || product.variations?.colors?.length"></div>
-
-      <div class="var-group" *ngIf="product.variations?.sizes?.length">
-        <div class="var-label">
-          Talla <span class="sel-val" *ngIf="selectedSize()">— {{ selectedSize() }}</span>
-        </div>
-        <div class="size-opts">
-          <button *ngFor="let s of product.variations!.sizes"
-            class="size-opt" [class.active]="selectedSize() === s"
-            (click)="selectSize(s)">{{ s }}</button>
-        </div>
+      <div class="product-price">
+        {{ (selectedVariant(product)?.price ?? product.price) | currencyCop }}
       </div>
 
-      <div class="var-group" *ngIf="product.variations?.colors?.length">
-        <div class="var-label">
-          Color <span class="sel-val" *ngIf="selectedColor()">— {{ selectedColor() }}</span>
-        </div>
-        <div class="color-opts">
-          <button *ngFor="let c of product.variations!.colors"
-            class="color-opt"
-            [class.active]="selectedColor() === c"
-            [style.background]="colorHex[c] || '#ccc'"
-            [title]="c"
-            (click)="selectColor(c)">
-          </button>
-        </div>
-      </div>
+      <ng-container *ngIf="attributeGroups().length">
+        <div class="divider"></div>
 
-      <div class="divider" *ngIf="product.variations?.sizes?.length || product.variations?.colors?.length"></div>
+        <div class="var-group" *ngFor="let group of attributeGroups()">
+          <div class="var-label">
+            {{ group.name }}
+            <span class="sel-val" *ngIf="selectedAttributes()[group.name]">
+              — {{ selectedAttributes()[group.name] }}
+            </span>
+          </div>
+          <div class="size-opts">
+            <button *ngFor="let val of group.values"
+              class="size-opt"
+              [class.active]="selectedAttributes()[group.name] === val"
+              (click)="selectAttribute(group.name, val)">
+              {{ val }}
+            </button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+      </ng-container>
 
       <div class="qty-wrap">
         <span class="qty-lbl">Cantidad</span>
@@ -95,8 +90,8 @@
         + Agregar al carrito
       </button>
 
-      <div class="var-hint" *ngIf="!canAdd(product) && hintText(product)">
-        {{ hintText(product) }}
+      <div class="var-hint" *ngIf="!canAdd(product) && hintText()">
+        {{ hintText() }}
       </div>
     </div>
   </div>

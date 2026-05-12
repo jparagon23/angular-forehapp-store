@@ -1,5 +1,5 @@
 export interface Brand { id: number; name: string; }
-export interface BrandLine { id: number; name: string; }
+export interface BrandLine { id: number; name: string; categoryId: number; }
 export interface Category { id: number; name: string; }
 export interface AttributeValue { id: number; description: string; }
 

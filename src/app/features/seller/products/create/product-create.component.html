@@ -56,28 +56,6 @@
     </div>
 
     <div class="form-row">
-      <!-- Marca -->
-      <div class="form-group">
-        <label>Marca <span class="req">*</span></label>
-        <select formControlName="brandId" (change)="onBrandChange($event)">
-          <option [value]="null">— Selecciona marca —</option>
-          <option *ngFor="let b of brands()" [value]="b.id">{{ b.name }}</option>
-        </select>
-        <span class="form-error" *ngIf="basicForm.get('brandId')?.touched && basicForm.get('brandId')?.hasError('required')">Selecciona una marca.</span>
-      </div>
-
-      <!-- Línea (opcional, aparece tras seleccionar marca) -->
-      <div class="form-group" *ngIf="basicForm.get('brandId')?.value">
-        <label>Línea <span class="opt">(opcional)</span></label>
-        <span class="loading-inline" *ngIf="loadingLines()">Cargando…</span>
-        <select formControlName="lineId" *ngIf="!loadingLines()">
-          <option [value]="null">— Sin línea —</option>
-          <option *ngFor="let l of brandLines()" [value]="l.id">{{ l.name }}</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="form-row">
       <!-- Categoría -->
       <div class="form-group">
         <label>Categoría <span class="req">*</span></label>
@@ -98,6 +76,28 @@
         </div>
       </div>
       <div class="loading-inline" *ngIf="loadingAttrs()">Cargando atributos…</div>
+    </div>
+
+    <div class="form-row">
+      <!-- Marca -->
+      <div class="form-group">
+        <label>Marca <span class="req">*</span></label>
+        <select formControlName="brandId" (change)="onBrandChange($event)">
+          <option [value]="null">— Selecciona marca —</option>
+          <option *ngFor="let b of brands()" [value]="b.id">{{ b.name }}</option>
+        </select>
+        <span class="form-error" *ngIf="basicForm.get('brandId')?.touched && basicForm.get('brandId')?.hasError('required')">Selecciona una marca.</span>
+      </div>
+
+      <!-- Línea (opcional, aparece solo cuando hay categoría y marca) -->
+      <div class="form-group" *ngIf="basicForm.get('categoryId')?.value && basicForm.get('brandId')?.value">
+        <label>Línea <span class="opt">(opcional)</span></label>
+        <span class="loading-inline" *ngIf="loadingLines()">Cargando…</span>
+        <select formControlName="lineId" *ngIf="!loadingLines()">
+          <option [value]="null">— Sin línea —</option>
+          <option *ngFor="let l of brandLines()" [value]="l.id">{{ l.name }}</option>
+        </select>
+      </div>
     </div>
 
     <div class="form-error form-error--global" *ngIf="draftError()">{{ draftError() }}</div>

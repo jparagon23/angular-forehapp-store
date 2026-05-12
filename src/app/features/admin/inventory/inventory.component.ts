@@ -23,7 +23,7 @@ export class InventoryComponent implements OnInit {
   newStock = signal(0);
   readonly reasons = ['Reposición de proveedor','Corrección de inventario','Devolución de cliente','Merma / daño','Otro'];
 
-  ngOnInit() { this.store.dispatch(loadProducts()); }
+  ngOnInit() { this.store.dispatch(loadProducts({})); }
 
   openModal(p: Product) {
     this.adjustingProduct.set(p);

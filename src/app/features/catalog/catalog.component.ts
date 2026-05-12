@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AsyncPipe, NgFor, NgIf } from '@angular/common';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
-import { combineLatest, map } from 'rxjs';
+import { combineLatest, map, take } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { loadProducts } from '../../store/products/products.actions';
 import { selectAllProducts, selectProductsLoading } from '../../store/products/products.selectors';
@@ -15,6 +15,8 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
 import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
 import { CartItem } from '../../core/models/cart-item.model';
 import { Product } from '../../core/models/product.model';
+import { ProductService } from '../../core/services/product.service';
+import { Category } from '../../core/models/seller-product.model';
 
 @Component({
   selector: 'app-catalog',
@@ -24,33 +26,17 @@ import { Product } from '../../core/models/product.model';
   styleUrl: './catalog.component.scss',
 })
 export class CatalogComponent implements OnInit {
-  private store = inject(Store);
-  private router = inject(Router);
-  private route = inject(ActivatedRoute);
+  private store          = inject(Store);
+  private router         = inject(Router);
+  private route          = inject(ActivatedRoute);
+  private productService = inject(ProductService);
 
-  loading$    = this.store.select(selectProductsLoading);
+  loading$     = this.store.select(selectProductsLoading);
   toastMessage = signal('');
 
   wishlistIds = toSignal(this.store.select(selectWishlistIds), { initialValue: [] as number[] });
 
-  filteredProducts$ = combineLatest([
-    this.store.select(selectAllProducts),
-    this.route.queryParams,
-  ]).pipe(
-    map(([products, params]) => {
-      let result = products;
-      if (params['cat']) result = result.filter(p => p.cat === params['cat']);
-      if (params['q']) {
-        const q = (params['q'] as string).toLowerCase();
-        result = result.filter(p =>
-          p.name.toLowerCase().includes(q) ||
-          p.brand.toLowerCase().includes(q) ||
-          p.desc.toLowerCase().includes(q)
-        );
-      }
-      return result;
-    })
-  );
+  filteredProducts$ = this.store.select(selectAllProducts);
 
   activeFilter$ = this.route.queryParams.pipe(
     map(params => {
@@ -60,7 +46,22 @@ export class CatalogComponent implements OnInit {
     })
   );
 
-  ngOnInit() { this.store.dispatch(loadProducts()); }
+  private categories: Category[] = [];
+
+  ngOnInit() {
+    combineLatest([
+      this.productService.getCategories().pipe(take(1)),
+      this.route.queryParams,
+    ]).subscribe(([categories, params]) => {
+      this.categories = categories;
+      const search     = params['q']   || undefined;
+      const catName    = params['cat'] || undefined;
+      const categoryId = catName
+        ? categories.find(c => c.name === catName)?.id
+        : undefined;
+      this.store.dispatch(loadProducts({ search, categoryId }));
+    });
+  }
 
   clearFilter()       { this.router.navigate(['/']); }
   goToProduct(id: number) { this.router.navigate(['/product', id]); }

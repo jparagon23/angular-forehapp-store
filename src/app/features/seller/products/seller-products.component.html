@@ -33,32 +33,72 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let p of products$ | async">
-        <td>
-          <div class="sp-product-cell">
-            <img *ngIf="p.images?.length" [src]="p.images[0].url" alt="" class="sp-thumb" />
-            <div *ngIf="!p.images?.length" class="sp-thumb-placeholder">📦</div>
-            <div>
-              <strong class="sp-product-name">{{ p.title }}</strong>
-              <span class="sp-product-brand">{{ p.brand }}<span *ngIf="p.line"> · {{ p.line }}</span></span>
+      <ng-container *ngFor="let p of products$ | async">
+        <tr [class.sp-row-expanded]="expandedId() === p.id" (click)="toggleExpand(p.id)" class="sp-row-clickable">
+          <td>
+            <div class="sp-product-cell">
+              <img *ngIf="p.images?.length" [src]="p.images[0].url" alt="" class="sp-thumb" />
+              <div *ngIf="!p.images?.length" class="sp-thumb-placeholder">📦</div>
+              <div>
+                <strong class="sp-product-name">
+                  {{ p.title }}
+                  <span class="sp-expand-icon">{{ expandedId() === p.id ? '▲' : '▼' }}</span>
+                </strong>
+                <span class="sp-product-brand">{{ p.brand }}<span *ngIf="p.line"> · {{ p.line }}</span></span>
+              </div>
             </div>
-          </div>
-        </td>
-        <td>{{ p.category }}</td>
-        <td><span class="sp-badge" [ngClass]="statusClass(p.status)">{{ statusLabel(p.status) }}</span></td>
-        <td>{{ p.variants.length }} variante(s)</td>
-        <td>{{ minPrice(p.variants) | currency:'USD':'symbol':'1.2-2' }}</td>
-        <td>{{ p.createdAt | date:'dd/MM/yy' }}</td>
-        <td>
-          <div class="sp-actions">
-            <button *ngIf="p.status === 'DRAFT'"       class="btn-action btn-publish"    (click)="publish(p.id)">Publicar</button>
-            <button *ngIf="p.status === 'ACTIVE'"      class="btn-action btn-deactivate" (click)="deactivate(p.id)">Desactivar</button>
-            <button *ngIf="p.status === 'INACTIVE' || p.status === 'OUT_OF_STOCK'"
-                    class="btn-action btn-activate"    (click)="activate(p.id)">Activar</button>
-            <button *ngIf="p.status === 'DRAFT'"       class="btn-action btn-delete"     (click)="delete(p.id)">Eliminar</button>
-          </div>
-        </td>
-      </tr>
+          </td>
+          <td>{{ p.category }}</td>
+          <td><span class="sp-badge" [ngClass]="statusClass(p.status)">{{ statusLabel(p.status) }}</span></td>
+          <td>{{ p.variants.length }} variante(s)</td>
+          <td>{{ minPrice(p.variants) | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td>{{ p.createdAt | date:'dd/MM/yy' }}</td>
+          <td>
+            <div class="sp-actions" (click)="$event.stopPropagation()">
+              <button *ngIf="p.status === 'DRAFT'"       class="btn-action btn-publish"    (click)="publish(p.id)">Publicar</button>
+              <button *ngIf="p.status === 'ACTIVE'"      class="btn-action btn-deactivate" (click)="deactivate(p.id)">Desactivar</button>
+              <button *ngIf="p.status === 'INACTIVE' || p.status === 'OUT_OF_STOCK'"
+                      class="btn-action btn-activate"    (click)="activate(p.id)">Activar</button>
+              <button *ngIf="p.status === 'DRAFT'"       class="btn-action btn-delete"     (click)="delete(p.id)">Eliminar</button>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Fila expandible de variantes -->
+        <tr *ngIf="expandedId() === p.id" class="sp-variants-row">
+          <td colspan="7">
+            <div class="sp-variants-detail" *ngIf="p.variants.length; else noVariants">
+              <table class="sp-variants-table">
+                <thead>
+                  <tr>
+                    <th>SKU</th>
+                    <th>Atributos</th>
+                    <th>Precio</th>
+                    <th>Precio tachado</th>
+                    <th>Stock</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let v of p.variants">
+                    <td class="sp-sku">{{ v.sku }}</td>
+                    <td>
+                      <span class="sp-attr-pill" *ngFor="let a of v.attributes">
+                        {{ a.attribute }}: <strong>{{ a.value }}</strong>
+                      </span>
+                    </td>
+                    <td>{{ v.price | currency:'USD':'symbol':'1.2-2' }}</td>
+                    <td>{{ v.compareAtPrice ? (v.compareAtPrice | currency:'USD':'symbol':'1.2-2') : '—' }}</td>
+                    <td [class.sp-stock-warn]="v.stock === 0">{{ v.stock }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <ng-template #noVariants>
+              <p class="sp-no-variants">Este producto aún no tiene variantes. <a routerLink="../products/create">Agregar variantes →</a></p>
+            </ng-template>
+          </td>
+        </tr>
+      </ng-container>
     </tbody>
   </table>
 </div>

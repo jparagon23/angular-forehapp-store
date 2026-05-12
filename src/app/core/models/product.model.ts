@@ -3,6 +3,17 @@ export interface ProductVariations {
   colors?: string[];
 }
 
+export interface DetailVariantAttribute { id: number; attribute: string; value: string; }
+
+export interface DetailVariant {
+  id: number;
+  sku: string;
+  price: number;
+  compareAtPrice: number | null;
+  stock: number;
+  attributes: DetailVariantAttribute[];
+}
+
 export interface Product {
   id: number;
   emoji: string;
@@ -15,4 +26,5 @@ export interface Product {
   stock: number;
   status: 'Activo' | 'Borrador' | 'Agotado';
   variations?: ProductVariations;
+  variants?: DetailVariant[];
 }

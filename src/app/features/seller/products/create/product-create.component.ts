@@ -96,8 +96,9 @@ export class ProductCreateComponent implements OnInit {
     this.basicForm.patchValue({ brandId: id, lineId: null });
     this.brandLines.set([]);
     if (!id) return;
+    const categoryId = this.basicForm.value.categoryId ?? undefined;
     this.loadingLines.set(true);
-    this.service.getBrandLines(id).subscribe({
+    this.service.getBrandLines(id, categoryId ?? undefined).subscribe({
       next: lines => { this.brandLines.set(lines); this.loadingLines.set(false); },
       error: ()    => this.loadingLines.set(false),
     });
@@ -105,15 +106,25 @@ export class ProductCreateComponent implements OnInit {
 
   onCategoryChange(event: Event) {
     const id = Number((event.target as HTMLSelectElement).value) || null;
-    this.basicForm.patchValue({ categoryId: id });
+    this.basicForm.patchValue({ categoryId: id, lineId: null });
     this.categoryAttrs.set([]);
     this.selectedAttrValues = {};
-    if (!id) return;
-    this.loadingAttrs.set(true);
-    this.service.getCategoryAttributes(id).subscribe({
-      next: attrs => { this.categoryAttrs.set(attrs); this.loadingAttrs.set(false); },
-      error: ()    => this.loadingAttrs.set(false),
-    });
+    if (id) {
+      this.loadingAttrs.set(true);
+      this.service.getCategoryAttributes(id).subscribe({
+        next: attrs => { this.categoryAttrs.set(attrs); this.loadingAttrs.set(false); },
+        error: ()    => this.loadingAttrs.set(false),
+      });
+    }
+    const brandId = this.basicForm.value.brandId;
+    if (brandId) {
+      this.brandLines.set([]);
+      this.loadingLines.set(true);
+      this.service.getBrandLines(brandId, id ?? undefined).subscribe({
+        next: lines => { this.brandLines.set(lines); this.loadingLines.set(false); },
+        error: ()    => this.loadingLines.set(false),
+      });
+    }
   }
 
   createDraft() {

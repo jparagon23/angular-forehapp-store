@@ -13,8 +13,8 @@ export class ProductsEffects {
   loadProducts$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ProductsActions.loadProducts),
-      switchMap(() =>
-        this.productService.getProducts().pipe(
+      switchMap(({ search, categoryId }) =>
+        this.productService.getProducts({ search, categoryId }).pipe(
           map(products => ProductsActions.loadProductsSuccess({ products })),
           catchError(error => of(ProductsActions.loadProductsFailure({ error: error.message })))
         )

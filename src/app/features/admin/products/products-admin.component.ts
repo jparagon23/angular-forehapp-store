@@ -32,7 +32,7 @@ export class ProductsAdminComponent implements OnInit {
   readonly CLOTHING_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
   readonly SHOE_SIZES     = ['35','36','37','38','39','40','41','42','43','44','45'];
 
-  ngOnInit() { this.store.dispatch(loadProducts()); }
+  ngOnInit() { this.store.dispatch(loadProducts({})); }
 
   filtered(products: Product[] | null): Product[] {
     if (!products) return [];

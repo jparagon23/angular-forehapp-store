@@ -39,6 +39,6 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit() {
     this.store.dispatch(loadOrders());
-    this.store.dispatch(loadProducts());
+    this.store.dispatch(loadProducts({}));
   }
 }
