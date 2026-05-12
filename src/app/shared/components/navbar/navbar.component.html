@@ -71,8 +71,8 @@
           <div class="nb-drop-divider"></div>
           <div class="nb-drop-section">
             <strong class="nb-drop-heading">Mis cuentas</strong>
-            <a routerLink="/" class="nb-drop-item">Mis pedidos</a>
-            <a routerLink="/" class="nb-drop-item">Lista de deseos</a>
+            <a routerLink="/orders"   class="nb-drop-item" (click)="accountOpen = false">Mis pedidos</a>
+            <a routerLink="/wishlist" class="nb-drop-item" (click)="accountOpen = false">Lista de deseos</a>
           </div>
         </ng-container>
 
@@ -88,8 +88,8 @@
           <div class="nb-drop-divider"></div>
           <div class="nb-drop-section">
             <strong class="nb-drop-heading">Mis cuentas</strong>
-            <a routerLink="/" class="nb-drop-item">Mis pedidos</a>
-            <a routerLink="/" class="nb-drop-item">Lista de deseos</a>
+            <a routerLink="/orders"   class="nb-drop-item" (click)="accountOpen = false">Mis pedidos</a>
+            <a routerLink="/wishlist" class="nb-drop-item" (click)="accountOpen = false">Lista de deseos</a>
           </div>
           <div class="nb-drop-divider"></div>
           <div class="nb-drop-section">
@@ -103,10 +103,10 @@
     </div>
 
     <!-- Orders -->
-    <div class="nb-orders nb-block">
-      <span class="nb-top-sup">Devoluciones</span>
-      <span class="nb-top-main">y pedidos</span>
-    </div>
+    <button class="nb-orders nb-block" (click)="goToOrders()">
+      <span class="nb-top-sup">Historial de</span>
+      <span class="nb-top-main">Pedidos</span>
+    </button>
 
     <!-- Cart -->
     <button class="nb-cart" (click)="openCart()">
@@ -151,8 +151,11 @@
       🔥 Ofertas del día
     </button>
 
-    <a routerLink="/admin" class="nb-cat nb-admin">
+    <a *ngIf="(userRole$ | async) === 'STORE_ADMIN'" routerLink="/admin" class="nb-cat nb-admin">
       Panel Admin →
+    </a>
+    <a *ngIf="(userRole$ | async) === 'SELLER'" routerLink="/seller" class="nb-cat nb-admin">
+      Panel Seller →
     </a>
 
   </div>

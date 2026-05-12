@@ -1,0 +1,47 @@
+<div class="auth-page">
+  <div class="auth-card">
+
+    <a routerLink="/" class="auth-brand">
+      <span class="auth-brand-name">Forehapp <span>Store</span></span>
+    </a>
+
+    <div class="verify-icon">📧</div>
+    <h1 class="auth-title">Verifica tu correo</h1>
+    <p class="verify-hint">
+      Te enviamos un código de 6 dígitos. Revisa tu bandeja de entrada
+      (y la carpeta de spam).
+    </p>
+
+    <div class="form-group">
+      <label for="code">Código de verificación</label>
+      <input
+        id="code"
+        type="text"
+        [(ngModel)]="code"
+        maxlength="6"
+        placeholder="000000"
+        class="code-input"
+        (input)="error.set('')"
+        autocomplete="one-time-code"
+        inputmode="numeric"
+      />
+    </div>
+
+    <div class="login-error" *ngIf="error()">{{ error() }}</div>
+    <div class="verify-success" *ngIf="resendMessage()">{{ resendMessage() }}</div>
+
+    <button class="btn-primary" (click)="submit()" [disabled]="loading()">
+      {{ loading() ? 'Verificando…' : 'Confirmar código' }}
+    </button>
+
+    <div class="resend-row">
+      <span>¿No recibiste el código?</span>
+      <button class="btn-link" (click)="resend()" [disabled]="resending()">
+        {{ resending() ? 'Reenviando…' : 'Reenviar código' }}
+      </button>
+    </div>
+
+    <a routerLink="/register" class="back-link">← Volver al registro</a>
+
+  </div>
+</div>

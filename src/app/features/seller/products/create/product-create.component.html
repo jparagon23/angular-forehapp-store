@@ -1,0 +1,275 @@
+<div class="wiz-header">
+  <div>
+    <h1 class="wiz-title">Crear Producto</h1>
+    <p class="wiz-subtitle">Completa los pasos para publicar tu producto</p>
+  </div>
+  <a routerLink="/seller/products" class="wiz-back">← Mis Productos</a>
+</div>
+
+<!-- ── Stepper ──────────────────────────────────────────────── -->
+<div class="wiz-steps">
+  <div class="wiz-step" [class.active]="step() >= 1" [class.done]="step() > 1">
+    <div class="wiz-step-dot">{{ step() > 1 ? '✓' : '1' }}</div>
+    <span>Datos básicos</span>
+  </div>
+  <div class="wiz-step-line" [class.done]="step() > 1"></div>
+  <div class="wiz-step" [class.active]="step() >= 2" [class.done]="step() > 2">
+    <div class="wiz-step-dot">{{ step() > 2 ? '✓' : '2' }}</div>
+    <span>Variantes</span>
+  </div>
+  <div class="wiz-step-line" [class.done]="step() > 2"></div>
+  <div class="wiz-step" [class.active]="step() >= 3" [class.done]="step() > 3">
+    <div class="wiz-step-dot">{{ step() > 3 ? '✓' : '3' }}</div>
+    <span>Imágenes</span>
+  </div>
+  <div class="wiz-step-line" [class.done]="step() > 3"></div>
+  <div class="wiz-step" [class.active]="step() >= 4">
+    <div class="wiz-step-dot">4</div>
+    <span>Publicar</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     STEP 1 — Datos básicos
+══════════════════════════════════════════════════════════ -->
+<div class="wiz-card" *ngIf="step() === 1">
+  <h2 class="wiz-card-title">Información del producto</h2>
+
+  <div class="loading-ref" *ngIf="loadingRef()">Cargando marcas y categorías…</div>
+
+  <form [formGroup]="basicForm" (ngSubmit)="createDraft()" novalidate *ngIf="!loadingRef()">
+
+    <div class="form-row">
+      <div class="form-group form-group--full">
+        <label>Título <span class="req">*</span></label>
+        <input formControlName="title" type="text" placeholder="Ej: Nike Air Max 90" maxlength="255" />
+        <span class="form-error" *ngIf="basicForm.get('title')?.touched && basicForm.get('title')?.hasError('required')">El título es obligatorio.</span>
+        <span class="form-error" *ngIf="basicForm.get('title')?.hasError('maxlength')">Máximo 255 caracteres.</span>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group form-group--full">
+        <label>Descripción</label>
+        <textarea formControlName="description" rows="3" placeholder="Describe tu producto…"></textarea>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <!-- Marca -->
+      <div class="form-group">
+        <label>Marca <span class="req">*</span></label>
+        <select formControlName="brandId" (change)="onBrandChange($event)">
+          <option [value]="null">— Selecciona marca —</option>
+          <option *ngFor="let b of brands()" [value]="b.id">{{ b.name }}</option>
+        </select>
+        <span class="form-error" *ngIf="basicForm.get('brandId')?.touched && basicForm.get('brandId')?.hasError('required')">Selecciona una marca.</span>
+      </div>
+
+      <!-- Línea (opcional, aparece tras seleccionar marca) -->
+      <div class="form-group" *ngIf="basicForm.get('brandId')?.value">
+        <label>Línea <span class="opt">(opcional)</span></label>
+        <span class="loading-inline" *ngIf="loadingLines()">Cargando…</span>
+        <select formControlName="lineId" *ngIf="!loadingLines()">
+          <option [value]="null">— Sin línea —</option>
+          <option *ngFor="let l of brandLines()" [value]="l.id">{{ l.name }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <!-- Categoría -->
+      <div class="form-group">
+        <label>Categoría <span class="req">*</span></label>
+        <select formControlName="categoryId" (change)="onCategoryChange($event)">
+          <option [value]="null">— Selecciona categoría —</option>
+          <option *ngFor="let c of categories()" [value]="c.id">{{ c.name }}</option>
+        </select>
+        <span class="form-error" *ngIf="basicForm.get('categoryId')?.touched && basicForm.get('categoryId')?.hasError('required')">Selecciona una categoría.</span>
+      </div>
+
+      <!-- Atributos de la categoría (informativo) -->
+      <div class="form-group attr-info" *ngIf="categoryAttrs().length && !loadingAttrs()">
+        <label>Atributos requeridos por variante</label>
+        <div class="attr-pills">
+          <span class="attr-pill" *ngFor="let a of categoryAttrs()">
+            {{ a.name }}<span *ngIf="a.required" class="req">*</span>
+          </span>
+        </div>
+      </div>
+      <div class="loading-inline" *ngIf="loadingAttrs()">Cargando atributos…</div>
+    </div>
+
+    <div class="form-error form-error--global" *ngIf="draftError()">{{ draftError() }}</div>
+
+    <div class="wiz-actions">
+      <button type="submit" class="btn-primary" [disabled]="creatingDraft()">
+        {{ creatingDraft() ? 'Creando borrador…' : 'Crear borrador y continuar →' }}
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     STEP 2 — Variantes
+══════════════════════════════════════════════════════════ -->
+<div class="wiz-card" *ngIf="step() === 2">
+  <h2 class="wiz-card-title">Variantes</h2>
+  <p class="wiz-card-hint">Agrega al menos una variante (talla, color, etc.) para poder publicar.</p>
+
+  <!-- Lista de variantes agregadas -->
+  <div class="variant-list" *ngIf="variants().length">
+    <h3 class="variant-list-title">Variantes agregadas ({{ variants().length }})</h3>
+    <div class="variant-row" *ngFor="let v of variants()">
+      <div class="variant-info">
+        <strong>{{ v.sku }}</strong>
+        <span>$ {{ v.price | number:'1.2-2' }}</span>
+        <span>Stock: {{ v.stock }}</span>
+        <span class="variant-attrs" *ngIf="v.attributes?.length">
+          <ng-container *ngFor="let a of v.attributes; let last = last">
+            {{ a.attribute }}: {{ a.value }}{{ !last ? ' · ' : '' }}
+          </ng-container>
+        </span>
+      </div>
+      <button class="btn-remove" (click)="removeVariant(v.id)" title="Eliminar variante">✕</button>
+    </div>
+  </div>
+
+  <!-- Formulario nueva variante -->
+  <form [formGroup]="variantForm" (ngSubmit)="addVariant()" novalidate class="variant-form">
+    <h3 class="variant-form-title">Nueva variante</h3>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>SKU <span class="req">*</span></label>
+        <input formControlName="sku" type="text" placeholder="Ej: AIRMAX90-WHT-US9" />
+        <span class="form-error" *ngIf="variantForm.get('sku')?.touched && variantForm.get('sku')?.hasError('required')">El SKU es obligatorio.</span>
+      </div>
+      <div class="form-group">
+        <label>Precio <span class="req">*</span></label>
+        <input formControlName="price" type="number" min="0.01" step="0.01" placeholder="0.00" />
+        <span class="form-error" *ngIf="variantForm.get('price')?.touched && variantForm.get('price')?.invalid">Precio mayor a 0 requerido.</span>
+      </div>
+      <div class="form-group">
+        <label>Precio tachado <span class="opt">(opcional)</span></label>
+        <input formControlName="compareAtPrice" type="number" min="0.01" step="0.01" placeholder="0.00" />
+      </div>
+      <div class="form-group">
+        <label>Stock <span class="req">*</span></label>
+        <input formControlName="stock" type="number" min="0" step="1" placeholder="0" />
+        <span class="form-error" *ngIf="variantForm.get('stock')?.touched && variantForm.get('stock')?.invalid">Stock >= 0 requerido.</span>
+      </div>
+    </div>
+
+    <!-- Atributos de categoría -->
+    <div class="form-row" *ngIf="categoryAttrs().length">
+      <div class="form-group" *ngFor="let attr of categoryAttrs()">
+        <label>{{ attr.name }} <span class="req" *ngIf="attr.required">*</span></label>
+        <select [(ngModel)]="selectedAttrValues[attr.attributeId]" [ngModelOptions]="{standalone: true}">
+          <option [value]="null">— Seleccionar —</option>
+          <option *ngFor="let v of attr.values" [value]="v.id">{{ v.description }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-error form-error--global" *ngIf="variantError()">{{ variantError() }}</div>
+
+    <div class="wiz-actions">
+      <button type="submit" class="btn-secondary" [disabled]="addingVariant()">
+        {{ addingVariant() ? 'Agregando…' : '+ Agregar variante' }}
+      </button>
+      <button type="button" class="btn-primary" (click)="step.set(3)" [disabled]="!variants().length">
+        Continuar → Imágenes
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     STEP 3 — Imágenes
+══════════════════════════════════════════════════════════ -->
+<div class="wiz-card" *ngIf="step() === 3">
+  <h2 class="wiz-card-title">Imágenes del producto</h2>
+  <p class="wiz-card-hint">Sube al menos una imagen. Formatos: JPEG, PNG, WebP. Máx. 5 MB por archivo.</p>
+
+  <!-- Grid de imágenes -->
+  <div class="img-grid" *ngIf="images().length">
+    <div class="img-item" *ngFor="let img of images()">
+      <img [src]="img.url" alt="Imagen producto" />
+      <button class="img-remove" (click)="removeImage(img.id)" title="Eliminar">✕</button>
+    </div>
+  </div>
+
+  <div class="img-upload-area">
+    <label class="img-upload-btn" [class.loading]="uploadingImage()">
+      <span *ngIf="!uploadingImage()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+        </svg>
+        Subir imagen
+      </span>
+      <span *ngIf="uploadingImage()">Subiendo…</span>
+      <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onFileSelected($event)" [disabled]="uploadingImage()" hidden />
+    </label>
+  </div>
+
+  <div class="form-error form-error--global" *ngIf="imageError()">{{ imageError() }}</div>
+
+  <div class="wiz-actions">
+    <button type="button" class="btn-ghost" (click)="step.set(2)">← Volver a variantes</button>
+    <button type="button" class="btn-primary" (click)="step.set(4)" [disabled]="!images().length">
+      Continuar → Publicar
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     STEP 4 — Publicar
+══════════════════════════════════════════════════════════ -->
+<div class="wiz-card" *ngIf="step() === 4">
+  <h2 class="wiz-card-title">Revisar y publicar</h2>
+
+  <div class="pub-summary">
+    <div class="pub-item">
+      <span class="pub-label">Producto</span>
+      <strong>{{ draftProduct()?.title }}</strong>
+    </div>
+    <div class="pub-item">
+      <span class="pub-label">Marca / Categoría</span>
+      <strong>{{ draftProduct()?.brand }} · {{ draftProduct()?.category }}</strong>
+    </div>
+    <div class="pub-item">
+      <span class="pub-label">Variantes</span>
+      <strong [class.pub-ok]="variants().length > 0" [class.pub-warn]="!variants().length">
+        {{ variants().length }} variante(s)
+        <span *ngIf="!variants().length"> — se requiere al menos 1</span>
+      </strong>
+    </div>
+    <div class="pub-item">
+      <span class="pub-label">Imágenes</span>
+      <strong [class.pub-ok]="images().length > 0" [class.pub-warn]="!images().length">
+        {{ images().length }} imagen(es)
+        <span *ngIf="!images().length"> — se requiere al menos 1</span>
+      </strong>
+    </div>
+    <div class="pub-item">
+      <span class="pub-label">Stock disponible</span>
+      <strong [class.pub-ok]="hasStock" [class.pub-warn]="!hasStock">
+        {{ hasStock ? 'Sí' : 'No — al menos 1 variante debe tener stock > 0' }}
+      </strong>
+    </div>
+  </div>
+
+  <div class="pub-note" *ngIf="!canPublish">
+    <strong>⚠ No puedes publicar aún.</strong> Asegúrate de tener al menos 1 variante con stock, 1 imagen.
+  </div>
+
+  <div class="form-error form-error--global" *ngIf="publishError()">{{ publishError() }}</div>
+
+  <div class="wiz-actions">
+    <button type="button" class="btn-ghost" (click)="step.set(3)">← Volver a imágenes</button>
+    <button type="button" class="btn-primary" (click)="publish()" [disabled]="!canPublish || publishing()">
+      {{ publishing() ? 'Publicando…' : '🚀 Publicar producto' }}
+    </button>
+  </div>
+</div>

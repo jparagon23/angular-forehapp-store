@@ -1,0 +1,58 @@
+<app-navbar></app-navbar>
+
+<div class="wl-page" *ngIf="isLoggedIn$ | async">
+  <div class="wl-wrap">
+
+    <div class="page-header">
+      <h1>Lista de deseos
+        <span class="count-badge" *ngIf="(count$ | async) as n">{{ n }}</span>
+      </h1>
+      <p class="page-sub">Productos que guardaste para más tarde</p>
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty-wl" *ngIf="(items$ | async)?.length === 0">
+      <div class="empty-icon">♡</div>
+      <h2>Tu lista de deseos está vacía</h2>
+      <p>Usa el botón <strong>♥</strong> en las tarjetas de producto para guardar los que más te gusten.</p>
+      <a routerLink="/" class="btn-explore">Explorar productos</a>
+    </div>
+
+    <!-- Items grid -->
+    <div class="wl-grid" *ngIf="(items$ | async) as items">
+      <div class="wl-card" *ngFor="let item of items">
+
+        <button class="wl-remove" (click)="remove(item.id)" aria-label="Quitar de lista de deseos">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+
+        <div class="wl-thumb">{{ item.emoji }}</div>
+
+        <div class="wl-info">
+          <span class="wl-brand">{{ item.brand }}</span>
+          <p class="wl-name">{{ item.name }}</p>
+          <p class="wl-cat">{{ item.cat }}</p>
+          <p class="wl-price">{{ item.price | currencyCop }}</p>
+        </div>
+
+        <div class="wl-actions">
+          <button class="btn-cart" (click)="addToCart(item)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <path d="M16 10a4 4 0 01-8 0"/>
+            </svg>
+            Agregar al carrito
+          </button>
+          <a class="btn-detail" [routerLink]="['/product', item.id]">Ver producto</a>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<app-cart-drawer></app-cart-drawer>

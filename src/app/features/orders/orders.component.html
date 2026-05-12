@@ -1,0 +1,71 @@
+<app-navbar></app-navbar>
+
+<div class="orders-page" *ngIf="isLoggedIn$ | async">
+  <div class="orders-wrap">
+
+    <div class="page-header">
+      <h1>Mis pedidos</h1>
+      <p class="page-sub" *ngIf="authUser$ | async as user">
+        Cuenta: <strong>{{ user.email }}</strong>
+      </p>
+    </div>
+
+    <div class="orders-list">
+      <div class="order-card" *ngFor="let order of orders">
+
+        <!-- Card header -->
+        <div class="oc-header" (click)="toggle(order.id)">
+          <div class="oc-left">
+            <div class="oc-id">Pedido {{ order.id }}</div>
+            <div class="oc-date">{{ order.date }}</div>
+          </div>
+          <div class="oc-center">
+            <span class="status-badge" [class]="statusClass(order.status)">
+              {{ order.status }}
+            </span>
+          </div>
+          <div class="oc-right">
+            <span class="oc-total">{{ order.total | currencyCop }}</span>
+            <svg class="oc-chevron" [class.rotated]="isExpanded(order.id)"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Expanded detail -->
+        <div class="oc-body" *ngIf="isExpanded(order.id)">
+
+          <div class="oc-items">
+            <div class="oc-item" *ngFor="let item of order.items">
+              <span class="oci-emoji">{{ item.emoji }}</span>
+              <span class="oci-name">{{ item.name }}</span>
+              <span class="oci-qty">x{{ item.qty }}</span>
+              <span class="oci-price">{{ item.price * item.qty | currencyCop }}</span>
+            </div>
+          </div>
+
+          <div class="oc-meta">
+            <div class="oc-meta-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              {{ order.address }}
+            </div>
+            <div class="oc-summary">
+              <span>Total del pedido</span>
+              <strong>{{ order.total | currencyCop }}</strong>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <div class="back-row">
+      <a routerLink="/" class="btn-back">← Seguir comprando</a>
+    </div>
+
+  </div>
+</div>

@@ -77,7 +77,8 @@ $green-h: #4fc217;
 .nb-block {
   @extend %nb-hover;
   display: flex; flex-direction: column; justify-content: center;
-  padding: 5px 10px; cursor: default; flex-shrink: 0;
+  padding: 5px 10px; cursor: pointer; flex-shrink: 0;
+  background: none; border: none; color: inherit; text-align: left;
   @media (max-width: 740px) { display: none; }
 }
 

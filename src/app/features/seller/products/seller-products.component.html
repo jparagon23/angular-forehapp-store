@@ -1,0 +1,64 @@
+<div class="sp-header">
+  <div>
+    <h1 class="sp-title">Mis Productos</h1>
+    <p class="sp-subtitle">Gestiona tu catálogo de productos</p>
+  </div>
+  <a routerLink="../products/create" class="btn-create">+ Crear Producto</a>
+</div>
+
+<div class="sp-loading" *ngIf="loading$ | async">Cargando productos…</div>
+
+<div class="sp-error" *ngIf="error$ | async as err">
+  <strong>Error:</strong> {{ err }}
+</div>
+
+<div class="sp-empty" *ngIf="!(loading$ | async) && (products$ | async)?.length === 0">
+  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5">
+    <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+  </svg>
+  <p>Aún no tienes productos. <a routerLink="../products/create">Crea tu primer producto</a>.</p>
+</div>
+
+<div class="sp-table-wrap" *ngIf="(products$ | async)?.length">
+  <table class="sp-table">
+    <thead>
+      <tr>
+        <th>Producto</th>
+        <th>Categoría</th>
+        <th>Estado</th>
+        <th>Variantes</th>
+        <th>Precio desde</th>
+        <th>Creado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let p of products$ | async">
+        <td>
+          <div class="sp-product-cell">
+            <img *ngIf="p.images?.length" [src]="p.images[0].url" alt="" class="sp-thumb" />
+            <div *ngIf="!p.images?.length" class="sp-thumb-placeholder">📦</div>
+            <div>
+              <strong class="sp-product-name">{{ p.title }}</strong>
+              <span class="sp-product-brand">{{ p.brand }}<span *ngIf="p.line"> · {{ p.line }}</span></span>
+            </div>
+          </div>
+        </td>
+        <td>{{ p.category }}</td>
+        <td><span class="sp-badge" [ngClass]="statusClass(p.status)">{{ statusLabel(p.status) }}</span></td>
+        <td>{{ p.variants.length }} variante(s)</td>
+        <td>{{ minPrice(p.variants) | currency:'USD':'symbol':'1.2-2' }}</td>
+        <td>{{ p.createdAt | date:'dd/MM/yy' }}</td>
+        <td>
+          <div class="sp-actions">
+            <button *ngIf="p.status === 'DRAFT'"       class="btn-action btn-publish"    (click)="publish(p.id)">Publicar</button>
+            <button *ngIf="p.status === 'ACTIVE'"      class="btn-action btn-deactivate" (click)="deactivate(p.id)">Desactivar</button>
+            <button *ngIf="p.status === 'INACTIVE' || p.status === 'OUT_OF_STOCK'"
+                    class="btn-action btn-activate"    (click)="activate(p.id)">Activar</button>
+            <button *ngIf="p.status === 'DRAFT'"       class="btn-action btn-delete"     (click)="delete(p.id)">Eliminar</button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

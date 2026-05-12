@@ -12,7 +12,7 @@
     </div>
     <table>
       <thead>
-        <tr><th>Producto</th><th>Marca</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Estado</th><th>Acciones</th></tr>
+        <tr><th>Producto</th><th>Marca</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Variaciones</th><th>Estado</th><th>Acciones</th></tr>
       </thead>
       <tbody>
         <tr *ngFor="let p of filtered(products$ | async)">
@@ -20,6 +20,7 @@
           <td>{{ p.brand }}</td><td>{{ p.cat }}</td>
           <td>{{ p.price | currencyCop }}</td>
           <td><span class="stock-badge" [class]="stockClass(p.stock)">{{ p.stock }} uds.</span></td>
+          <td><span class="var-summary">{{ variationsSummary(p) }}</span></td>
           <td><span class="stock-badge" [class]="p.status === 'Activo' ? 'stock-ok' : 'stock-low'">{{ p.status }}</span></td>
           <td>
             <div class="action-btns">
@@ -49,7 +50,42 @@
       <div class="form-group"><label>Estado</label>
         <select [(ngModel)]="form.status"><option>Activo</option><option>Borrador</option><option>Agotado</option></select>
       </div>
+
+      <!-- ── VARIACIONES ───────────────────────────────────── -->
+      <div class="form-group full var-section">
+        <div class="var-section-title">Variaciones <span class="var-hint-label">Opcional — activa las que apliquen</span></div>
+
+        <label class="var-label">Tallas</label>
+        <div class="chip-row">
+          <span class="chip-group-label">Ropa</span>
+          <button *ngFor="let s of CLOTHING_SIZES" type="button"
+                  class="size-chip" [class.active]="formSizes().includes(s)"
+                  (click)="toggleSize(s)">{{ s }}</button>
+          <span class="chip-group-label">Calzado</span>
+          <button *ngFor="let s of SHOE_SIZES" type="button"
+                  class="size-chip" [class.active]="formSizes().includes(s)"
+                  (click)="toggleSize(s)">{{ s }}</button>
+        </div>
+        <div class="selected-chips" *ngIf="formSizes().length">
+          <span class="sel-chip" *ngFor="let s of formSizes()">
+            {{ s }}<button type="button" (click)="toggleSize(s)">×</button>
+          </span>
+        </div>
+
+        <label class="var-label" style="margin-top:14px">Colores</label>
+        <div class="color-add-row">
+          <input [(ngModel)]="newColor" placeholder="Ej: Blanco, Azul Navy, Rojo..."
+                 (keyup.enter)="addColor()" class="color-input" />
+          <button type="button" class="btn btn-outline btn-sm" (click)="addColor()">+ Agregar</button>
+        </div>
+        <div class="selected-chips" *ngIf="formColors().length">
+          <span class="sel-chip color-chip" *ngFor="let c of formColors()">
+            {{ c }}<button type="button" (click)="removeColor(c)">×</button>
+          </span>
+        </div>
+      </div>
     </div>
+
     <div class="modal-actions">
       <button class="btn btn-outline" (click)="modalOpen.set(false)">Cancelar</button>
       <button class="btn btn-green" (click)="save()">Guardar</button>

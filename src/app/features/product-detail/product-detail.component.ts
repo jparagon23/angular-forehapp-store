@@ -125,4 +125,8 @@ export class ProductDetailComponent implements OnInit {
     const empty = 5 - full - half;
     return [...Array(full).fill('★'), ...Array(half).fill('½'), ...Array(empty).fill('☆')];
   }
+
+  onImgError(event: Event) {
+    (event.target as HTMLImageElement).style.display = 'none';
+  }
 }

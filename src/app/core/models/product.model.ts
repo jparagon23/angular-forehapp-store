@@ -6,6 +6,7 @@ export interface ProductVariations {
 export interface Product {
   id: number;
   emoji: string;
+  image: string;
   brand: string;
   name: string;
   desc: string;

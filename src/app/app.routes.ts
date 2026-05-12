@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { sellerGuard } from './core/guards/seller.guard';
 
 export const routes: Routes = [
   {
@@ -22,8 +23,38 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent),
   },
   {
+    path: 'verify-code',
+    loadComponent: () => import('./features/auth/verify-code/verify-code.component').then(m => m.VerifyCodeComponent),
+  },
+  {
     path: 'checkout',
     loadComponent: () => import('./features/checkout/checkout.component').then(m => m.CheckoutComponent),
+  },
+  {
+    path: 'orders',
+    loadComponent: () => import('./features/orders/orders.component').then(m => m.OrdersComponent),
+  },
+  {
+    path: 'wishlist',
+    loadComponent: () => import('./features/wishlist/wishlist.component').then(m => m.WishlistComponent),
+  },
+  {
+    path: 'seller',
+    loadComponent: () => import('./features/seller/seller.component').then(m => m.SellerComponent),
+    canActivate: [sellerGuard],
+    children: [
+      { path: '', redirectTo: 'products', pathMatch: 'full' },
+      {
+        path: 'products',
+        loadComponent: () => import('./features/seller/products/seller-products.component').then(m => m.SellerProductsComponent),
+        canActivate: [sellerGuard],
+      },
+      {
+        path: 'products/create',
+        loadComponent: () => import('./features/seller/products/create/product-create.component').then(m => m.ProductCreateComponent),
+        canActivate: [sellerGuard],
+      },
+    ],
   },
   {
     path: 'admin',

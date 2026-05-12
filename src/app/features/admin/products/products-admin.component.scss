@@ -1,1 +1,60 @@
 @use '../shared/admin-styles';
+
+// ── Variations section ────────────────────────────────────────
+.var-section {
+  background: #f8fdf7; border: 1px solid #daeeda; border-radius: 12px;
+  padding: 16px 18px; margin-top: 4px;
+}
+.var-section-title {
+  font-size: .82rem; font-weight: 800; color: #555; text-transform: uppercase;
+  letter-spacing: 1px; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.var-hint-label {
+  font-size: .73rem; font-weight: 500; color: #aaa; text-transform: none; letter-spacing: 0;
+}
+.var-label {
+  display: block; font-size: .78rem; font-weight: 700; color: #888;
+  text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px;
+}
+.chip-row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+}
+.chip-group-label {
+  font-size: .7rem; font-weight: 700; color: #bbb; text-transform: uppercase;
+  letter-spacing: .8px; margin-right: 2px; flex-shrink: 0;
+  &:not(:first-child) { margin-left: 6px; }
+}
+.size-chip {
+  padding: 5px 11px; border-radius: 8px;
+  border: 1.5px solid #cce4c6; background: #fff;
+  font-size: .82rem; font-weight: 600; color: #666; cursor: pointer;
+  transition: border-color .12s, background .12s, color .12s;
+  &:hover { border-color: #4caf50; color: #2e7d32; }
+  &.active { border-color: #4caf50; background: #4caf50; color: #fff; }
+}
+.selected-chips {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;
+}
+.sel-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 20px;
+  padding: 4px 10px; font-size: .8rem; font-weight: 600; color: #2e7d32;
+  button {
+    background: none; border: none; cursor: pointer; color: #888;
+    font-size: .95rem; line-height: 1; padding: 0 0 0 2px;
+    &:hover { color: #e53935; }
+  }
+  &.color-chip { background: #e3f2fd; border-color: #90caf9; color: #1565c0; }
+}
+.color-add-row {
+  display: flex; gap: 8px; align-items: center;
+}
+.color-input {
+  flex: 1; height: 36px; border: 1.5px solid #d0e8cc; border-radius: 8px;
+  padding: 0 12px; font-size: .9rem; outline: none;
+  &:focus { border-color: #4caf50; }
+}
+.var-summary {
+  font-size: .8rem; color: #888;
+}

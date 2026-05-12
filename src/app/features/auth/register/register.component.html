@@ -10,17 +10,31 @@
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
 
       <div class="form-group">
-        <label for="name">Tu nombre</label>
+        <label for="name">Nombre</label>
         <input
           id="name"
           type="text"
           formControlName="name"
           [class.invalid]="submitted && name.invalid"
-          placeholder="Nombre completo"
-          autocomplete="name"
+          placeholder="Tu nombre"
+          autocomplete="given-name"
         />
         <span class="form-error" *ngIf="submitted && name.hasError('required')">Ingresa tu nombre.</span>
         <span class="form-error" *ngIf="submitted && name.hasError('minlength')">Mínimo 2 caracteres.</span>
+      </div>
+
+      <div class="form-group">
+        <label for="lastname">Apellido</label>
+        <input
+          id="lastname"
+          type="text"
+          formControlName="lastname"
+          [class.invalid]="submitted && lastname.invalid"
+          placeholder="Tu apellido"
+          autocomplete="family-name"
+        />
+        <span class="form-error" *ngIf="submitted && lastname.hasError('required')">Ingresa tu apellido.</span>
+        <span class="form-error" *ngIf="submitted && lastname.hasError('minlength')">Mínimo 2 caracteres.</span>
       </div>
 
       <div class="form-group">
@@ -70,7 +84,11 @@
         </span>
       </div>
 
-      <button type="submit" class="btn-primary">Crear tu cuenta Forehapp</button>
+      <div class="login-error" *ngIf="serverError">{{ serverError }}</div>
+
+      <button type="submit" class="btn-primary" [disabled]="loading">
+        {{ loading ? 'Creando cuenta…' : 'Crear tu cuenta Forehapp' }}
+      </button>
 
     </form>
 

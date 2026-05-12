@@ -14,7 +14,10 @@
       <div class="carousel-main">
         <button class="carousel-btn prev" (click)="prevSlide()">&#8249;</button>
         <div class="carousel-slide" [style.background]="slideBackgrounds[currentSlide()]">
-          <span class="carousel-emoji">{{ product.emoji }}</span>
+          <img *ngIf="currentSlide() === 0 && product.image"
+               class="slide-real-img" [src]="product.image" [alt]="product.name"
+               (error)="onImgError($event)">
+          <span class="carousel-emoji" *ngIf="currentSlide() !== 0 || !product.image">{{ product.emoji }}</span>
         </div>
         <button class="carousel-btn next" (click)="nextSlide()">&#8250;</button>
       </div>
@@ -25,7 +28,9 @@
           [class.active]="currentSlide() === i"
           [style.background]="bg"
           (click)="setSlide(i)">
-          <span>{{ product.emoji }}</span>
+          <img *ngIf="i === 0 && product.image" class="thumb-real-img"
+               [src]="product.image" [alt]="product.name" (error)="onImgError($event)">
+          <span *ngIf="i !== 0 || !product.image">{{ product.emoji }}</span>
         </button>
       </div>
       <div class="carousel-dots">
@@ -142,7 +147,11 @@
       <h2 class="section-title">Productos relacionados</h2>
       <div class="related-grid">
         <a class="related-card" *ngFor="let rp of related" [routerLink]="['/product', rp.id]">
-          <div class="related-img" [style.background]="slideBackgrounds[0]">{{ rp.emoji }}</div>
+          <div class="related-img" [style.background]="slideBackgrounds[0]">
+            <img *ngIf="rp.image" [src]="rp.image" [alt]="rp.name" class="related-real-img"
+                 (error)="onImgError($event)">
+            <span *ngIf="!rp.image">{{ rp.emoji }}</span>
+          </div>
           <div class="related-info">
             <span class="related-brand">{{ rp.brand }}</span>
             <span class="related-name">{{ rp.name }}</span>

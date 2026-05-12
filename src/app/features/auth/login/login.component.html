@@ -17,6 +17,7 @@
           formControlName="email"
           [class.invalid]="submitted && email.invalid"
           autocomplete="email"
+          (input)="loginError = ''"
         />
         <span class="form-error" *ngIf="submitted && email.hasError('required')">Ingresa tu correo.</span>
         <span class="form-error" *ngIf="submitted && email.hasError('email')">Correo no válido.</span>
@@ -31,6 +32,7 @@
             formControlName="password"
             [class.invalid]="submitted && password.invalid"
             autocomplete="current-password"
+            (input)="loginError = ''"
           />
           <button type="button" class="toggle-pass" (click)="showPass = !showPass">
             {{ showPass ? 'Ocultar' : 'Mostrar' }}
@@ -40,7 +42,16 @@
         <span class="form-error" *ngIf="submitted && password.hasError('minlength')">Mínimo 6 caracteres.</span>
       </div>
 
-      <button type="submit" class="btn-primary">Iniciar sesión</button>
+      <div class="login-error" *ngIf="loginError">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        {{ loginError }}
+      </div>
+
+      <button type="submit" class="btn-primary" [disabled]="loading">
+        {{ loading ? 'Ingresando…' : 'Iniciar sesión' }}
+      </button>
 
     </form>
 
