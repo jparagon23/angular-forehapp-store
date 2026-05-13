@@ -78,10 +78,18 @@
       <div class="qty-wrap">
         <span class="qty-lbl">Cantidad</span>
         <div class="qty-ctrl">
-          <button (click)="changeQty(-1)">−</button>
+          <button (click)="changeQty(-1, product)" [disabled]="qty() <= 1">−</button>
           <span class="qty-num">{{ qty() }}</span>
-          <button (click)="changeQty(1)">+</button>
+          <button (click)="changeQty(1, product)" [disabled]="availableStock(product) === null || availableStock(product)! <= qty()">+</button>
         </div>
+        <ng-container *ngIf="availableStock(product) !== null">
+          <span class="stock-info" *ngIf="availableStock(product)! > 0">
+            {{ availableStock(product) }} disponible{{ availableStock(product) !== 1 ? 's' : '' }}
+          </span>
+          <span class="stock-info stock-info--out" *ngIf="availableStock(product) === 0">
+            Sin stock
+          </span>
+        </ng-container>
       </div>
 
       <button class="add-btn-main"
@@ -90,8 +98,8 @@
         + Agregar al carrito
       </button>
 
-      <div class="var-hint" *ngIf="!canAdd(product) && hintText()">
-        {{ hintText() }}
+      <div class="var-hint" *ngIf="!canAdd(product) && hintText(product)">
+        {{ hintText(product) }}
       </div>
     </div>
   </div>

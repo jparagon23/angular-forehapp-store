@@ -117,7 +117,9 @@
   &.active { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--green); }
 }
 
-.qty-wrap { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+.qty-wrap { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; flex-wrap: wrap; }
+.stock-info { font-size: .82rem; color: #4caf50; font-weight: 600; }
+.stock-info--out { color: #e53935; }
 .qty-lbl { font-size: .8rem; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 1px; }
 .qty-ctrl {
   display: flex; align-items: center;

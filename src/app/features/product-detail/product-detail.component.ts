@@ -96,8 +96,6 @@ export class ProductDetailComponent implements OnInit {
     this.selectedAttributes.update(attrs => ({ ...attrs, [name]: value }));
   }
 
-  changeQty(delta: number) { this.qty.set(Math.max(1, this.qty() + delta)); }
-
   selectedVariant(product: Product): DetailVariant | null {
     if (!product.variants?.length) return null;
     const sel = this.selectedAttributes();
@@ -106,18 +104,34 @@ export class ProductDetailComponent implements OnInit {
     ) ?? null;
   }
 
-  canAdd(product: Product): boolean {
+  // null = no hay variante completamente seleccionada aún
+  availableStock(product: Product): number | null {
     const groups = this.attributeGroups();
-    if (!groups.length) return true;
     const sel = this.selectedAttributes();
-    return groups.every(g => !!sel[g.name]);
+    const allSelected = !groups.length || groups.every(g => !!sel[g.name]);
+    if (!allSelected) return null;
+    const variant = this.selectedVariant(product);
+    return variant ? variant.stock : product.stock;
   }
 
-  hintText(): string {
+  changeQty(delta: number, product: Product) {
+    const stock = this.availableStock(product);
+    const max = stock ?? 999;
+    this.qty.set(Math.min(max, Math.max(1, this.qty() + delta)));
+  }
+
+  canAdd(product: Product): boolean {
+    const stock = this.availableStock(product);
+    return stock !== null && stock > 0;
+  }
+
+  hintText(product: Product): string {
     const groups = this.attributeGroups();
     const sel = this.selectedAttributes();
     const missing = groups.filter(g => !sel[g.name]).map(g => g.name);
-    return missing.length ? `* Selecciona: ${missing.join(', ')}` : '';
+    if (missing.length) return `* Selecciona: ${missing.join(', ')}`;
+    if (this.availableStock(product) === 0) return 'Sin stock disponible';
+    return '';
   }
 
   addToCart(product: Product) {
