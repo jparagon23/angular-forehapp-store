@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
@@ -15,6 +16,10 @@ import {
   loadSellerProductsSuccess,
   sellerActionFailure,
 } from './seller.actions';
+
+function extractApiError(err: HttpErrorResponse, fallback: string): string {
+  return err.error?.error ?? err.error?.message ?? err.message ?? fallback;
+}
 
 @Injectable()
 export class SellerEffects {
@@ -36,7 +41,7 @@ export class SellerEffects {
       ofType(deleteSellerProduct),
       switchMap(({ id }) => this.service.deleteProduct(id).pipe(
         map(() => deleteSellerProductSuccess({ id })),
-        catchError(err => of(sellerActionFailure({ error: err.message ?? 'Error al eliminar' })))
+        catchError(err => of(sellerActionFailure({ error: extractApiError(err, 'Error al eliminar') })))
       ))
     )
   );
@@ -50,7 +55,7 @@ export class SellerEffects {
                     :                            this.service.activateProduct(id);
         return call$.pipe(
           map(product => changeSellerProductStatusSuccess({ product })),
-          catchError(err => of(sellerActionFailure({ error: err.message ?? 'Error al cambiar estado' })))
+          catchError(err => of(sellerActionFailure({ error: extractApiError(err, 'Error al cambiar estado') })))
         );
       })
     )
@@ -63,7 +68,7 @@ export class SellerEffects {
         this.service.updateInventory(productId, variantId, { quantity, reason }).pipe(
           map(() => adjustSellerInventorySuccess({ productId, variantId, quantity })),
           catchError(err => of(sellerActionFailure({
-            error: err.error?.message ?? err.message ?? 'Error al ajustar inventario',
+            error: extractApiError(err, 'Error al ajustar inventario'),
           })))
         )
       )

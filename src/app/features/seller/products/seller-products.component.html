@@ -1,3 +1,5 @@
+<app-toast [message]="toastMsg()" [type]="toastType()"></app-toast>
+
 <!-- Inventory Adjustment Modal -->
 <div class="inv-overlay" [class.inv-open]="invOpen()">
   <div class="inv-modal">
@@ -115,6 +117,29 @@
   <a routerLink="../products/create" class="btn-create">+ Crear Producto</a>
 </div>
 
+<!-- Toolbar: search + status filter -->
+<div class="sp-toolbar" *ngIf="!(loading$ | async)">
+  <div class="sp-search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input type="text" placeholder="Buscar por nombre, marca, categoría o SKU..."
+           [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)">
+    <button class="sp-search-clear" *ngIf="searchQuery()" (click)="searchQuery.set('')" title="Limpiar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="sp-filter-pills">
+    <button class="sp-pill" [class.sp-pill-on]="statusFilter() === null"         (click)="statusFilter.set(null)">Todos</button>
+    <button class="sp-pill" [class.sp-pill-on]="statusFilter() === 'DRAFT'"      (click)="statusFilter.set('DRAFT')">Borrador</button>
+    <button class="sp-pill" [class.sp-pill-on]="statusFilter() === 'ACTIVE'"     (click)="statusFilter.set('ACTIVE')">Activo</button>
+    <button class="sp-pill" [class.sp-pill-on]="statusFilter() === 'INACTIVE'"   (click)="statusFilter.set('INACTIVE')">Inactivo</button>
+    <button class="sp-pill" [class.sp-pill-on]="statusFilter() === 'OUT_OF_STOCK'" (click)="statusFilter.set('OUT_OF_STOCK')">Sin stock</button>
+  </div>
+</div>
+
 <div class="sp-skeleton-wrap" *ngIf="loading$ | async">
   <table class="sp-table">
     <thead>
@@ -145,18 +170,24 @@
   </table>
 </div>
 
-<div class="sp-error" *ngIf="error$ | async as err">
-  <strong>Error:</strong> {{ err }}
-</div>
-
-<div class="sp-empty" *ngIf="!(loading$ | async) && (products$ | async)?.length === 0">
+<!-- Sin productos aún -->
+<div class="sp-empty" *ngIf="!(loading$ | async) && allProducts().length === 0">
   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5">
     <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
   </svg>
   <p>Aún no tienes productos. <a routerLink="../products/create">Crea tu primer producto</a>.</p>
 </div>
 
-<div class="sp-status-guide" *ngIf="(products$ | async)?.length">
+<!-- Sin resultados para la búsqueda activa -->
+<div class="sp-no-results" *ngIf="!(loading$ | async) && allProducts().length && !filteredProducts().length">
+  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5" stroke-linecap="round">
+    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+  </svg>
+  <p>Sin resultados para <strong>"{{ searchQuery() || statusFilter() }}"</strong></p>
+  <button class="sp-clear-link" (click)="clearFilters()">Limpiar filtros</button>
+</div>
+
+<div class="sp-status-guide" *ngIf="allProducts().length">
   <span class="sp-guide-label">Flujo de publicación:</span>
   <span class="sp-badge status-draft">Borrador</span>
   <span class="sp-guide-arrow">→ Publicar →</span>
@@ -168,7 +199,11 @@
   <span class="sp-guide-hint">· Haz clic en una fila para ver y gestionar sus variantes</span>
 </div>
 
-<div class="sp-table-wrap" *ngIf="(products$ | async)?.length">
+<div class="sp-table-wrap" *ngIf="filteredProducts().length">
+  <div class="sp-results-bar" *ngIf="hasFilters()">
+    {{ filteredProducts().length }} resultado{{ filteredProducts().length !== 1 ? 's' : '' }} de {{ allProducts().length }}
+    <button class="sp-clear-link" (click)="clearFilters()">× Limpiar</button>
+  </div>
   <table class="sp-table">
     <thead>
       <tr>
@@ -182,7 +217,7 @@
       </tr>
     </thead>
     <tbody>
-      <ng-container *ngFor="let p of products$ | async">
+      <ng-container *ngFor="let p of filteredProducts()">
         <tr [class.sp-row-expanded]="expandedId() === p.id" (click)="toggleExpand(p.id)" class="sp-row-clickable">
           <td>
             <div class="sp-product-cell">

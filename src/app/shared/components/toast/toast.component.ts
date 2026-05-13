@@ -3,7 +3,11 @@ import { Component, Input, OnChanges } from '@angular/core';
 @Component({
   selector: 'app-toast',
   standalone: true,
-  template: `<div class="toast" [class.show]="visible">{{ message }}</div>`,
+  template: `
+    <div class="toast" [class.show]="visible" [class.toast-error]="type === 'error'">
+      {{ message }}
+    </div>
+  `,
   styles: [`
     .toast {
       position: fixed;
@@ -17,14 +21,18 @@ import { Component, Input, OnChanges } from '@angular/core';
       font-size: .95rem;
       border-left: 4px solid var(--green);
       transition: transform .3s;
-      z-index: 400;
+      z-index: 9999;
       pointer-events: none;
+      max-width: 480px;
+      text-align: center;
     }
     .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.toast-error { border-left-color: #e74c3c; }
   `]
 })
 export class ToastComponent implements OnChanges {
   @Input() message = '';
+  @Input() type: 'success' | 'error' = 'success';
   visible = false;
   private timer: any;
 
@@ -32,6 +40,6 @@ export class ToastComponent implements OnChanges {
     if (!this.message) return;
     this.visible = true;
     clearTimeout(this.timer);
-    this.timer = setTimeout(() => { this.visible = false; }, 2400);
+    this.timer = setTimeout(() => { this.visible = false; }, 3200);
   }
 }

@@ -1,20 +1,24 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AsyncPipe, CurrencyPipe, DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { Actions, ofType } from '@ngrx/effects';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import {
   adjustSellerInventory,
   changeSellerProductStatus,
+  changeSellerProductStatusSuccess,
   deleteSellerProduct,
   loadSellerProducts,
+  sellerActionFailure,
 } from '../../../store/seller/seller.actions';
 import {
-  selectSellerError,
   selectSellerInventoryLoading,
   selectSellerLoading,
   selectSellerProducts,
 } from '../../../store/seller/seller.selectors';
+import { ToastComponent } from '../../../shared/components/toast/toast.component';
 import {
   InventoryMovement, InventoryRequest, MovementReason,
   MovementsPage, ProductStatus, ProductVariant, SellerProduct,
@@ -24,18 +28,42 @@ import { SellerProductService } from '../../../core/services/seller-product.serv
 @Component({
   selector: 'app-seller-products',
   standalone: true,
-  imports: [AsyncPipe, NgFor, NgIf, NgClass, RouterLink, CurrencyPipe, DatePipe, FormsModule],
+  imports: [AsyncPipe, NgFor, NgIf, NgClass, RouterLink, CurrencyPipe, DatePipe, FormsModule, ToastComponent],
   templateUrl: './seller-products.component.html',
   styleUrl: './seller-products.component.scss',
 })
 export class SellerProductsComponent implements OnInit {
   private store         = inject(Store);
   private sellerService = inject(SellerProductService);
+  private actions$      = inject(Actions);
+  private destroyRef    = inject(DestroyRef);
 
-  products$   = this.store.select(selectSellerProducts);
   loading$    = this.store.select(selectSellerLoading);
-  error$      = this.store.select(selectSellerError);
   invLoading$ = this.store.select(selectSellerInventoryLoading);
+
+  allProducts = toSignal(this.store.select(selectSellerProducts), { initialValue: [] as SellerProduct[] });
+
+  searchQuery  = signal('');
+  statusFilter = signal<ProductStatus | null>(null);
+
+  filteredProducts = computed(() => {
+    const q      = this.searchQuery().toLowerCase().trim();
+    const status = this.statusFilter();
+    return this.allProducts().filter(p => {
+      const matchesSearch = !q
+        || p.title.toLowerCase().includes(q)
+        || p.brand.toLowerCase().includes(q)
+        || p.category.toLowerCase().includes(q)
+        || p.variants.some(v => v.sku.toLowerCase().includes(q));
+      const matchesStatus = !status || p.status === status;
+      return matchesSearch && matchesStatus;
+    });
+  });
+
+  hasFilters = computed(() => !!this.searchQuery() || this.statusFilter() !== null);
+
+  toastMsg  = signal('');
+  toastType = signal<'success' | 'error'>('success');
 
   expandedId = signal<number | null>(null);
 
@@ -65,7 +93,27 @@ export class SellerProductsComponent implements OnInit {
   invReason    = signal<InventoryRequest['reason']>('RESTOCK');
   invError     = signal('');
 
+  constructor() {
+    this.actions$.pipe(ofType(sellerActionFailure), takeUntilDestroyed(this.destroyRef))
+      .subscribe(({ error }) => {
+        this.toastType.set('error');
+        this.toastMsg.set(error);
+      });
+
+    this.actions$.pipe(ofType(changeSellerProductStatusSuccess), takeUntilDestroyed(this.destroyRef))
+      .subscribe(({ product }) => {
+        const label: Record<string, string> = {
+          ACTIVE: 'Producto publicado', INACTIVE: 'Producto desactivado',
+          DRAFT: 'Producto guardado como borrador', OUT_OF_STOCK: 'Producto sin stock',
+        };
+        this.toastType.set('success');
+        this.toastMsg.set(label[product.status] ?? 'Estado actualizado');
+      });
+  }
+
   ngOnInit() { this.store.dispatch(loadSellerProducts()); }
+
+  clearFilters() { this.searchQuery.set(''); this.statusFilter.set(null); }
 
   toggleExpand(id: number) {
     this.expandedId.update(cur => cur === id ? null : id);
