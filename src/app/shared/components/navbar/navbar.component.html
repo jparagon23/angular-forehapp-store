@@ -13,14 +13,102 @@
       <div class="nb-logo-text">Forehapp <span>Store</span></div>
     </a>
 
-    <!-- Location -->
-    <div class="nb-location">
+    <!-- Location dropdown (estilo Amazon) -->
+    <div class="nb-location nb-location-wrap"
+         (mouseenter)="openLocation()"
+         (mouseleave)="closeLocation()">
+
       <svg class="nb-loc-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
       </svg>
       <div class="nb-loc-text">
         <span class="nb-top-sup">Enviar a</span>
-        <span class="nb-top-main">Colombia 🇨🇴</span>
+        <!-- Logged in: show default address city or fallback -->
+        <ng-container *ngIf="isLoggedIn$ | async; else guestLocation">
+          <span class="nb-top-main" *ngIf="defaultAddress$ | async as def">{{ def.alias || def.city }}</span>
+          <span class="nb-top-main" *ngIf="!(defaultAddress$ | async)">Colombia 🇨🇴</span>
+        </ng-container>
+        <ng-template #guestLocation>
+          <span class="nb-top-main">Colombia 🇨🇴</span>
+        </ng-template>
+      </div>
+
+      <!-- Location dropdown panel -->
+      <div class="nb-loc-drop" [class.open]="locationOpen" (click)="$event.stopPropagation()">
+        <div class="nb-drop-arrow loc-arrow"></div>
+
+        <!-- ── Guest ── -->
+        <ng-container *ngIf="!(isLoggedIn$ | async)">
+          <div class="loc-guest">
+            <p>Inicia sesión para ver y gestionar tus direcciones de envío.</p>
+            <button class="loc-signin" routerLink="/login" (click)="closeLocation()">Iniciar sesión</button>
+          </div>
+        </ng-container>
+
+        <!-- ── Logged in ── -->
+        <ng-container *ngIf="isLoggedIn$ | async">
+
+          <!-- Address list view -->
+          <ng-container>
+
+            <!-- Loading -->
+            <div class="loc-loading" *ngIf="addressesLoading$ | async">
+              <div class="loc-spinner"></div> Cargando...
+            </div>
+
+            <!-- Empty -->
+            <div class="loc-empty" *ngIf="!(addressesLoading$ | async) && (addresses$ | async)?.length === 0">
+              <p>Aún no tienes direcciones guardadas.</p>
+            </div>
+
+            <!-- Address list -->
+            <ng-container *ngIf="!(addressesLoading$ | async) && (addresses$ | async) as addresses">
+              <p class="loc-list-title">Selecciona una dirección</p>
+              <div class="loc-list">
+                <div class="loc-item" *ngFor="let addr of addresses"
+                     [class.loc-item-default]="addr.isDefault"
+                     (click)="setAsDefault(addr.id)">
+                  <div class="loc-radio">
+                    <div class="loc-dot" *ngIf="addr.isDefault"></div>
+                  </div>
+                  <div class="loc-item-info">
+                    <p class="loc-item-alias">
+                      {{ addr.alias || addr.city }}
+                      <span class="loc-default-tag" *ngIf="addr.isDefault">Predeterminada</span>
+                    </p>
+                    <p class="loc-item-detail">{{ addr.street }}</p>
+                    <p class="loc-item-city">{{ addr.city }}<span *ngIf="addr.state">, {{ addr.state }}</span></p>
+                  </div>
+                  <button class="loc-del"
+                          [class.loc-del-disabled]="addr.isDefault"
+                          [title]="addr.isDefault ? 'No puedes eliminar la predeterminada' : 'Eliminar'"
+                          (click)="$event.stopPropagation(); removeAddress(addr)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                      <path d="M10 11v6M14 11v6"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </ng-container>
+
+            <!-- Footer actions -->
+            <div class="loc-footer">
+              <a class="loc-add-btn" routerLink="/account/addresses" (click)="closeLocation()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Agregar dirección
+              </a>
+              <a class="loc-manage" routerLink="/account/addresses" (click)="closeLocation()">
+                Administrar todas →
+              </a>
+            </div>
+
+          </ng-container>
+        </ng-container>
+
       </div>
     </div>
 
@@ -45,11 +133,9 @@
 
       <!-- Autocomplete dropdown -->
       <div class="nb-drop" [class.nb-drop-open]="dropOpen()">
-
         <div class="nb-drop-loading" *ngIf="searching()">
           Buscando<span class="nb-dots">...</span>
         </div>
-
         <ng-container *ngIf="!searching()">
           <div
             class="nb-drop-item"
@@ -64,7 +150,6 @@
             </div>
             <span class="nb-drop-price">{{ p.price | currencyCop }}</span>
           </div>
-
           <div class="nb-drop-all"
                *ngIf="suggestions().length"
                (mousedown)="$event.preventDefault()"
@@ -72,7 +157,6 @@
             Ver todos los resultados para <strong>"{{ searchQuery() }}"</strong> →
           </div>
         </ng-container>
-
       </div>
     </div>
 
@@ -81,13 +165,11 @@
          (mouseenter)="accountOpen = true"
          (mouseleave)="accountOpen = false">
 
-      <!-- Not logged in -->
       <ng-container *ngIf="!(isLoggedIn$ | async)">
         <span class="nb-top-sup">Hola, ingresa</span>
         <span class="nb-top-main">Identifícate ▾</span>
       </ng-container>
 
-      <!-- Logged in -->
       <ng-container *ngIf="isLoggedIn$ | async">
         <span class="nb-top-sup">Hola, {{ (authUser$ | async)?.name }}</span>
         <span class="nb-top-main">Mi cuenta ▾</span>
@@ -96,7 +178,6 @@
       <div class="nb-account-drop" [class.open]="accountOpen" (click)="$event.stopPropagation()">
         <div class="nb-drop-arrow"></div>
 
-        <!-- Guest dropdown -->
         <ng-container *ngIf="!(isLoggedIn$ | async)">
           <div class="nb-drop-top">
             <button class="nb-drop-signin" routerLink="/login" (click)="accountOpen = false">Iniciar sesión</button>
@@ -112,7 +193,6 @@
           </div>
         </ng-container>
 
-        <!-- Auth dropdown -->
         <ng-container *ngIf="isLoggedIn$ | async">
           <div class="nb-drop-user">
             <div class="nb-drop-avatar">{{ (authUser$ | async)?.name?.charAt(0) | uppercase }}</div>
@@ -124,8 +204,9 @@
           <div class="nb-drop-divider"></div>
           <div class="nb-drop-section">
             <strong class="nb-drop-heading">Mis cuentas</strong>
-            <a routerLink="/orders"   class="nb-drop-item" (click)="accountOpen = false">Mis pedidos</a>
-            <a routerLink="/wishlist" class="nb-drop-item" (click)="accountOpen = false">Lista de deseos</a>
+            <a routerLink="/orders"            class="nb-drop-item" (click)="accountOpen = false">Mis pedidos</a>
+            <a routerLink="/wishlist"          class="nb-drop-item" (click)="accountOpen = false">Lista de deseos</a>
+            <a routerLink="/account/addresses" class="nb-drop-item" (click)="accountOpen = false">Mis direcciones</a>
           </div>
           <div class="nb-drop-divider"></div>
           <div class="nb-drop-section">

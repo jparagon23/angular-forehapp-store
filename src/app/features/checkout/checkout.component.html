@@ -1,5 +1,4 @@
 <div class="checkout-page">
-
   <div class="checkout-wrap">
 
     <!-- Left: order summary -->
@@ -49,6 +48,78 @@
         </div>
       </div>
 
+      <!-- ── Shipping address ───────────────────────────── -->
+      <div class="ship-section">
+        <div class="ship-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          <span class="ship-label">Enviar a</span>
+          <button class="btn-change" *ngIf="!(addressesLoading$ | async) && (addresses$ | async)?.length && !showAddressPicker"
+                  (click)="showAddressPicker = true">
+            Cambiar
+          </button>
+        </div>
+
+        <!-- Loading -->
+        <div class="ship-loading" *ngIf="addressesLoading$ | async">
+          <div class="mini-spinner"></div>
+          <span>Cargando direcciones...</span>
+        </div>
+
+        <!-- No addresses yet -->
+        <div class="ship-empty" *ngIf="!(addressesLoading$ | async) && (addresses$ | async)?.length === 0">
+          <p>No tienes direcciones guardadas.</p>
+          <button class="btn-add-addr" (click)="openAddressForm()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Agregar dirección de envío
+          </button>
+        </div>
+
+        <!-- Addresses loaded -->
+        <ng-container *ngIf="!(addressesLoading$ | async) && (addresses$ | async) as addresses">
+
+          <!-- Selected address display -->
+          <div class="ship-selected" *ngIf="!showAddressPicker && getSelected(addresses) as sel">
+            <div class="sel-info">
+              <p class="sel-alias">{{ sel.alias || 'Dirección' }}</p>
+              <p class="sel-street">{{ sel.street }}</p>
+              <p class="sel-city">{{ sel.city }}<span *ngIf="sel.state">, {{ sel.state }}</span><span *ngIf="sel.zipCode"> {{ sel.zipCode }}</span></p>
+              <p class="sel-country">{{ sel.country }}</p>
+            </div>
+          </div>
+
+          <!-- Address picker list -->
+          <div class="ship-picker" *ngIf="showAddressPicker">
+            <div class="pick-option" *ngFor="let addr of addresses"
+                 [class.active]="addr.id === selectedAddressId"
+                 (click)="selectAddress(addr.id)">
+              <div class="pick-radio">
+                <div class="pick-dot" *ngIf="addr.id === selectedAddressId"></div>
+              </div>
+              <div class="pick-info">
+                <p class="pick-alias">{{ addr.alias || 'Dirección' }}
+                  <span class="pick-default" *ngIf="addr.isDefault">Predeterminada</span>
+                </p>
+                <p class="pick-detail">{{ addr.street }}, {{ addr.city }}</p>
+              </div>
+            </div>
+            <button class="pick-add-new" (click)="openAddressForm()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Nueva dirección
+            </button>
+            <button class="pick-cancel" (click)="showAddressPicker = false">Cancelar</button>
+          </div>
+
+        </ng-container>
+      </div>
+      <!-- ── /Shipping address ──────────────────────────── -->
+
       <!-- Mock payment form -->
       <div class="pay-form">
         <div class="form-group">
@@ -84,7 +155,9 @@
         Pago 100% seguro y encriptado
       </div>
 
-      <button class="btn-confirm" (click)="confirm()">
+      <button class="btn-confirm"
+              [disabled]="(addressesLoading$ | async) || !selectedAddressId"
+              (click)="confirm()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="20 6 9 17 4 12"/>
         </svg>
@@ -94,5 +167,69 @@
       <a routerLink="/" class="back-link">← Seguir comprando</a>
     </div>
 
+  </div>
+</div>
+
+<!-- ── Add address modal ───────────────────────────────────── -->
+<div class="modal-overlay" *ngIf="showAddressForm" (click)="closeAddressForm()">
+  <div class="addr-modal" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h3>Nueva dirección de envío</h3>
+      <button class="modal-close" (click)="closeAddressForm()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <form [formGroup]="addressForm" (ngSubmit)="submitAddress()" class="addr-form">
+
+      <div class="field">
+        <label>Alias <span class="optional">(opcional)</span></label>
+        <input type="text" formControlName="alias" placeholder='Ej: "Casa", "Trabajo"' maxlength="100">
+      </div>
+
+      <div class="field">
+        <label>Calle / Dirección <span class="req">*</span></label>
+        <input type="text" formControlName="street" placeholder="Av. Siempre Viva 742" maxlength="255"
+               [class.invalid]="hasFormError('street')">
+        <span class="err" *ngIf="hasFormError('street')">La dirección es obligatoria</span>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Ciudad <span class="req">*</span></label>
+          <input type="text" formControlName="city" placeholder="Bogotá" maxlength="100"
+                 [class.invalid]="hasFormError('city')">
+          <span class="err" *ngIf="hasFormError('city')">La ciudad es obligatoria</span>
+        </div>
+        <div class="field">
+          <label>Estado / Depto</label>
+          <input type="text" formControlName="state" placeholder="Cundinamarca" maxlength="100">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>País <span class="req">*</span></label>
+          <input type="text" formControlName="country" placeholder="Colombia" maxlength="100"
+                 [class.invalid]="hasFormError('country')">
+          <span class="err" *ngIf="hasFormError('country')">El país es obligatorio</span>
+        </div>
+        <div class="field">
+          <label>Código postal</label>
+          <input type="text" formControlName="zipCode" placeholder="110111" maxlength="20">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="closeAddressForm()">Cancelar</button>
+        <button type="submit" class="btn-save" [disabled]="addressesSaving$ | async">
+          {{ (addressesSaving$ | async) ? 'Guardando...' : 'Guardar y usar esta dirección' }}
+        </button>
+      </div>
+
+    </form>
   </div>
 </div>

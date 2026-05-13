@@ -9,6 +9,9 @@ import { selectCartCount } from '../../../store/cart/cart.selectors';
 import { openCart } from '../../../store/cart/cart.actions';
 import { selectIsLoggedIn, selectAuthUser, selectUserRole } from '../../../store/auth/auth.selectors';
 import { logout } from '../../../store/auth/auth.actions';
+import { loadAddresses, deleteAddress, setDefaultAddress } from '../../../store/addresses/addresses.actions';
+import { selectAllAddresses, selectDefaultAddress, selectAddressesLoading } from '../../../store/addresses/addresses.selectors';
+import { Address } from '../../../core/models/address.model';
 import { TokenStore } from '../../../core/services/token-store.service';
 import { ProductService } from '../../../core/services/product.service';
 import { Product } from '../../../core/models/product.model';
@@ -30,12 +33,18 @@ export class NavbarComponent {
   private productService = inject(ProductService);
   private destroyRef     = inject(DestroyRef);
 
-  accountOpen = false;
+  accountOpen  = false;
+  locationOpen = false;
+  private addrLoaded = false;
 
-  cartCount$  = this.store.select(selectCartCount);
-  isLoggedIn$ = this.store.select(selectIsLoggedIn);
-  authUser$   = this.store.select(selectAuthUser);
-  userRole$   = this.store.select(selectUserRole);
+  cartCount$        = this.store.select(selectCartCount);
+  isLoggedIn$       = this.store.select(selectIsLoggedIn);
+  authUser$         = this.store.select(selectAuthUser);
+  userRole$         = this.store.select(selectUserRole);
+  addresses$        = this.store.select(selectAllAddresses);
+  defaultAddress$   = this.store.select(selectDefaultAddress);
+  addressesLoading$ = this.store.select(selectAddressesLoading);
+
   readonly categories = CATEGORIES;
 
   activeCategory = toSignal(
@@ -47,7 +56,6 @@ export class NavbarComponent {
     { initialValue: null }
   );
 
-  // Autocomplete state
   private searchSubject = new Subject<string>();
   searchQuery  = signal('');
   suggestions  = signal<Product[]>([]);
@@ -97,20 +105,15 @@ export class NavbarComponent {
       this.highlightIdx.update(i => Math.max(i - 1, -1));
     } else if (e.key === 'Enter') {
       const hi = this.highlightIdx();
-      if (hi >= 0 && hi < items.length) {
-        this.selectSuggestion(items[hi]);
-      } else {
-        this.runSearch(input.value);
-      }
+      if (hi >= 0 && hi < items.length) this.selectSuggestion(items[hi]);
+      else this.runSearch(input.value);
     } else if (e.key === 'Escape') {
       this.closeDrop();
       input.blur();
     }
   }
 
-  onBlur() {
-    setTimeout(() => this.closeDrop(), 160);
-  }
+  onBlur() { setTimeout(() => this.closeDrop(), 160); }
 
   selectSuggestion(p: Product) {
     this.searchQuery.set('');
@@ -118,14 +121,16 @@ export class NavbarComponent {
     this.router.navigate(['/product', p.id]);
   }
 
-  runSearch(val: string) {
-    this.closeDrop();
-    this.onSearch(val);
+  runSearch(val: string) { this.closeDrop(); this.onSearch(val); }
+  private closeDrop() { this.dropOpen.set(false); this.highlightIdx.set(-1); }
+
+  onSearch(query: string) {
+    const q = query.trim();
+    this.router.navigate(['/'], { queryParams: q ? { q } : {} });
   }
 
-  private closeDrop() {
-    this.dropOpen.set(false);
-    this.highlightIdx.set(-1);
+  goToCategory(cat: string | null) {
+    this.router.navigate(['/'], { queryParams: cat ? { cat } : {} });
   }
 
   openCart() { this.store.dispatch(openCart()); }
@@ -138,20 +143,29 @@ export class NavbarComponent {
 
   goToOrders() {
     this.isLoggedIn$.pipe(take(1)).subscribe(loggedIn => {
-      if (loggedIn) {
-        this.router.navigate(['/orders']);
-      } else {
-        this.router.navigate(['/login'], { queryParams: { redirect: '/orders' } });
-      }
+      if (loggedIn) this.router.navigate(['/orders']);
+      else this.router.navigate(['/login'], { queryParams: { redirect: '/orders' } });
     });
   }
 
-  onSearch(query: string) {
-    const q = query.trim();
-    this.router.navigate(['/'], { queryParams: q ? { q } : {} });
+  openLocation() {
+    this.locationOpen = true;
+    if (!this.addrLoaded) {
+      this.isLoggedIn$.pipe(take(1)).subscribe(loggedIn => {
+        if (loggedIn) {
+          this.store.dispatch(loadAddresses());
+          this.addrLoaded = true;
+        }
+      });
+    }
   }
 
-  goToCategory(cat: string | null) {
-    this.router.navigate(['/'], { queryParams: cat ? { cat } : {} });
+  closeLocation() { this.locationOpen = false; }
+
+  setAsDefault(id: number) { this.store.dispatch(setDefaultAddress({ id })); }
+
+  removeAddress(addr: Address) {
+    if (addr.isDefault) return;
+    this.store.dispatch(deleteAddress({ id: addr.id }));
   }
 }

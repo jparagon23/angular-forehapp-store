@@ -17,11 +17,13 @@ import { ordersReducer } from './store/orders/orders.reducer';
 import { customersReducer } from './store/customers/customers.reducer';
 import { discountsReducer } from './store/discounts/discounts.reducer';
 import { sellerReducer } from './store/seller/seller.reducer';
+import { addressesReducer } from './store/addresses/addresses.reducer';
 import { ProductsEffects } from './store/products/products.effects';
 import { OrdersEffects } from './store/orders/orders.effects';
 import { CustomersEffects } from './store/customers/customers.effects';
 import { DiscountsEffects } from './store/discounts/discounts.effects';
 import { SellerEffects } from './store/seller/seller.effects';
+import { AddressesEffects } from './store/addresses/addresses.effects';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
@@ -37,8 +39,9 @@ export const appConfig: ApplicationConfig = {
       customers: customersReducer,
       discounts: discountsReducer,
       seller: sellerReducer,
+      addresses: addressesReducer,
     }),
-    provideEffects([ProductsEffects, OrdersEffects, CustomersEffects, DiscountsEffects, SellerEffects]),
+    provideEffects([ProductsEffects, OrdersEffects, CustomersEffects, DiscountsEffects, SellerEffects, AddressesEffects]),
     provideStoreDevtools({ maxAge: 25, logOnly: false }),
     {
       provide: APP_INITIALIZER,

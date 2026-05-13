@@ -1,0 +1,165 @@
+<app-navbar></app-navbar>
+
+<div class="addr-page" *ngIf="isLoggedIn$ | async">
+  <div class="addr-wrap">
+
+    <div class="page-header">
+      <div class="header-left">
+        <h1>Mis Direcciones
+          <span class="count-badge" *ngIf="(count$ | async) as n">{{ n }} / 10</span>
+        </h1>
+        <p class="page-sub">Gestiona las direcciones de entrega de tu cuenta</p>
+      </div>
+      <button class="btn-add" (click)="openCreate()" [disabled]="(count$ | async)! >= 10">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Nueva dirección
+      </button>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-state" *ngIf="loading$ | async">
+      <div class="spinner"></div>
+      <p>Cargando direcciones...</p>
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty-state" *ngIf="!(loading$ | async) && (addresses$ | async)?.length === 0">
+      <div class="empty-icon">📍</div>
+      <h2>No tienes direcciones guardadas</h2>
+      <p>Agrega una dirección para agilizar tus compras y envíos.</p>
+      <button class="btn-add-empty" (click)="openCreate()">Agregar dirección</button>
+    </div>
+
+    <!-- Address list -->
+    <div class="addr-grid" *ngIf="!(loading$ | async) && (addresses$ | async) as addresses">
+      <div class="addr-card" *ngFor="let addr of addresses" [class.is-default]="addr.isDefault">
+
+        <div class="card-header">
+          <div class="alias-row">
+            <span class="alias">{{ addr.alias || 'Dirección' }}</span>
+            <span class="default-badge" *ngIf="addr.isDefault">Predeterminada</span>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <p class="street">{{ addr.street }}</p>
+          <p class="location">
+            {{ addr.city }}<span *ngIf="addr.state">, {{ addr.state }}</span>
+            <span *ngIf="addr.zipCode"> {{ addr.zipCode }}</span>
+          </p>
+          <p class="country">{{ addr.country }}</p>
+        </div>
+
+        <div class="card-actions">
+          <button class="btn-default" (click)="setDefault(addr.id)" *ngIf="!addr.isDefault" title="Establecer como predeterminada">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Predeterminar
+          </button>
+          <button class="btn-edit" (click)="openEdit(addr)" title="Editar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            Editar
+          </button>
+          <button class="btn-delete" (click)="confirmDelete(addr.id)" [disabled]="addr.isDefault" [title]="addr.isDefault ? 'No puedes eliminar la dirección predeterminada' : 'Eliminar'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+              <path d="M10 11v6M14 11v6"/>
+              <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+            </svg>
+            Eliminar
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Delete confirmation ─────────────────────────────────── -->
+<div class="modal-overlay" *ngIf="deleteTargetId !== null" (click)="cancelDelete()">
+  <div class="confirm-dialog" (click)="$event.stopPropagation()">
+    <p>¿Eliminar esta dirección?</p>
+    <div class="confirm-actions">
+      <button class="btn-cancel" (click)="cancelDelete()">Cancelar</button>
+      <button class="btn-confirm-delete" (click)="doDelete()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Create / Edit modal ─────────────────────────────────── -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h2>{{ modalMode === 'create' ? 'Nueva dirección' : 'Editar dirección' }}</h2>
+      <button class="modal-close" (click)="closeModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="addr-form">
+
+      <div class="field">
+        <label>Alias <span class="optional">(opcional)</span></label>
+        <input type="text" formControlName="alias" placeholder='Ej: "Casa", "Trabajo"' maxlength="100">
+      </div>
+
+      <div class="field">
+        <label>Calle / Dirección <span class="required">*</span></label>
+        <input type="text" formControlName="street" placeholder="Av. Siempre Viva 742" maxlength="255"
+               [class.invalid]="hasError('street')">
+        <span class="error-msg" *ngIf="hasError('street')">La dirección es obligatoria</span>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Ciudad <span class="required">*</span></label>
+          <input type="text" formControlName="city" placeholder="Ciudad" maxlength="100"
+                 [class.invalid]="hasError('city')">
+          <span class="error-msg" *ngIf="hasError('city')">La ciudad es obligatoria</span>
+        </div>
+        <div class="field">
+          <label>Estado / Depto <span class="optional">(opcional)</span></label>
+          <input type="text" formControlName="state" placeholder="Bogotá D.C." maxlength="100">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>País <span class="required">*</span></label>
+          <input type="text" formControlName="country" placeholder="Colombia" maxlength="100"
+                 [class.invalid]="hasError('country')">
+          <span class="error-msg" *ngIf="hasError('country')">El país es obligatorio</span>
+        </div>
+        <div class="field">
+          <label>Código postal <span class="optional">(opcional)</span></label>
+          <input type="text" formControlName="zipCode" placeholder="110111" maxlength="20">
+        </div>
+      </div>
+
+      <label class="check-row" *ngIf="modalMode === 'create'">
+        <input type="checkbox" formControlName="isDefault">
+        <span>Establecer como dirección predeterminada</span>
+      </label>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="closeModal()">Cancelar</button>
+        <button type="submit" class="btn-save" [disabled]="saving$ | async">
+          <span *ngIf="!(saving$ | async)">{{ modalMode === 'create' ? 'Guardar dirección' : 'Guardar cambios' }}</span>
+          <span *ngIf="saving$ | async">Guardando...</span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>

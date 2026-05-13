@@ -41,13 +41,147 @@ $green-h: #4fc217;
 .nb-location {
   @extend %nb-hover;
   display: flex; align-items: center; gap: 5px;
-  padding: 5px 9px; flex-shrink: 0; cursor: default;
+  padding: 5px 9px; flex-shrink: 0; cursor: pointer;
   @media (max-width: 880px) { display: none; }
 }
 .nb-loc-pin {
   width: 18px; height: 18px; color: #ccc; margin-top: 10px; flex-shrink: 0;
 }
 .nb-loc-text { display: flex; flex-direction: column; line-height: 1.25; }
+
+// ── Location wrap & dropdown ───────────────────────────────
+.nb-location-wrap {
+  position: relative;
+  &::after {
+    content: '';
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    height: 10px;
+  }
+}
+
+.nb-loc-drop {
+  display: none;
+  position: absolute; top: calc(100% + 6px); left: 0;
+  width: 300px; background: #fff;
+  border: 1px solid #ccc; border-radius: 6px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.24);
+  z-index: 400; overflow: hidden;
+  &.open { display: block; }
+}
+
+.loc-arrow {
+  position: absolute; top: -8px; left: 20px !important; right: auto !important;
+}
+
+// Guest state
+.loc-guest {
+  padding: 18px 16px;
+  p { font-size: .84rem; color: #555; margin-bottom: 12px; line-height: 1.5; }
+}
+.loc-signin {
+  width: 100%; padding: 9px 0;
+  background: $green; color: #fff; border: none; border-radius: 5px;
+  font-size: .92rem; font-weight: 700; cursor: pointer;
+  transition: background .14s;
+  &:hover { background: $green-h; }
+}
+
+// Loading
+.loc-loading {
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px 16px; font-size: .82rem; color: #aaa;
+}
+.loc-spinner {
+  width: 14px; height: 14px;
+  border: 2px solid #dde; border-top-color: $green;
+  border-radius: 50%;
+  animation: locSpin .7s linear infinite;
+}
+@keyframes locSpin { to { transform: rotate(360deg); } }
+
+// Empty
+.loc-empty {
+  padding: 14px 16px;
+  p { font-size: .83rem; color: #aaa; }
+}
+
+// List title
+.loc-list-title {
+  padding: 12px 16px 6px;
+  font-size: .72rem; font-weight: 700; text-transform: uppercase;
+  color: #888; letter-spacing: .5px;
+}
+
+// Address list
+.loc-list {
+  display: flex; flex-direction: column; gap: 2px;
+  max-height: 240px; overflow-y: auto;
+  padding: 0 8px;
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+}
+
+.loc-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 9px 8px; border-radius: 6px; cursor: pointer;
+  transition: background .12s;
+  &:hover { background: #f5f5f5; }
+  &.loc-item-default { background: #f0fbec; }
+}
+
+.loc-radio {
+  width: 15px; height: 15px; border-radius: 50%;
+  border: 2px solid #ccc; flex-shrink: 0; margin-top: 2px;
+  display: flex; align-items: center; justify-content: center;
+  .loc-item-default & { border-color: $green; }
+}
+.loc-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: $green;
+}
+
+.loc-item-info { flex: 1; min-width: 0; }
+.loc-item-alias {
+  font-size: .83rem; font-weight: 700; color: #111;
+  display: flex; align-items: center; gap: 5px;
+}
+.loc-default-tag {
+  font-size: .65rem; font-weight: 700; color: $green;
+  background: #e5f7dd; padding: 1px 6px; border-radius: 8px;
+}
+.loc-item-detail { font-size: .76rem; color: #666; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.loc-item-city   { font-size: .72rem; color: #aaa; }
+
+.loc-del {
+  flex-shrink: 0; width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: none; cursor: pointer; border-radius: 4px;
+  svg { width: 13px; height: 13px; stroke: #ccc; transition: stroke .12s; }
+  &:hover:not(.loc-del-disabled) { svg { stroke: #e53e3e; } background: #fff0f0; }
+  &.loc-del-disabled { cursor: not-allowed; opacity: .3; }
+}
+
+// Footer
+.loc-footer {
+  padding: 10px 12px 12px;
+  border-top: 1px solid #eee;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.loc-add-btn {
+  display: flex; align-items: center; gap: 6px;
+  width: 100%; padding: 8px 10px;
+  background: #f5f5f5; border: 1.5px dashed #c0c0c0; border-radius: 6px;
+  font-size: .83rem; font-weight: 700; color: $green; cursor: pointer;
+  transition: background .14s;
+  svg { width: 13px; height: 13px; }
+  &:hover { background: #ecfbe6; border-color: $green; }
+}
+.loc-manage {
+  text-align: center; font-size: .78rem; color: #888;
+  transition: color .12s;
+  &:hover { color: $green; }
+}
+
 
 // ── Shared sub/main text inside blocks
 .nb-top-sup  { font-size: .67rem; color: #ccc; }
