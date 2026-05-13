@@ -1,3 +1,112 @@
+<!-- Inventory Adjustment Modal -->
+<div class="inv-overlay" [class.inv-open]="invOpen()">
+  <div class="inv-modal">
+    <h3 class="inv-title">Ajustar inventario</h3>
+    <div class="inv-meta">
+      <span class="inv-sku">{{ invSku() }}</span>
+      <span class="inv-stock-info">Stock actual: <strong>{{ invStock() }}</strong> uds.</span>
+    </div>
+
+    <div class="inv-fields">
+      <div class="inv-field">
+        <label>Cantidad</label>
+        <input type="number" [ngModel]="invQuantity()" (ngModelChange)="invQuantity.set($event)"
+               placeholder="Ej: 10 o -3" />
+      </div>
+      <div class="inv-field">
+        <label>Motivo</label>
+        <select [ngModel]="invReason()" (ngModelChange)="invReason.set($event)">
+          <option value="RESTOCK">Reposición</option>
+          <option value="RETURN">Devolución</option>
+          <option value="ADJUSTMENT">Ajuste manual</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="inv-hint" *ngIf="invReason() === 'ADJUSTMENT'">
+      💡 Para reducir stock ingresa una cantidad negativa (ej: -3)
+    </div>
+    <div class="inv-error" *ngIf="invError()">{{ invError() }}</div>
+
+    <div class="inv-actions">
+      <button class="btn-action" (click)="closeInvModal()">Cancelar</button>
+      <button class="btn-action btn-publish" (click)="submitInventory()"
+              [disabled]="invLoading$ | async">Aplicar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Movements History Modal -->
+<div class="inv-overlay" [class.inv-open]="movOpen()">
+  <div class="mov-modal">
+
+    <div class="mov-header">
+      <div>
+        <h3 class="inv-title">Historial de movimientos</h3>
+        <div class="mov-sku">SKU: <code>{{ movSku() }}</code></div>
+      </div>
+      <button class="mov-close" (click)="closeMovements()">✕</button>
+    </div>
+
+    <!-- Filter pills -->
+    <div class="mov-filters">
+      <button class="mov-pill" [class.mov-pill-on]="movReasonFilter() === null"
+              (click)="setMovFilter(null)">Todos</button>
+      <button class="mov-pill" [class.mov-pill-on]="movReasonFilter() === 'RESTOCK'"
+              (click)="setMovFilter('RESTOCK')">Reposición</button>
+      <button class="mov-pill" [class.mov-pill-on]="movReasonFilter() === 'RETURN'"
+              (click)="setMovFilter('RETURN')">Devolución</button>
+      <button class="mov-pill" [class.mov-pill-on]="movReasonFilter() === 'ADJUSTMENT'"
+              (click)="setMovFilter('ADJUSTMENT')">Ajuste</button>
+      <button class="mov-pill" [class.mov-pill-on]="movReasonFilter() === 'SALE'"
+              (click)="setMovFilter('SALE')">Venta</button>
+    </div>
+
+    <!-- Skeleton while loading -->
+    <div class="mov-skeleton" *ngIf="movLoading()">
+      <div class="mov-skel-row" *ngFor="let i of [1,2,3,4,5]">
+        <div class="mov-skel-qty"></div>
+        <div class="mov-skel-badge"></div>
+        <div class="mov-skel-date"></div>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div class="inv-error" *ngIf="movError()">{{ movError() }}</div>
+
+    <!-- Empty -->
+    <div class="mov-empty" *ngIf="!movLoading() && !movError() && movements().length === 0">
+      Sin movimientos para este filtro.
+    </div>
+
+    <!-- List -->
+    <div class="mov-list" *ngIf="!movLoading() && movements().length">
+      <div class="mov-row" *ngFor="let m of movements()">
+        <span class="mov-qty" [class.mov-pos]="m.quantity > 0" [class.mov-neg]="m.quantity < 0">
+          {{ m.quantity > 0 ? '+' : '' }}{{ m.quantity }}
+        </span>
+        <span class="mov-badge" [ngClass]="movReasonClass(m.reason)">{{ movReasonLabel(m.reason) }}</span>
+        <span class="mov-date">{{ m.createdAt | date:'dd/MM/yy, HH:mm' }}</span>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="mov-footer" *ngIf="!movLoading()">
+      <span class="mov-total-txt">
+        {{ movTotalItems() }} movimiento{{ movTotalItems() !== 1 ? 's' : '' }}
+        <ng-container *ngIf="movTotalPages() > 1">
+          · pág. {{ movPage() + 1 }} / {{ movTotalPages() }}
+        </ng-container>
+      </span>
+      <div class="mov-page-btns" *ngIf="movTotalPages() > 1">
+        <button class="btn-action" [disabled]="movIsFirst()" (click)="movPrev()">← Ant.</button>
+        <button class="btn-action" [disabled]="movIsLast()"  (click)="movNext()">Sig. →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <div class="sp-header">
   <div>
     <h1 class="sp-title">Mis Productos</h1>
@@ -47,6 +156,18 @@
   <p>Aún no tienes productos. <a routerLink="../products/create">Crea tu primer producto</a>.</p>
 </div>
 
+<div class="sp-status-guide" *ngIf="(products$ | async)?.length">
+  <span class="sp-guide-label">Flujo de publicación:</span>
+  <span class="sp-badge status-draft">Borrador</span>
+  <span class="sp-guide-arrow">→ Publicar →</span>
+  <span class="sp-badge status-active">Activo</span>
+  <span class="sp-guide-arrow">→ Desactivar →</span>
+  <span class="sp-badge status-inactive">Inactivo</span>
+  <span class="sp-guide-arrow">→ Activar →</span>
+  <span class="sp-badge status-active">Activo</span>
+  <span class="sp-guide-hint">· Haz clic en una fila para ver y gestionar sus variantes</span>
+</div>
+
 <div class="sp-table-wrap" *ngIf="(products$ | async)?.length">
   <table class="sp-table">
     <thead>
@@ -68,17 +189,24 @@
               <img *ngIf="p.images?.length" [src]="p.images[0].url" alt="" class="sp-thumb" />
               <div *ngIf="!p.images?.length" class="sp-thumb-placeholder">📦</div>
               <div>
-                <strong class="sp-product-name">
-                  {{ p.title }}
-                  <span class="sp-expand-icon">{{ expandedId() === p.id ? '▲' : '▼' }}</span>
-                </strong>
+                <strong class="sp-product-name">{{ p.title }}</strong>
                 <span class="sp-product-brand">{{ p.brand }}<span *ngIf="p.line"> · {{ p.line }}</span></span>
               </div>
             </div>
           </td>
           <td>{{ p.category }}</td>
           <td><span class="sp-badge" [ngClass]="statusClass(p.status)">{{ statusLabel(p.status) }}</span></td>
-          <td>{{ p.variants.length }} variante(s)</td>
+          <td>
+            <button class="sp-expand-btn" [class.sp-expand-btn-open]="expandedId() === p.id">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                   stroke-linecap="round" stroke-linejoin="round"
+                   [style.transform]="expandedId() === p.id ? 'rotate(180deg)' : 'rotate(0)'"
+                   style="transition: transform .18s">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+              {{ p.variants.length }} variante{{ p.variants.length !== 1 ? 's' : '' }}
+            </button>
+          </td>
           <td>{{ minPrice(p.variants) | currency:'USD':'symbol':'1.2-2' }}</td>
           <td>{{ p.createdAt | date:'dd/MM/yy' }}</td>
           <td>
@@ -104,6 +232,7 @@
                     <th>Precio</th>
                     <th>Precio tachado</th>
                     <th>Stock</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -117,6 +246,12 @@
                     <td>{{ v.price | currency:'USD':'symbol':'1.2-2' }}</td>
                     <td>{{ v.compareAtPrice ? (v.compareAtPrice | currency:'USD':'symbol':'1.2-2') : '—' }}</td>
                     <td [class.sp-stock-warn]="v.stock === 0">{{ v.stock }}</td>
+                    <td>
+                      <div class="sp-actions">
+                        <button class="btn-action btn-inv"   (click)="openInvModal(p, v, $event)">Ajustar</button>
+                        <button class="btn-action btn-hist"  (click)="openMovements(p, v, $event)">Historial</button>
+                      </div>
+                    </td>
                   </tr>
                 </tbody>
               </table>

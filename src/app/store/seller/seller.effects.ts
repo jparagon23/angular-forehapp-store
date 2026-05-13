@@ -4,6 +4,8 @@ import { catchError, map, switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { SellerProductService } from '../../core/services/seller-product.service';
 import {
+  adjustSellerInventory,
+  adjustSellerInventorySuccess,
   changeSellerProductStatus,
   changeSellerProductStatusSuccess,
   deleteSellerProduct,
@@ -51,6 +53,20 @@ export class SellerEffects {
           catchError(err => of(sellerActionFailure({ error: err.message ?? 'Error al cambiar estado' })))
         );
       })
+    )
+  );
+
+  adjustInventory$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(adjustSellerInventory),
+      switchMap(({ productId, variantId, quantity, reason }) =>
+        this.service.updateInventory(productId, variantId, { quantity, reason }).pipe(
+          map(() => adjustSellerInventorySuccess({ productId, variantId, quantity })),
+          catchError(err => of(sellerActionFailure({
+            error: err.error?.message ?? err.message ?? 'Error al ajustar inventario',
+          })))
+        )
+      )
     )
   );
 }

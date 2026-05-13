@@ -31,13 +31,49 @@
         class="nb-search-input"
         type="text"
         placeholder="Busca raquetas, zapatillas, ropa..."
-        (keydown.enter)="onSearch(searchRef.value)"
+        autocomplete="off"
+        [value]="searchQuery()"
+        (input)="onInput(searchRef.value)"
+        (keydown)="onKeyDown($event, searchRef)"
+        (blur)="onBlur()"
       />
-      <button class="nb-search-btn" (click)="onSearch(searchRef.value)" aria-label="Buscar">
+      <button class="nb-search-btn" (click)="runSearch(searchRef.value)" aria-label="Buscar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
       </button>
+
+      <!-- Autocomplete dropdown -->
+      <div class="nb-drop" [class.nb-drop-open]="dropOpen()">
+
+        <div class="nb-drop-loading" *ngIf="searching()">
+          Buscando<span class="nb-dots">...</span>
+        </div>
+
+        <ng-container *ngIf="!searching()">
+          <div
+            class="nb-drop-item"
+            *ngFor="let p of suggestions(); let i = index"
+            [class.nb-drop-item-hl]="highlightIdx() === i"
+            (mousedown)="$event.preventDefault()"
+            (click)="selectSuggestion(p)">
+            <span class="nb-drop-emoji">{{ p.emoji }}</span>
+            <div class="nb-drop-info">
+              <span class="nb-drop-name">{{ p.name }}</span>
+              <span class="nb-drop-brand">{{ p.brand }}</span>
+            </div>
+            <span class="nb-drop-price">{{ p.price | currencyCop }}</span>
+          </div>
+
+          <div class="nb-drop-all"
+               *ngIf="suggestions().length"
+               (mousedown)="$event.preventDefault()"
+               (click)="runSearch(searchRef.value)">
+            Ver todos los resultados para <strong>"{{ searchQuery() }}"</strong> →
+          </div>
+        </ng-container>
+
+      </div>
     </div>
 
     <!-- Account -->

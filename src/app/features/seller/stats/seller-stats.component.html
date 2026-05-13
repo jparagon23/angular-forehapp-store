@@ -1,0 +1,96 @@
+<div class="ss-header">
+  <h1 class="ss-title">Estadísticas</h1>
+  <p class="ss-sub">Resumen de tu actividad este mes</p>
+</div>
+
+<!-- KPI cards -->
+<div class="ss-kpis">
+
+  <div class="ss-kpi">
+    <div class="ss-kpi-top">
+      <span class="ss-kpi-icon">💰</span>
+      <span class="ss-kpi-badge ss-up">+18%</span>
+    </div>
+    <div class="ss-kpi-val">{{ revenue | currencyCop }}</div>
+    <div class="ss-kpi-label">Ingresos este mes</div>
+  </div>
+
+  <div class="ss-kpi">
+    <div class="ss-kpi-top">
+      <span class="ss-kpi-icon">📦</span>
+      <span class="ss-kpi-badge" [class.ss-up]="ordersDelta > 0" [class.ss-down]="ordersDelta < 0">
+        {{ ordersDelta > 0 ? '+' : '' }}{{ ordersDelta }} vs mes ant.
+      </span>
+    </div>
+    <div class="ss-kpi-val">{{ ordersMonth }}</div>
+    <div class="ss-kpi-label">Pedidos este mes</div>
+  </div>
+
+  <div class="ss-kpi">
+    <div class="ss-kpi-top">
+      <span class="ss-kpi-icon">🏷️</span>
+    </div>
+    <div class="ss-kpi-val">
+      <ng-container *ngIf="!(loading$ | async); else kpiLoad">
+        {{ activeProducts() }}
+        <span class="ss-kpi-of">/ {{ totalProducts() }}</span>
+      </ng-container>
+      <ng-template #kpiLoad><span class="ss-skel ss-skel-val"></span></ng-template>
+    </div>
+    <div class="ss-kpi-label">Productos activos</div>
+  </div>
+
+  <div class="ss-kpi" [class.ss-kpi-warn]="outOfStock() > 0 || lowStockVariants() > 0">
+    <div class="ss-kpi-top">
+      <span class="ss-kpi-icon">⚠️</span>
+    </div>
+    <div class="ss-kpi-val">
+      <ng-container *ngIf="!(loading$ | async); else kpiLoad2">
+        {{ outOfStock() + lowStockVariants() }}
+      </ng-container>
+      <ng-template #kpiLoad2><span class="ss-skel ss-skel-val"></span></ng-template>
+    </div>
+    <div class="ss-kpi-label">
+      Variantes con stock bajo
+      <span *ngIf="outOfStock() > 0" class="ss-kpi-detail">· {{ outOfStock() }} agotado(s)</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- Top products -->
+<div class="ss-section">
+  <h2 class="ss-section-title">Productos más vendidos</h2>
+  <div class="ss-top-list">
+    <div class="ss-top-row" *ngFor="let p of topProducts; let i = index">
+      <span class="ss-top-rank">{{ i + 1 }}</span>
+      <div class="ss-top-info">
+        <span class="ss-top-name">{{ p.name }}</span>
+        <div class="ss-bar-wrap">
+          <div class="ss-bar" [style.width.%]="p.pct"></div>
+        </div>
+      </div>
+      <span class="ss-top-sold">{{ p.sold }} vendido{{ p.sold !== 1 ? 's' : '' }}</span>
+      <span class="ss-top-rev">{{ p.revenue | currencyCop }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- Quick actions -->
+<div class="ss-section">
+  <h2 class="ss-section-title">Acciones rápidas</h2>
+  <div class="ss-actions">
+    <a routerLink="/seller/products/create" class="ss-action-card">
+      <span class="ss-action-icon">➕</span>
+      <span class="ss-action-label">Crear producto</span>
+    </a>
+    <a routerLink="/seller/products" class="ss-action-card">
+      <span class="ss-action-icon">📋</span>
+      <span class="ss-action-label">Ver catálogo</span>
+    </a>
+    <a routerLink="/seller/orders" class="ss-action-card">
+      <span class="ss-action-icon">📦</span>
+      <span class="ss-action-label">Ver pedidos</span>
+    </a>
+  </div>
+</div>

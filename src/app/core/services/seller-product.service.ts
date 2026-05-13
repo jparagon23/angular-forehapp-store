@@ -5,7 +5,8 @@ import { environment } from '../../../environments/environment';
 import {
   Brand, BrandLine, Category, CategoryAttribute,
   CreateProductRequest, CreateVariantRequest,
-  InventoryRequest, ProductImage, ProductVariant, SellerProduct,
+  InventoryRequest, MovementReason, MovementsPage,
+  ProductImage, ProductVariant, SellerProduct,
 } from '../models/seller-product.model';
 
 @Injectable({ providedIn: 'root' })
@@ -86,7 +87,28 @@ export class SellerProductService {
 
   updateInventory(productId: number, variantId: number, req: InventoryRequest): Observable<void> {
     return this.http.post<void>(
-      `${this.BASE}/products/${productId}/variants/${variantId}/inventory`, req
+      `${this.BASE}/inventory/products/${productId}/variants/${variantId}`, req
+    );
+  }
+
+  adminAdjustInventory(productId: number, variantId: number, req: InventoryRequest): Observable<void> {
+    return this.http.post<void>(
+      `${this.BASE}/admin/inventory/products/${productId}/variants/${variantId}`, req
+    );
+  }
+
+  getInventoryMovements(
+    productId: number,
+    variantId: number,
+    opts: { page?: number; size?: number; reason?: MovementReason } = {}
+  ): Observable<MovementsPage> {
+    const params: Record<string, string> = {};
+    if (opts.page  !== undefined) params['page']   = String(opts.page);
+    if (opts.size  !== undefined) params['size']   = String(opts.size);
+    if (opts.reason)              params['reason'] = opts.reason;
+    return this.http.get<MovementsPage>(
+      `${this.BASE}/inventory/products/${productId}/variants/${variantId}/movements`,
+      { params }
     );
   }
 }

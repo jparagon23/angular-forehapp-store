@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store';
-import { SellerProduct } from '../../core/models/seller-product.model';
+import { InventoryRequest, SellerProduct } from '../../core/models/seller-product.model';
 
 export const loadSellerProducts = createAction('[Seller] Load Products');
 export const loadSellerProductsSuccess = createAction(
@@ -23,4 +23,13 @@ export const changeSellerProductStatusSuccess = createAction(
 );
 export const sellerActionFailure = createAction(
   '[Seller] Action Failure', props<{ error: string }>()
+);
+
+export const adjustSellerInventory = createAction(
+  '[Seller] Adjust Inventory',
+  props<{ productId: number; variantId: number; quantity: number; reason: InventoryRequest['reason'] }>()
+);
+export const adjustSellerInventorySuccess = createAction(
+  '[Seller] Adjust Inventory Success',
+  props<{ productId: number; variantId: number; quantity: number }>()
 );

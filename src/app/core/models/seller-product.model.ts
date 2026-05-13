@@ -64,3 +64,22 @@ export interface InventoryRequest {
   quantity: number;
   reason: 'RESTOCK' | 'RETURN' | 'ADJUSTMENT';
 }
+
+export type MovementReason = 'RESTOCK' | 'RETURN' | 'ADJUSTMENT' | 'SALE';
+
+export interface InventoryMovement {
+  id: number;
+  quantity: number;
+  reason: MovementReason;
+  createdAt: string;
+}
+
+export interface MovementsPage {
+  content: InventoryMovement[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+  first: boolean;
+  last: boolean;
+}

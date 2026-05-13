@@ -105,6 +105,29 @@
   tr:hover td { background: #fafafa; }
 }
 
+// Status guide bar
+.sp-status-guide {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  background: #f7fbf7; border: 1px solid #d8edd8;
+  border-radius: 10px; padding: 10px 16px; margin-bottom: 14px;
+  font-size: .8rem;
+}
+.sp-guide-label { font-weight: 700; color: #555; margin-right: 2px; }
+.sp-guide-arrow { color: #aaa; font-size: .75rem; }
+.sp-guide-hint  { color: #aaa; margin-left: 6px; font-style: italic; }
+
+// Expand button in "Variantes" column
+.sp-expand-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: none; border: 1px solid #e0e0e0; border-radius: 6px;
+  padding: 4px 10px; font-size: .8rem; color: #666;
+  cursor: pointer; white-space: nowrap;
+  transition: background .12s, color .12s, border-color .12s;
+
+  &:hover { background: #f0f0f0; border-color: #bbb; color: #222; }
+  &.sp-expand-btn-open { border-color: #4caf50; color: #2e7d32; background: #f0faf0; }
+}
+
 .sp-product-cell {
   display: flex;
   align-items: center;
@@ -201,6 +224,130 @@
 
 .sp-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 
+// Inventory modal
+.inv-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45); z-index: 300;
+  align-items: center; justify-content: center;
+  &.inv-open { display: flex; }
+}
+
+.inv-modal {
+  background: #fff; border-radius: 16px; padding: 28px;
+  width: 420px; max-width: 95vw;
+  animation: invPop .18s ease;
+}
+
+@keyframes invPop {
+  from { transform: scale(.94); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.inv-title { font-size: 1.05rem; font-weight: 800; color: #1a1a2e; margin: 0 0 14px; }
+
+.inv-meta {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 20px; padding: 10px 14px;
+  background: #f7fbf7; border-radius: 8px;
+}
+.inv-sku        { font-family: monospace; font-size: .85rem; color: #555; }
+.inv-stock-info { font-size: .85rem; color: #666; margin-left: auto; }
+
+.inv-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.inv-field {
+  display: flex; flex-direction: column; gap: 5px;
+  label { font-size: .78rem; font-weight: 600; color: #888; }
+  input, select {
+    border: 1px solid #ddd; border-radius: 8px;
+    padding: 8px 10px; font-size: .9rem; outline: none;
+    transition: border-color .2s;
+    &:focus { border-color: #4caf50; }
+  }
+}
+
+.inv-hint  { font-size: .8rem; color: #888; margin-top: 10px; }
+.inv-error { font-size: .82rem; color: #c62828; background: #fdecea; border-radius: 6px; padding: 8px 10px; margin-top: 10px; }
+
+.inv-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+// ── Movements history modal
+.mov-modal {
+  background: #fff; border-radius: 16px; padding: 24px 28px;
+  width: 560px; max-width: 96vw; max-height: 88vh;
+  display: flex; flex-direction: column; gap: 0;
+  animation: invPop .18s ease;
+}
+
+.mov-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.mov-sku    { font-size: .8rem; color: #888; margin-top: 3px; code { font-size: .82rem; color: #555; } }
+.mov-close  {
+  background: none; border: none; font-size: 1.1rem; color: #aaa;
+  cursor: pointer; padding: 2px 6px; line-height: 1;
+  &:hover { color: #555; }
+}
+
+.mov-filters {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.mov-pill {
+  padding: 4px 13px; border-radius: 20px; border: 1px solid #ddd;
+  font-size: .78rem; font-weight: 600; cursor: pointer; background: #fff; color: #666;
+  transition: all .12s;
+  &:hover { border-color: #4caf50; color: #4caf50; }
+  &.mov-pill-on { background: #4caf50; border-color: #4caf50; color: #fff; }
+}
+
+// Skeleton
+.mov-skeleton { display: flex; flex-direction: column; gap: 10px; }
+.mov-skel-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid #f5f5f5;
+}
+.mov-skel-qty   { @extend %skel-base; height: 22px; width: 48px; border-radius: 6px; }
+.mov-skel-badge { @extend %skel-base; height: 20px; width: 80px; border-radius: 20px; }
+.mov-skel-date  { @extend %skel-base; height: 14px; width: 120px; border-radius: 4px; margin-left: auto; }
+
+// List
+.mov-list { flex: 1; overflow-y: auto; max-height: 360px; }
+.mov-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 4px; border-bottom: 1px solid #f5f5f5;
+  &:last-child { border-bottom: none; }
+}
+
+.mov-qty {
+  font-size: 1rem; font-weight: 800; min-width: 52px; text-align: right;
+  &.mov-pos { color: #2e7d32; }
+  &.mov-neg { color: #c62828; }
+}
+
+.mov-badge {
+  display: inline-block; padding: 3px 10px; border-radius: 20px;
+  font-size: .73rem; font-weight: 700; flex-shrink: 0;
+  &.mov-restock    { background: #e8f5e9; color: #2e7d32; }
+  &.mov-return     { background: #e3f2fd; color: #1565c0; }
+  &.mov-adj        { background: #fff8e1; color: #f57f17; }
+  &.mov-sale       { background: #fce4ec; color: #c62828; }
+}
+
+.mov-date  { font-size: .8rem; color: #999; margin-left: auto; white-space: nowrap; }
+
+.mov-empty { text-align: center; padding: 40px 0; color: #bbb; font-size: .9rem; }
+
+.mov-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 14px; margin-top: 4px; border-top: 1px solid #f0f0f0;
+  flex-wrap: wrap; gap: 8px;
+}
+.mov-total-txt { font-size: .8rem; color: #999; }
+.mov-page-btns { display: flex; gap: 6px; }
+
 .btn-action {
   padding: 5px 10px;
   border-radius: 6px;
@@ -214,4 +361,6 @@
   &.btn-deactivate { background: #ff9800; color: #fff; }
   &.btn-activate   { background: #1976d2; color: #fff; }
   &.btn-delete     { background: #f44336; color: #fff; }
+  &.btn-inv        { background: #e3f2fd; color: #1565c0; }
+  &.btn-hist       { background: #f3e5f5; color: #7b1fa2; }
 }

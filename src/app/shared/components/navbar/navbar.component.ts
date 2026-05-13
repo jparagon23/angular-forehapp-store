@@ -1,28 +1,34 @@
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { Router, RouterLink, NavigationEnd } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { AsyncPipe, NgFor, NgIf, UpperCasePipe } from '@angular/common';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { filter, map, startWith, take } from 'rxjs';
+import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject } from 'rxjs';
+import { filter, map, startWith, take, debounceTime, distinctUntilChanged, switchMap, catchError, of } from 'rxjs';
 import { selectCartCount } from '../../../store/cart/cart.selectors';
 import { openCart } from '../../../store/cart/cart.actions';
 import { selectIsLoggedIn, selectAuthUser, selectUserRole } from '../../../store/auth/auth.selectors';
 import { logout } from '../../../store/auth/auth.actions';
 import { TokenStore } from '../../../core/services/token-store.service';
+import { ProductService } from '../../../core/services/product.service';
+import { Product } from '../../../core/models/product.model';
+import { CurrencyCopPipe } from '../../pipes/currency-cop.pipe';
 
 const CATEGORIES = ['Raquetas', 'Zapatillas', 'Ropa', 'Pelotas', 'Accesorios'];
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink, AsyncPipe, NgFor, NgIf, UpperCasePipe],
+  imports: [RouterLink, AsyncPipe, NgFor, NgIf, UpperCasePipe, CurrencyCopPipe],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.scss',
 })
 export class NavbarComponent {
-  private store      = inject(Store);
-  private router     = inject(Router);
-  private tokenStore = inject(TokenStore);
+  private store          = inject(Store);
+  private router         = inject(Router);
+  private tokenStore     = inject(TokenStore);
+  private productService = inject(ProductService);
+  private destroyRef     = inject(DestroyRef);
 
   accountOpen = false;
 
@@ -41,7 +47,89 @@ export class NavbarComponent {
     { initialValue: null }
   );
 
+  // Autocomplete state
+  private searchSubject = new Subject<string>();
+  searchQuery  = signal('');
+  suggestions  = signal<Product[]>([]);
+  searching    = signal(false);
+  dropOpen     = signal(false);
+  highlightIdx = signal(-1);
+
+  constructor() {
+    this.searchSubject.pipe(
+      debounceTime(280),
+      distinctUntilChanged(),
+      switchMap(q => {
+        this.searching.set(true);
+        return this.productService.getProducts({ search: q }).pipe(
+          map(products => products.slice(0, 7)),
+          catchError(() => of([] as Product[]))
+        );
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(products => {
+      this.searching.set(false);
+      this.suggestions.set(products);
+      this.dropOpen.set(products.length > 0);
+      this.highlightIdx.set(-1);
+    });
+  }
+
+  onInput(val: string) {
+    this.searchQuery.set(val);
+    if (val.trim().length >= 2) {
+      this.searching.set(true);
+      this.searchSubject.next(val.trim());
+    } else {
+      this.searching.set(false);
+      this.suggestions.set([]);
+      this.dropOpen.set(false);
+    }
+  }
+
+  onKeyDown(e: KeyboardEvent, input: HTMLInputElement) {
+    const items = this.suggestions();
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      this.highlightIdx.update(i => Math.min(i + 1, items.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      this.highlightIdx.update(i => Math.max(i - 1, -1));
+    } else if (e.key === 'Enter') {
+      const hi = this.highlightIdx();
+      if (hi >= 0 && hi < items.length) {
+        this.selectSuggestion(items[hi]);
+      } else {
+        this.runSearch(input.value);
+      }
+    } else if (e.key === 'Escape') {
+      this.closeDrop();
+      input.blur();
+    }
+  }
+
+  onBlur() {
+    setTimeout(() => this.closeDrop(), 160);
+  }
+
+  selectSuggestion(p: Product) {
+    this.searchQuery.set('');
+    this.closeDrop();
+    this.router.navigate(['/product', p.id]);
+  }
+
+  runSearch(val: string) {
+    this.closeDrop();
+    this.onSearch(val);
+  }
+
+  private closeDrop() {
+    this.dropOpen.set(false);
+    this.highlightIdx.set(-1);
+  }
+
   openCart() { this.store.dispatch(openCart()); }
+
   logOut() {
     this.tokenStore.clearTokens();
     this.store.dispatch(logout());

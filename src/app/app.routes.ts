@@ -43,7 +43,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/seller/seller.component').then(m => m.SellerComponent),
     canActivate: [sellerGuard],
     children: [
-      { path: '', redirectTo: 'products', pathMatch: 'full' },
+      { path: '', redirectTo: 'stats', pathMatch: 'full' },
+      {
+        path: 'stats',
+        loadComponent: () => import('./features/seller/stats/seller-stats.component').then(m => m.SellerStatsComponent),
+        canActivate: [sellerGuard],
+      },
       {
         path: 'products',
         loadComponent: () => import('./features/seller/products/seller-products.component').then(m => m.SellerProductsComponent),
@@ -52,6 +57,11 @@ export const routes: Routes = [
       {
         path: 'products/create',
         loadComponent: () => import('./features/seller/products/create/product-create.component').then(m => m.ProductCreateComponent),
+        canActivate: [sellerGuard],
+      },
+      {
+        path: 'orders',
+        loadComponent: () => import('./features/seller/orders/seller-orders.component').then(m => m.SellerOrdersComponent),
         canActivate: [sellerGuard],
       },
     ],

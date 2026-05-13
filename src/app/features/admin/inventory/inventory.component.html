@@ -1,47 +1,195 @@
 <app-admin-topbar title="Inventario"></app-admin-topbar>
 
 <div class="content">
-  <div class="alert alert-warn" *ngIf="(lowStock$ | async)?.length">
-    ⚠️ Productos con stock bajo (≤5 unidades). Revisa el listado a continuación.
-  </div>
-
   <div class="table-card">
     <div class="table-header"><h3>Control de inventario</h3></div>
     <table>
       <thead>
-        <tr><th>Producto</th><th>Categoría</th><th>Stock actual</th><th>Estado</th><th>Ajustar</th></tr>
+        <tr>
+          <th>Producto</th>
+          <th>Categoría</th>
+          <th>Variantes</th>
+          <th>Acciones</th>
+        </tr>
       </thead>
       <tbody>
         <tr *ngFor="let p of products$ | async">
-          <td><span>{{ p.emoji }}</span> <strong>{{ p.name }}</strong></td>
+          <td>
+            <strong>{{ p.emoji }} {{ p.name }}</strong><br>
+            <span style="font-size:.8rem;color:#888">{{ p.brand }}</span>
+          </td>
           <td>{{ p.cat }}</td>
-          <td style="font-size:1.1rem;font-weight:700">{{ p.stock }}</td>
-          <td><span class="stock-badge" [class]="stockClass(p.stock)">{{ p.stock === 0 ? '⛔ Sin stock' : p.stock <= 5 ? '⚠️ Bajo' : '✅ OK' }}</span></td>
-          <td><button class="btn btn-green btn-sm" (click)="openModal(p)">Ajustar stock</button></td>
+          <td style="font-weight:700">{{ p.stock }}</td>
+          <td>
+            <div class="action-btns">
+              <button class="btn btn-green btn-sm"   (click)="openModal(p)">Ajustar</button>
+              <button class="btn btn-purple btn-sm"  (click)="openMovements(p)">Historial</button>
+            </div>
+          </td>
         </tr>
       </tbody>
     </table>
   </div>
 </div>
 
+<!-- ── Adjustment Modal ─────────────────────────────────────── -->
 <div class="modal-overlay" [class.open]="modalOpen()">
-  <div class="modal" style="max-width:360px">
+  <div class="modal" style="max-width:460px">
     <h2>Ajustar inventario</h2>
     <div style="margin-bottom:18px">
-      <div style="font-weight:700">{{ adjustingProduct()?.emoji }} {{ adjustingProduct()?.name }}</div>
-      <div style="color:var(--muted);font-size:.85rem;margin-top:4px">Stock actual: {{ adjustingProduct()?.stock }} unidades</div>
+      <strong>{{ adjustingProduct()?.emoji }} {{ adjustingProduct()?.name }}</strong>
     </div>
-    <div class="form-group">
-      <label>Nuevo stock</label>
-      <input type="number" [ngModel]="newStock()" (ngModelChange)="newStock.set($event)" min="0" />
+
+    <div *ngIf="modalLoading()" style="text-align:center;padding:20px;color:#888">
+      Cargando variantes…
     </div>
-    <div class="form-group" style="margin-top:12px">
-      <label>Motivo del ajuste</label>
-      <select><option *ngFor="let r of reasons">{{ r }}</option></select>
+
+    <div *ngIf="!modalLoading() && !modalVariants().length && !adminError()"
+         style="color:#aaa;font-size:.9rem;padding:12px 0">
+      Este producto no tiene variantes registradas.
     </div>
+
+    <ng-container *ngIf="!modalLoading() && modalVariants().length">
+      <div class="form-group" style="margin-bottom:14px">
+        <label>Variante</label>
+        <select [ngModel]="selectedVarId()" (ngModelChange)="selectedVarId.set(+$event)">
+          <option *ngFor="let v of modalVariants()" [value]="v.id">
+            {{ v.sku }} — Stock: {{ v.stock }} uds.
+          </option>
+        </select>
+      </div>
+      <div style="font-size:.83rem;color:#888;margin-bottom:16px">
+        Stock actual: <strong>{{ currentVariantStock() }}</strong> uds.
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Cantidad</label>
+          <input type="number" [ngModel]="adminQty()" (ngModelChange)="adminQty.set($event)"
+                 placeholder="Ej: 10 o -3" />
+        </div>
+        <div class="form-group">
+          <label>Motivo</label>
+          <select [ngModel]="adminReason()" (ngModelChange)="adminReason.set($event)">
+            <option value="RESTOCK">Reposición</option>
+            <option value="RETURN">Devolución</option>
+            <option value="ADJUSTMENT">Ajuste manual</option>
+          </select>
+        </div>
+      </div>
+
+      <div *ngIf="adminReason() === 'ADJUSTMENT'" style="font-size:.8rem;color:#888;margin-top:10px">
+        💡 Para reducir stock ingresa una cantidad negativa (ej: -3)
+      </div>
+
+      <div class="alert alert-warn" *ngIf="adminError()" style="margin-top:14px">⚠️ {{ adminError() }}</div>
+      <div class="alert" *ngIf="adminSuccess()"
+           style="background:#d4edda;color:#276749;border:1px solid #c3e6cb;margin-top:14px">
+        ✅ {{ adminSuccess() }}
+      </div>
+    </ng-container>
+
     <div class="modal-actions">
-      <button class="btn btn-outline" (click)="modalOpen.set(false)">Cancelar</button>
-      <button class="btn btn-green" (click)="apply()">Actualizar stock</button>
+      <button class="btn btn-outline" (click)="modalOpen.set(false)">Cerrar</button>
+      <button class="btn btn-green"
+              *ngIf="!modalLoading() && modalVariants().length"
+              [disabled]="!adminQty()"
+              (click)="apply()">
+        Aplicar ajuste
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Movements Modal ──────────────────────────────────────── -->
+<div class="modal-overlay" [class.open]="movOpen()">
+  <div class="modal mov-modal">
+
+    <div class="mov-modal-head">
+      <div>
+        <h2>Historial de movimientos</h2>
+        <div class="mov-product-name">{{ movProduct()?.emoji }} {{ movProduct()?.name }}</div>
+      </div>
+      <button class="mov-close-btn" (click)="closeMovements()">✕</button>
+    </div>
+
+    <!-- Variant selector -->
+    <div *ngIf="movVarLoading()" class="mov-var-loading">Cargando variantes…</div>
+
+    <ng-container *ngIf="!movVarLoading() && movVariants().length">
+      <div class="form-group mov-var-select">
+        <label>Variante</label>
+        <select [ngModel]="movSelectedId()" (ngModelChange)="onMovVariantChange(+$event)">
+          <option *ngFor="let v of movVariants()" [value]="v.id">
+            {{ v.sku }} — Stock: {{ v.stock }} uds.
+          </option>
+        </select>
+      </div>
+
+      <!-- Filter pills -->
+      <div class="mov-filters">
+        <button class="mov-pill" [class.mov-pill-on]="movReasonFilter() === null"
+                (click)="setMovFilter(null)">Todos</button>
+        <button class="mov-pill" [class.mov-pill-on]="movReasonFilter() === 'RESTOCK'"
+                (click)="setMovFilter('RESTOCK')">Reposición</button>
+        <button class="mov-pill" [class.mov-pill-on]="movReasonFilter() === 'RETURN'"
+                (click)="setMovFilter('RETURN')">Devolución</button>
+        <button class="mov-pill" [class.mov-pill-on]="movReasonFilter() === 'ADJUSTMENT'"
+                (click)="setMovFilter('ADJUSTMENT')">Ajuste</button>
+        <button class="mov-pill" [class.mov-pill-on]="movReasonFilter() === 'SALE'"
+                (click)="setMovFilter('SALE')">Venta</button>
+      </div>
+
+      <!-- Skeleton -->
+      <div class="mov-skeleton" *ngIf="movLoading()">
+        <div class="mov-skel-row" *ngFor="let i of [1,2,3,4,5]">
+          <div class="mov-skel-qty"></div>
+          <div class="mov-skel-badge"></div>
+          <div class="mov-skel-date"></div>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div class="alert alert-warn" *ngIf="movError()" style="margin-top:8px">⚠️ {{ movError() }}</div>
+
+      <!-- Empty -->
+      <div class="mov-empty" *ngIf="!movLoading() && !movError() && movements().length === 0">
+        Sin movimientos para este filtro.
+      </div>
+
+      <!-- List -->
+      <div class="mov-list" *ngIf="!movLoading() && movements().length">
+        <div class="mov-row" *ngFor="let m of movements()">
+          <span class="mov-qty" [class.mov-pos]="m.quantity > 0" [class.mov-neg]="m.quantity < 0">
+            {{ m.quantity > 0 ? '+' : '' }}{{ m.quantity }}
+          </span>
+          <span class="mov-badge" [ngClass]="movReasonClass(m.reason)">{{ movReasonLabel(m.reason) }}</span>
+          <span class="mov-date">{{ m.createdAt | date:'dd/MM/yy, HH:mm' }}</span>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="mov-footer" *ngIf="!movLoading()">
+        <span class="mov-total-txt">
+          {{ movTotalItems() }} movimiento{{ movTotalItems() !== 1 ? 's' : '' }}
+          <ng-container *ngIf="movTotalPages() > 1">
+            · pág. {{ movPage() + 1 }} / {{ movTotalPages() }}
+          </ng-container>
+        </span>
+        <div class="action-btns" *ngIf="movTotalPages() > 1">
+          <button class="btn btn-outline btn-sm" [disabled]="movIsFirst()" (click)="movPrev()">← Ant.</button>
+          <button class="btn btn-outline btn-sm" [disabled]="movIsLast()"  (click)="movNext()">Sig. →</button>
+        </div>
+      </div>
+    </ng-container>
+
+    <div *ngIf="!movVarLoading() && !movVariants().length && !movError()"
+         style="color:#aaa;font-size:.9rem;padding:20px 0">
+      Este producto no tiene variantes registradas.
+    </div>
+
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="btn btn-outline" (click)="closeMovements()">Cerrar</button>
     </div>
   </div>
 </div>

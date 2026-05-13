@@ -1,6 +1,8 @@
 import { createReducer, on } from '@ngrx/store';
 import { SellerProduct } from '../../core/models/seller-product.model';
 import {
+  adjustSellerInventory,
+  adjustSellerInventorySuccess,
   changeSellerProductStatusSuccess,
   deleteSellerProductSuccess,
   loadSellerProducts,
@@ -12,10 +14,11 @@ import {
 export interface SellerState {
   products: SellerProduct[];
   loading: boolean;
+  inventoryLoading: boolean;
   error: string | null;
 }
 
-const initialState: SellerState = { products: [], loading: false, error: null };
+const initialState: SellerState = { products: [], loading: false, inventoryLoading: false, error: null };
 
 export const sellerReducer = createReducer(
   initialState,
@@ -29,5 +32,17 @@ export const sellerReducer = createReducer(
     ...state,
     products: state.products.map(p => p.id === product.id ? product : p),
   })),
-  on(sellerActionFailure, (state, { error }) => ({ ...state, error, loading: false })),
+  on(adjustSellerInventory, state => ({ ...state, inventoryLoading: true, error: null })),
+  on(adjustSellerInventorySuccess, (state, { productId, variantId, quantity }) => ({
+    ...state,
+    inventoryLoading: false,
+    products: state.products.map(p =>
+      p.id === productId
+        ? { ...p, variants: p.variants.map(v =>
+              v.id === variantId ? { ...v, stock: v.stock + quantity } : v
+            )}
+        : p
+    ),
+  })),
+  on(sellerActionFailure, (state, { error }) => ({ ...state, error, loading: false, inventoryLoading: false })),
 );

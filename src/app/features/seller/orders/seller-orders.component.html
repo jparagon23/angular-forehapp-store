@@ -1,0 +1,94 @@
+<div class="so-header">
+  <div>
+    <h1 class="so-title">Pedidos</h1>
+    <p class="so-sub">Revisa y gestiona los pedidos de tus clientes</p>
+  </div>
+</div>
+
+<!-- Filter pills -->
+<div class="so-filters">
+  <button class="so-pill" [class.so-pill-on]="activeFilter() === null"
+          (click)="activeFilter.set(null)">
+    Todos <span class="so-count">{{ counts().ALL }}</span>
+  </button>
+  <button class="so-pill so-pill-pending" [class.so-pill-on]="activeFilter() === 'PENDING'"
+          (click)="activeFilter.set('PENDING')">
+    Pendientes <span class="so-count">{{ counts().PENDING }}</span>
+  </button>
+  <button class="so-pill so-pill-shipped" [class.so-pill-on]="activeFilter() === 'SHIPPED'"
+          (click)="activeFilter.set('SHIPPED')">
+    Enviados <span class="so-count">{{ counts().SHIPPED }}</span>
+  </button>
+  <button class="so-pill so-pill-delivered" [class.so-pill-on]="activeFilter() === 'DELIVERED'"
+          (click)="activeFilter.set('DELIVERED')">
+    Entregados <span class="so-count">{{ counts().DELIVERED }}</span>
+  </button>
+  <button class="so-pill so-pill-cancelled" [class.so-pill-on]="activeFilter() === 'CANCELLED'"
+          (click)="activeFilter.set('CANCELLED')">
+    Cancelados <span class="so-count">{{ counts().CANCELLED }}</span>
+  </button>
+</div>
+
+<!-- Empty state -->
+<div class="so-empty" *ngIf="filtered().length === 0">
+  <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"
+       stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+    <line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
+  </svg>
+  <p>No hay pedidos en esta categoría.</p>
+</div>
+
+<!-- Orders list -->
+<div class="so-list" *ngIf="filtered().length">
+  <div class="so-card" *ngFor="let o of filtered()" [class.so-card-open]="expandedId() === o.id">
+
+    <!-- Card header (always visible) -->
+    <div class="so-card-head" (click)="toggleExpand(o.id)">
+      <div class="so-order-id">{{ o.id }}</div>
+      <div class="so-buyer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+        {{ o.buyer }}
+      </div>
+      <div class="so-date">{{ o.date | date:'dd MMM yyyy' }}</div>
+      <div class="so-items-count">{{ o.items.length }} ítem{{ o.items.length !== 1 ? 's' : '' }}</div>
+      <div class="so-total">{{ o.total | currencyCop }}</div>
+      <span class="so-badge" [ngClass]="statusClass(o.status)">{{ statusLabel(o.status) }}</span>
+      <div class="so-card-actions" (click)="$event.stopPropagation()">
+        <button *ngIf="o.status === 'PENDING'" class="so-btn so-btn-ship" (click)="markShipped(o.id, $event)">
+          Marcar enviado
+        </button>
+      </div>
+      <svg class="so-chevron" [class.so-chevron-open]="expandedId() === o.id"
+           width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    </div>
+
+    <!-- Expanded items -->
+    <div class="so-card-body" *ngIf="expandedId() === o.id">
+      <table class="so-items-table">
+        <thead>
+          <tr><th>SKU</th><th>Producto</th><th>Cantidad</th><th>Precio unit.</th><th>Subtotal</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of o.items">
+            <td class="so-sku">{{ item.sku }}</td>
+            <td>{{ item.name }}</td>
+            <td>{{ item.qty }}</td>
+            <td>{{ item.price | currencyCop }}</td>
+            <td><strong>{{ item.price * item.qty | currencyCop }}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="so-card-total">
+        Total del pedido: <strong>{{ o.total | currencyCop }}</strong>
+      </div>
+    </div>
+
+  </div>
+</div>
