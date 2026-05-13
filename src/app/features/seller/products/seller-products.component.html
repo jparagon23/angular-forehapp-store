@@ -6,7 +6,35 @@
   <a routerLink="../products/create" class="btn-create">+ Crear Producto</a>
 </div>
 
-<div class="sp-loading" *ngIf="loading$ | async">Cargando productos…</div>
+<div class="sp-skeleton-wrap" *ngIf="loading$ | async">
+  <table class="sp-table">
+    <thead>
+      <tr>
+        <th>Producto</th><th>Categoría</th><th>Estado</th>
+        <th>Variantes</th><th>Precio desde</th><th>Creado</th><th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let i of [1,2,3,4,5]" class="sp-skeleton-row">
+        <td>
+          <div class="sp-product-cell">
+            <div class="skel skel-thumb"></div>
+            <div>
+              <div class="skel skel-pname"></div>
+              <div class="skel skel-pbrand"></div>
+            </div>
+          </div>
+        </td>
+        <td><div class="skel skel-cat"></div></td>
+        <td><div class="skel skel-badge"></div></td>
+        <td><div class="skel skel-sm"></div></td>
+        <td><div class="skel skel-md"></div></td>
+        <td><div class="skel skel-sm"></div></td>
+        <td><div class="skel skel-action"></div></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
 <div class="sp-error" *ngIf="error$ | async as err">
   <strong>Error:</strong> {{ err }}

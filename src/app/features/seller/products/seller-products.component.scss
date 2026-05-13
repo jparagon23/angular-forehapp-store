@@ -24,7 +24,42 @@
   &:hover { background: #388e3c; }
 }
 
-.sp-loading { color: #888; font-size: .9rem; padding: 20px 0; }
+@keyframes shimmer {
+  from { background-position: -600px 0; }
+  to   { background-position:  600px 0; }
+}
+
+%skel-base {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
+  background-size: 1200px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 6px;
+}
+
+.sp-skeleton-wrap {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  overflow: hidden;
+}
+
+.sp-skeleton-row td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+.skel {
+  @extend %skel-base;
+  &.skel-thumb   { width: 44px; height: 44px; border-radius: 8px; flex-shrink: 0; }
+  &.skel-pname   { height: 13px; width: 140px; margin-bottom: 6px; }
+  &.skel-pbrand  { height: 11px; width: 80px; }
+  &.skel-cat     { height: 13px; width: 80px; }
+  &.skel-badge   { height: 20px; width: 62px; border-radius: 20px; }
+  &.skel-sm      { height: 13px; width: 50px; }
+  &.skel-md      { height: 13px; width: 80px; }
+  &.skel-action  { height: 28px; width: 72px; border-radius: 6px; }
+}
 .sp-error   { background: #fdecea; border: 1px solid #f5c6cb; border-radius: 8px; padding: 12px 16px; color: #c62828; font-size: .88rem; margin-bottom: 16px; }
 
 .sp-empty {

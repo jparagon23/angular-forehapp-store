@@ -127,6 +127,39 @@
 
 .loader { text-align: center; padding: 80px; color: var(--muted); font-size: 1.1rem; }
 
+@keyframes shimmer {
+  from { background-position: -600px 0; }
+  to   { background-position:  600px 0; }
+}
+
+%shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
+  background-size: 1200px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+.skeleton-card { pointer-events: none; cursor: default; }
+
+.skeleton-img {
+  @extend %shimmer;
+  width: 100%; height: 220px;
+}
+
+.skeleton-line {
+  @extend %shimmer;
+  border-radius: 6px;
+  &.skel-brand       { height: 11px; width: 55%; }
+  &.skel-name        { height: 17px; width: 85%; }
+  &.skel-desc        { height: 12px; width: 100%; }
+  &.skel-desc-short  { width: 68%; }
+  &.skel-price       { height: 22px; width: 42%; margin-top: 4px; }
+}
+
+.skeleton-btn {
+  @extend %shimmer;
+  height: 42px; border-radius: 10px; margin-top: 10px;
+}
+
 .site-footer {
   background: var(--dark); color: #aaa;
   text-align: center; padding: 26px; font-size: .85rem;
