@@ -44,6 +44,10 @@ export class OrderService {
     return this.http.patch<void>(`${this.base}/seller/order-groups/${groupId}/deliver`, {});
   }
 
+  cancelSellerGroup(groupId: number, reason: string): Observable<void> {
+    return this.http.patch<void>(`${this.base}/seller/order-groups/${groupId}/cancel`, { reason });
+  }
+
   // Admin panel (mock)
   getOrders(): Observable<Order[]> {
     return of(MOCK_ORDERS);

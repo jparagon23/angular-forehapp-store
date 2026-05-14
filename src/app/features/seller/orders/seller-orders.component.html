@@ -80,7 +80,7 @@
       <div class="so-card-actions" (click)="$event.stopPropagation()">
 
         <!-- PREPARING: mostrar botón o formulario inline de guía -->
-        <ng-container *ngIf="g.status === 'PREPARING'">
+        <ng-container *ngIf="g.status === 'PREPARING' && !cancelMode().has(g.groupId)">
           <button *ngIf="!shippingMode().has(g.groupId)"
                   class="so-btn so-btn-ship"
                   (click)="startShip(g.groupId)">
@@ -110,6 +110,13 @@
                 (click)="confirmDeliver(g.groupId)">
           {{ actionLoading().has(g.groupId) ? 'Guardando...' : 'Confirmar entrega' }}
         </button>
+
+        <!-- PENDING / PREPARING: botón cancelar pedido -->
+        <button *ngIf="(g.status === 'PENDING' || g.status === 'PREPARING') && !cancelMode().has(g.groupId) && !shippingMode().has(g.groupId)"
+                class="so-btn so-btn-cancel-order"
+                (click)="startCancel(g.groupId)">
+          Cancelar pedido
+        </button>
       </div>
 
       <svg class="so-chevron" [class.so-chevron-open]="expandedId() === g.groupId"
@@ -117,6 +124,24 @@
            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="6 9 12 15 18 9"/>
       </svg>
+    </div>
+
+    <!-- Cancel form -->
+    <div class="so-cancel-form" *ngIf="cancelMode().has(g.groupId)" (click)="$event.stopPropagation()">
+      <textarea class="so-cancel-textarea"
+                placeholder="Motivo de cancelación (requerido, máx. 500 caracteres)"
+                rows="2"
+                maxlength="500"
+                [value]="cancelReason()[g.groupId] ?? ''"
+                (input)="setCancelReason(g.groupId, $any($event.target).value)"></textarea>
+      <div class="so-cancel-form-btns">
+        <button class="so-btn so-btn-cancel-confirm"
+                [disabled]="!cancelReason()[g.groupId]?.trim() || actionLoading().has(g.groupId)"
+                (click)="confirmCancel(g.groupId)">
+          {{ actionLoading().has(g.groupId) ? 'Cancelando...' : 'Confirmar cancelación' }}
+        </button>
+        <button class="so-btn so-btn-cancel" (click)="abortCancel(g.groupId)">Volver</button>
+      </div>
     </div>
 
     <!-- Expanded body -->
@@ -137,6 +162,15 @@
           </svg>
           Guía: <strong>{{ g.trackingNumber }}</strong>
         </span>
+      </div>
+
+      <div class="so-cancellation-info" *ngIf="g.status === 'CANCELLED' && g.cancellationReason">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+        </svg>
+        <span><strong>Motivo de cancelación:</strong> {{ g.cancellationReason }}</span>
+        <span class="so-cancel-date" *ngIf="g.cancelledAt">· {{ g.cancelledAt | date:'dd MMM yyyy' }}</span>
       </div>
 
       <table class="so-items-table">

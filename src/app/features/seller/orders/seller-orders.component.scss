@@ -69,9 +69,11 @@
   font-size: .78rem; font-weight: 600; cursor: pointer; transition: opacity .12s; white-space: nowrap;
   &:hover:not(:disabled) { opacity: .82; }
   &:disabled { opacity: .5; cursor: not-allowed; }
-  &.so-btn-ship    { background: #1565c0; color: #fff; }
-  &.so-btn-deliver { background: #2e7d32; color: #fff; }
-  &.so-btn-cancel  { background: #f5f5f5; color: #555; border: 1px solid #ddd; }
+  &.so-btn-ship          { background: #1565c0; color: #fff; }
+  &.so-btn-deliver       { background: #2e7d32; color: #fff; }
+  &.so-btn-cancel        { background: #f5f5f5; color: #555; border: 1px solid #ddd; }
+  &.so-btn-cancel-order  { background: #fff3f3; color: #c62828; border: 1px solid #ef9a9a; }
+  &.so-btn-cancel-confirm{ background: #c62828; color: #fff; }
 }
 
 .so-tracking-input {
@@ -127,6 +129,30 @@
   text-align: right; font-size: .88rem; color: #666;
   strong { color: #1a1a2e; font-size: 1rem; }
 }
+
+// Cancel form
+.so-cancel-form {
+  border-top: 1px solid #fce4e4;
+  padding: 12px 18px;
+  background: #fff9f9;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.so-cancel-textarea {
+  width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #ef9a9a;
+  font-size: .83rem; resize: vertical; outline: none; font-family: inherit;
+  &:focus { border-color: #c62828; box-shadow: 0 0 0 2px rgba(198,40,40,.1); }
+}
+.so-cancel-form-btns { display: flex; gap: 8px; }
+
+// Cancellation info in expanded body
+.so-cancellation-info {
+  display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap;
+  background: #f5f5f5; border-radius: 6px; padding: 10px 14px; margin-bottom: 12px;
+  font-size: .83rem; color: #555;
+  svg { color: #c62828; flex-shrink: 0; margin-top: 1px; }
+  strong { color: #333; }
+}
+.so-cancel-date { color: #999; white-space: nowrap; }
 
 // Empty
 .so-empty {

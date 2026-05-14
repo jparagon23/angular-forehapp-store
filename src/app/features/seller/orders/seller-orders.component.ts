@@ -22,6 +22,8 @@ export class SellerOrdersComponent implements OnInit {
 
   shippingMode  = signal<Set<number>>(new Set());
   trackingDraft = signal<Record<number, string>>({});
+  cancelMode    = signal<Set<number>>(new Set());
+  cancelReason  = signal<Record<number, string>>({});
   actionLoading = signal<Set<number>>(new Set());
 
   filtered = computed(() => {
@@ -73,6 +75,33 @@ export class SellerOrdersComponent implements OnInit {
       next: () => {
         this.patchGroup(groupId, 'SHIPPED', { trackingNumber: tracking, shippedAt: new Date().toISOString() });
         this.cancelShip(groupId);
+        this.setLoading(groupId, false);
+      },
+      error: () => this.setLoading(groupId, false),
+    });
+  }
+
+  startCancel(groupId: number) {
+    this.cancelMode.update(s => { const n = new Set(s); n.add(groupId); return n; });
+    this.cancelReason.update(d => ({ ...d, [groupId]: '' }));
+  }
+
+  abortCancel(groupId: number) {
+    this.cancelMode.update(s => { const n = new Set(s); n.delete(groupId); return n; });
+  }
+
+  setCancelReason(groupId: number, value: string) {
+    this.cancelReason.update(d => ({ ...d, [groupId]: value }));
+  }
+
+  confirmCancel(groupId: number) {
+    const reason = (this.cancelReason()[groupId] ?? '').trim();
+    if (!reason) return;
+    this.setLoading(groupId, true);
+    this.orderService.cancelSellerGroup(groupId, reason).subscribe({
+      next: () => {
+        this.patchGroup(groupId, 'CANCELLED', { cancelledAt: new Date().toISOString(), cancellationReason: reason });
+        this.abortCancel(groupId);
         this.setLoading(groupId, false);
       },
       error: () => this.setLoading(groupId, false),

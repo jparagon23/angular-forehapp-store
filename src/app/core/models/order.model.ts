@@ -60,6 +60,8 @@ export interface SellerOrderGroupDetail {
   preparedAt: string | null;
   shippedAt: string | null;
   deliveredAt: string | null;
+  cancelledAt: string | null;
+  cancellationReason: string | null;
   items: OrderItemResponse[];
 }
 
