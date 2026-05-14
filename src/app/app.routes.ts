@@ -11,8 +11,16 @@ export const routes: Routes = [
     loadComponent: () => import('./features/product-detail/product-detail.component').then(m => m.ProductDetailComponent),
   },
   {
-    path: 'gracias',
+    path: 'payment/success',
     loadComponent: () => import('./features/thanks/thanks.component').then(m => m.ThanksComponent),
+  },
+  {
+    path: 'payment/failure',
+    loadComponent: () => import('./features/payment-failure/payment-failure.component').then(m => m.PaymentFailureComponent),
+  },
+  {
+    path: 'payment/pending',
+    loadComponent: () => import('./features/payment-pending/payment-pending.component').then(m => m.PaymentPendingComponent),
   },
   {
     path: 'login',

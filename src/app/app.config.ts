@@ -24,6 +24,7 @@ import { CustomersEffects } from './store/customers/customers.effects';
 import { DiscountsEffects } from './store/discounts/discounts.effects';
 import { SellerEffects } from './store/seller/seller.effects';
 import { AddressesEffects } from './store/addresses/addresses.effects';
+import { CartEffects } from './store/cart/cart.effects';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
@@ -41,7 +42,7 @@ export const appConfig: ApplicationConfig = {
       seller: sellerReducer,
       addresses: addressesReducer,
     }),
-    provideEffects([ProductsEffects, OrdersEffects, CustomersEffects, DiscountsEffects, SellerEffects, AddressesEffects]),
+    provideEffects([ProductsEffects, OrdersEffects, CustomersEffects, DiscountsEffects, SellerEffects, AddressesEffects, CartEffects]),
     provideStoreDevtools({ maxAge: 25, logOnly: false }),
     {
       provide: APP_INITIALIZER,

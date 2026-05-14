@@ -1,24 +1,54 @@
 <div class="thanks-page">
   <div class="card">
-    <div class="checkmark">✅</div>
-    <h1>¡Pago <span>exitoso</span>!</h1>
-    <p>Tu pedido fue procesado correctamente. Pronto recibirás un correo de confirmación con los detalles.</p>
 
-    <div class="order-box">
-      <div class="order-label">Número de orden</div>
-      <div class="order-num">{{ orderNumber }}</div>
-    </div>
+    <!-- Loading -->
+    <ng-container *ngIf="loading">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Verificando tu pago...</p>
+    </ng-container>
 
-    <div class="steps">
-      <div class="step"><div class="step-icon">📦</div> Preparando tu pedido</div>
-      <div class="step"><div class="step-icon">🚚</div> Envío en 2–4 días hábiles</div>
-      <div class="step"><div class="step-icon">🎾</div> ¡Listo para jugar!</div>
-    </div>
+    <!-- Error -->
+    <ng-container *ngIf="!loading && error">
+      <div class="checkmark">⚠️</div>
+      <h1>No pudimos verificar tu orden</h1>
+      <p>Si completaste el pago, recibirás un correo de confirmación. También puedes revisar tus órdenes.</p>
+      <a routerLink="/orders" class="back-btn">Ver mis órdenes</a>
+    </ng-container>
 
-    <a routerLink="/" class="back-btn">← Seguir comprando</a>
+    <!-- Success -->
+    <ng-container *ngIf="!loading && !error && order">
+      <div class="checkmark">✅</div>
+      <h1>¡Pago <span>exitoso</span>!</h1>
+      <p>Tu pedido fue procesado correctamente. Pronto recibirás un correo de confirmación con los detalles.</p>
 
-    <div class="logo-wrap">
-      <span class="logo-text">Forehapp <span>Store</span></span>
-    </div>
+      <div class="order-box">
+        <div class="order-label">Número de orden</div>
+        <div class="order-num">FH-{{ order.orderId }}</div>
+      </div>
+
+      <div class="order-detail">
+        <div class="detail-row">
+          <span>Total</span>
+          <strong>{{ order.total | currencyCop }}</strong>
+        </div>
+        <div class="detail-row">
+          <span>Enviar a</span>
+          <span>{{ order.shippingAddress }}, {{ order.shippingCity }}</span>
+        </div>
+      </div>
+
+      <div class="steps">
+        <div class="step"><div class="step-icon">📦</div> Preparando tu pedido</div>
+        <div class="step"><div class="step-icon">🚚</div> Envío en 2–4 días hábiles</div>
+        <div class="step"><div class="step-icon">🎾</div> ¡Listo para jugar!</div>
+      </div>
+
+      <a routerLink="/" class="back-btn">← Seguir comprando</a>
+
+      <div class="logo-wrap">
+        <span class="logo-text">Forehapp <span>Store</span></span>
+      </div>
+    </ng-container>
+
   </div>
 </div>

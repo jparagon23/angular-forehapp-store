@@ -32,4 +32,19 @@ export class OrdersEffects {
       )
     )
   );
+
+  createOrder$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(OrdersActions.createOrder),
+      switchMap(({ addressId }) =>
+        this.orderService.createOrder(addressId).pipe(
+          map(order => OrdersActions.createOrderSuccess({ order })),
+          catchError(error => {
+            const msg = error?.error?.message ?? error?.message ?? 'Error al crear la orden';
+            return of(OrdersActions.createOrderFailure({ error: msg }));
+          })
+        )
+      )
+    )
+  );
 }

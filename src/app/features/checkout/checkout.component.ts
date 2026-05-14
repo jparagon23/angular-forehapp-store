@@ -3,13 +3,14 @@ import { Router, RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { AsyncPipe, NgFor, NgIf, UpperCasePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { combineLatest, Subscription } from 'rxjs';
-import { filter, switchMap, take, withLatestFrom } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
+import { filter, take } from 'rxjs/operators';
 import { selectCartItems, selectCartTotal, selectCartCount } from '../../store/cart/cart.selectors';
 import { selectIsLoggedIn, selectAuthUser } from '../../store/auth/auth.selectors';
-import { clearCart } from '../../store/cart/cart.actions';
 import { loadAddresses, createAddress } from '../../store/addresses/addresses.actions';
 import { selectAllAddresses, selectAddressesLoading, selectAddressesSaving } from '../../store/addresses/addresses.selectors';
+import { createOrder, resetCreateOrder } from '../../store/orders/orders.actions';
+import { selectCreatingOrder, selectCreatedOrder, selectCreateOrderError } from '../../store/orders/orders.selectors';
 import { Address, CreateAddressRequest } from '../../core/models/address.model';
 import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
 
@@ -35,6 +36,9 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   addressesLoading$ = this.store.select(selectAddressesLoading);
   addressesSaving$  = this.store.select(selectAddressesSaving);
 
+  creatingOrder$    = this.store.select(selectCreatingOrder);
+  createOrderError$ = this.store.select(selectCreateOrderError);
+
   selectedAddressId: number | null = null;
   showAddressPicker = false;
   showAddressForm   = false;
@@ -48,9 +52,12 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     zipCode: [''],
   });
 
-  private addrSub?: Subscription;
+  private addrSub?:  Subscription;
+  private orderSub?: Subscription;
 
   ngOnInit() {
+    this.store.dispatch(resetCreateOrder());
+
     this.isLoggedIn$.pipe(take(1)).subscribe(loggedIn => {
       if (!loggedIn) {
         this.router.navigate(['/login'], { queryParams: { redirect: '/checkout' } });
@@ -69,9 +76,20 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.items$.pipe(take(1)).subscribe(items => {
       if (items.length === 0) this.router.navigate(['/']);
     });
+
+    // Redirect to MercadoPago when order is created
+    this.orderSub = this.store.select(selectCreatedOrder).pipe(
+      filter(order => order !== null && order.checkoutUrl !== null),
+      take(1),
+    ).subscribe(order => {
+      window.location.href = order!.checkoutUrl!;
+    });
   }
 
-  ngOnDestroy() { this.addrSub?.unsubscribe(); }
+  ngOnDestroy() {
+    this.addrSub?.unsubscribe();
+    this.orderSub?.unsubscribe();
+  }
 
   getSelected(addresses: Address[]): Address | null {
     return addresses.find(a => a.id === this.selectedAddressId) ?? null;
@@ -110,13 +128,15 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.addressesSaving$.pipe(
       filter(saving => saving),
       take(1),
-      switchMap(() => this.addressesSaving$.pipe(filter(saving => !saving), take(1))),
-      withLatestFrom(this.addresses$),
-    ).subscribe(([, addresses]) => {
-      const newAddr = addresses.find(a => a.isDefault) ?? addresses[addresses.length - 1];
-      if (newAddr) this.selectedAddressId = newAddr.id;
-      this.showAddressForm = false;
-      this.showAddressPicker = false;
+    ).subscribe(() => {
+      this.addressesSaving$.pipe(filter(saving => !saving), take(1)).subscribe(() => {
+        this.addresses$.pipe(take(1)).subscribe(addresses => {
+          const newAddr = addresses.find(a => a.isDefault) ?? addresses[addresses.length - 1];
+          if (newAddr) this.selectedAddressId = newAddr.id;
+          this.showAddressForm = false;
+          this.showAddressPicker = false;
+        });
+      });
     });
   }
 
@@ -125,12 +145,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     return !!(c?.invalid && c.touched);
   }
 
-  varInfo(size: string | null, color: string | null): string {
-    return [size, color].filter(Boolean).join(' · ');
-  }
-
   confirm() {
-    this.store.dispatch(clearCart());
-    this.router.navigate(['/gracias']);
+    if (!this.selectedAddressId) return;
+    this.store.dispatch(createOrder({ addressId: this.selectedAddressId }));
   }
 }

@@ -7,13 +7,13 @@
 
       <div class="items-list">
         <div class="order-item" *ngFor="let item of items$ | async">
-          <div class="oi-thumb">{{ item.emoji }}</div>
+          <div class="oi-thumb">📦</div>
           <div class="oi-info">
-            <p class="oi-name">{{ item.name }}</p>
-            <p class="oi-variant" *ngIf="item.size || item.color">{{ varInfo(item.size, item.color) }}</p>
-            <p class="oi-unit">{{ item.price | currencyCop }} × {{ item.qty }}</p>
+            <p class="oi-name">{{ item.productTitle }}</p>
+            <p class="oi-variant">{{ item.sku }}</p>
+            <p class="oi-unit">{{ item.unitPrice | currencyCop }} × {{ item.quantity }}</p>
           </div>
-          <div class="oi-total">{{ item.price * item.qty | currencyCop }}</div>
+          <div class="oi-total">{{ item.subtotal | currencyCop }}</div>
         </div>
       </div>
 
@@ -120,32 +120,26 @@
       </div>
       <!-- ── /Shipping address ──────────────────────────── -->
 
-      <!-- Mock payment form -->
-      <div class="pay-form">
-        <div class="form-group">
-          <label>Número de tarjeta</label>
-          <div class="mock-input">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-              <line x1="1" y1="10" x2="23" y2="10"/>
-            </svg>
-            <span>•••• •••• •••• 4242</span>
-          </div>
+      <!-- MercadoPago notice -->
+      <div class="mp-notice">
+        <div class="mp-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+            <line x1="1" y1="10" x2="23" y2="10"/>
+          </svg>
         </div>
-        <div class="pay-row">
-          <div class="form-group">
-            <label>Vence</label>
-            <div class="mock-input"><span>12 / 27</span></div>
-          </div>
-          <div class="form-group">
-            <label>CVV</label>
-            <div class="mock-input"><span>•••</span></div>
-          </div>
+        <div class="mp-text">
+          <p class="mp-title">Pago procesado por MercadoPago</p>
+          <p class="mp-sub">Al confirmar serás redirigido a la plataforma de pago segura.</p>
         </div>
-        <div class="form-group">
-          <label>Nombre en la tarjeta</label>
-          <div class="mock-input"><span *ngIf="authUser$ | async as u">{{ u.name }}</span></div>
-        </div>
+      </div>
+
+      <!-- Error de creación de orden -->
+      <div class="confirm-error" *ngIf="createOrderError$ | async as err">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        {{ err }}
       </div>
 
       <div class="secure-badge">
@@ -156,12 +150,18 @@
       </div>
 
       <button class="btn-confirm"
-              [disabled]="(addressesLoading$ | async) || !selectedAddressId"
+              [disabled]="(addressesLoading$ | async) || !selectedAddressId || (creatingOrder$ | async)"
               (click)="confirm()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
-        Confirmar pedido · {{ total$ | async | currencyCop }}
+        <ng-container *ngIf="!(creatingOrder$ | async); else loadingTpl">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Confirmar y pagar · {{ total$ | async | currencyCop }}
+        </ng-container>
+        <ng-template #loadingTpl>
+          <span class="btn-spinner"></span>
+          Procesando...
+        </ng-template>
       </button>
 
       <a routerLink="/" class="back-link">← Seguir comprando</a>

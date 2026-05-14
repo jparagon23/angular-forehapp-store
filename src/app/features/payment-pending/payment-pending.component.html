@@ -1,0 +1,28 @@
+<div class="result-page pending">
+  <div class="card">
+
+    <ng-container *ngIf="loading">
+      <div class="spinner"></div>
+      <p class="loading-text">Verificando estado del pago...</p>
+    </ng-container>
+
+    <ng-container *ngIf="!loading">
+      <div class="icon">⏳</div>
+      <h1>Pago en proceso</h1>
+      <p>Tu pago está siendo procesado. Puede tardar unos minutos en confirmarse.</p>
+
+      <div class="order-box" *ngIf="order">
+        <div class="order-label">Número de orden</div>
+        <div class="order-num">FH-{{ order.orderId }}</div>
+      </div>
+
+      <div class="info-box">
+        <p>Recibirás un correo de confirmación en cuanto el pago sea verificado. No es necesario realizar ninguna acción adicional.</p>
+      </div>
+
+      <a routerLink="/orders" class="btn-orders">Ver mis órdenes</a>
+      <a routerLink="/" class="btn-home">Volver al catálogo</a>
+    </ng-container>
+
+  </div>
+</div>

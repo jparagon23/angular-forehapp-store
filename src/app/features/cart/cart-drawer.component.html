@@ -26,108 +26,141 @@
     </button>
   </div>
 
-  <!-- Body: items or empty state -->
-  <ng-container *ngIf="items$ | async as items">
+  <!-- Loading spinner -->
+  <div class="loading-state" *ngIf="loading$ | async">
+    <div class="spinner"></div>
+  </div>
 
-    <!-- Empty state -->
-    <div class="empty-state" *ngIf="items.length === 0">
-      <div class="empty-icon">🛒</div>
-      <p class="empty-title">Tu carrito está vacío</p>
-      <p class="empty-sub">Agrega productos para comenzar</p>
-      <button class="btn-explore" (click)="close()">Explorar productos</button>
-    </div>
+  <!-- Body -->
+  <ng-container *ngIf="!(loading$ | async)">
+    <ng-container *ngIf="sellerGroups$ | async as groups">
 
-    <!-- Items list -->
-    <div class="cart-body" *ngIf="items.length > 0">
-      <div class="cart-item" *ngFor="let item of items">
-
-        <div class="ci-thumb">{{ item.emoji }}</div>
-
-        <div class="ci-info">
-          <p class="ci-name">{{ item.name }}</p>
-          <p class="ci-variant" *ngIf="item.size || item.color">
-            {{ varInfo(item.size, item.color) }}
-          </p>
-          <p class="ci-unit-price">{{ item.price | currencyCop }} c/u</p>
-
-          <div class="ci-bottom">
-            <div class="ci-controls">
-              <button class="qty-btn" (click)="decrement(item.key)" aria-label="Disminuir">−</button>
-              <span class="qty-val">{{ item.qty }}</span>
-              <button class="qty-btn" (click)="increment(item.key)" aria-label="Aumentar">+</button>
-            </div>
-            <div class="ci-right">
-              <span class="ci-subtotal">{{ item.price * item.qty | currencyCop }}</span>
-              <button class="ci-del" (click)="remove(item.key)" aria-label="Eliminar">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="3 6 5 6 21 6"/>
-                  <path d="M19 6l-1 14H6L5 6"/>
-                  <path d="M10 11v6M14 11v6"/>
-                  <path d="M9 6V4h6v2"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- Footer -->
-    <div class="drawer-footer" *ngIf="items.length > 0">
-
-      <div class="foot-rows">
-        <div class="foot-row">
-          <span>Subtotal ({{ count$ | async }} art.)</span>
-          <span>{{ total$ | async | currencyCop }}</span>
-        </div>
-        <div class="foot-row">
-          <span>Envío</span>
-          <span class="free-ship">Gratis</span>
-        </div>
+      <!-- Empty state -->
+      <div class="empty-state" *ngIf="groups.length === 0">
+        <div class="empty-icon">🛒</div>
+        <p class="empty-title">Tu carrito está vacío</p>
+        <p class="empty-sub">Agrega productos para comenzar</p>
+        <button class="btn-explore" (click)="close()">Explorar productos</button>
       </div>
 
-      <div class="foot-total">
-        <span>Total</span>
-        <strong class="total-val">{{ total$ | async | currencyCop }}</strong>
-      </div>
+      <!-- Items grouped by seller -->
+      <div class="cart-body" *ngIf="groups.length > 0">
+        <div class="seller-group" *ngFor="let group of groups">
 
-      <!-- Auth gate: NOT logged in -->
-      <ng-container *ngIf="!(isLoggedIn$ | async); else loggedInBlock">
-        <div class="auth-gate">
-          <div class="gate-header">
-            <svg class="gate-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-              <path d="M7 11V7a5 5 0 0110 0v4"/>
+          <div class="seller-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
+              <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
             </svg>
-            <span>Para continuar, inicia sesión</span>
+            <span>{{ group.sellerName }}</span>
           </div>
-          <button class="btn-gate-login" (click)="goToLogin()">Iniciar sesión</button>
-          <p class="gate-reg">
-            ¿No tienes cuenta?
-            <button class="gate-reg-btn" (click)="goToRegister()">Regístrate gratis</button>
-          </p>
+
+          <div class="cart-item" *ngFor="let item of group.items">
+
+            <div class="ci-thumb">📦</div>
+
+            <div class="ci-info">
+              <p class="ci-name">{{ item.productTitle }}</p>
+              <p class="ci-variant">{{ item.sku }}</p>
+
+              <!-- Price change alert -->
+              <div class="price-alert" *ngIf="item.priceChanged">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                Precio cambió de
+                <span class="old-price">{{ item.previousPrice! | currencyCop }}</span>
+                a {{ item.unitPrice | currencyCop }}
+              </div>
+
+              <p class="ci-unit-price">{{ item.unitPrice | currencyCop }} c/u</p>
+
+              <div class="ci-bottom">
+                <div class="ci-controls">
+                  <button class="qty-btn" (click)="decrement(item.itemId, item.quantity)" aria-label="Disminuir">−</button>
+                  <span class="qty-val">{{ item.quantity }}</span>
+                  <button class="qty-btn" (click)="increment(item.itemId, item.quantity)" aria-label="Aumentar">+</button>
+                </div>
+                <div class="ci-right">
+                  <span class="ci-subtotal">{{ item.subtotal | currencyCop }}</span>
+                  <button class="ci-del" (click)="remove(item.itemId)" aria-label="Eliminar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14H6L5 6"/>
+                      <path d="M10 11v6M14 11v6"/>
+                      <path d="M9 6V4h6v2"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="seller-subtotal">
+            Subtotal {{ group.sellerName }}: <strong>{{ group.subtotal | currencyCop }}</strong>
+          </div>
+
         </div>
-      </ng-container>
+      </div>
 
-      <!-- Logged in: checkout button -->
-      <ng-template #loggedInBlock>
-        <div class="user-tag">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-          {{ (authUser$ | async)?.email }}
+      <!-- Footer -->
+      <div class="drawer-footer" *ngIf="groups.length > 0">
+
+        <div class="foot-rows">
+          <div class="foot-row">
+            <span>Subtotal ({{ count$ | async }} art.)</span>
+            <span>{{ total$ | async | currencyCop }}</span>
+          </div>
+          <div class="foot-row">
+            <span>Envío</span>
+            <span class="free-ship">Gratis</span>
+          </div>
         </div>
-        <button class="btn-checkout" (click)="goToCheckout()">
-          Proceder al pago
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-          </svg>
-        </button>
-      </ng-template>
 
-    </div>
+        <div class="foot-total">
+          <span>Total</span>
+          <strong class="total-val">{{ total$ | async | currencyCop }}</strong>
+        </div>
 
+        <!-- Auth gate: NOT logged in -->
+        <ng-container *ngIf="!(isLoggedIn$ | async); else loggedInBlock">
+          <div class="auth-gate">
+            <div class="gate-header">
+              <svg class="gate-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0110 0v4"/>
+              </svg>
+              <span>Para continuar, inicia sesión</span>
+            </div>
+            <button class="btn-gate-login" (click)="goToLogin()">Iniciar sesión</button>
+            <p class="gate-reg">
+              ¿No tienes cuenta?
+              <button class="gate-reg-btn" (click)="goToRegister()">Regístrate gratis</button>
+            </p>
+          </div>
+        </ng-container>
+
+        <!-- Logged in: checkout button -->
+        <ng-template #loggedInBlock>
+          <div class="user-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            {{ (authUser$ | async)?.email }}
+          </div>
+          <button class="btn-checkout" (click)="goToCheckout()">
+            Proceder al pago
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </button>
+        </ng-template>
+
+      </div>
+
+    </ng-container>
   </ng-container>
 
 </div>

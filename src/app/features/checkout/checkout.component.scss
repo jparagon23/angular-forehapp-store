@@ -301,3 +301,32 @@
   &:hover:not(:disabled) { background: var(--green-dark); }
   &:disabled { opacity: .5; cursor: not-allowed; }
 }
+
+// MercadoPago notice
+.mp-notice {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; border-radius: 10px;
+  background: #f0f7ff; border: 1.5px solid #c6deff;
+  margin-bottom: 4px;
+  svg { width: 28px; height: 28px; color: #1a6fe8; flex-shrink: 0; }
+}
+.mp-title { font-size: .88rem; font-weight: 700; color: #1a3a6b; margin: 0 0 2px; }
+.mp-sub   { font-size: .78rem; color: #4a6fa5; margin: 0; }
+
+// Order creation error
+.confirm-error {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-radius: 8px;
+  background: #fff2f2; border: 1.5px solid #ffc9c9;
+  color: #c0392b; font-size: .84rem; font-weight: 600;
+  svg { width: 18px; height: 18px; flex-shrink: 0; }
+}
+
+// Button spinner
+.btn-spinner {
+  display: inline-block; width: 16px; height: 16px;
+  border: 2.5px solid rgba(255,255,255,.35);
+  border-top-color: #fff; border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }

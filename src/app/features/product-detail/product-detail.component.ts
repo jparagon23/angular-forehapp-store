@@ -6,12 +6,11 @@ import { Observable, combineLatest, map } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { loadProduct, loadProducts } from '../../store/products/products.actions';
 import { selectSelectedProduct, selectProductsLoading, selectAllProducts } from '../../store/products/products.selectors';
-import { addToCart, openCart } from '../../store/cart/cart.actions';
+import { addCartItem, openCart } from '../../store/cart/cart.actions';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { CartDrawerComponent } from '../cart/cart-drawer.component';
 import { ToastComponent } from '../../shared/components/toast/toast.component';
 import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
-import { CartItem } from '../../core/models/cart-item.model';
 import { DetailVariant, Product } from '../../core/models/product.model';
 import { Review } from '../../core/models/review.model';
 import { ProductService } from '../../core/services/product.service';
@@ -136,21 +135,9 @@ export class ProductDetailComponent implements OnInit {
 
   addToCart(product: Product) {
     const variant = this.selectedVariant(product);
-    const attrKey = Object.entries(this.selectedAttributes())
-      .map(([, v]) => v.replace(/\s+/g, ''))
-      .join('_');
-    const key = attrKey ? `${product.id}_${attrKey}` : String(product.id);
-    const attrDesc = Object.entries(this.selectedAttributes())
-      .map(([k, v]) => `${k}: ${v}`)
-      .join(' · ') || null;
-
-    const item: CartItem = {
-      key, id: product.id, name: product.name,
-      emoji: product.emoji,
-      price: variant?.price ?? product.price,
-      qty: this.qty(), size: attrDesc, color: null,
-    };
-    this.store.dispatch(addToCart({ item }));
+    const variantId = variant?.id ?? product.variants?.[0]?.id;
+    if (!variantId) return;
+    this.store.dispatch(addCartItem({ variantId, quantity: this.qty() }));
     this.store.dispatch(openCart());
     this.toastMessage.set(`${product.name} agregado al carrito 🎾 — ${Date.now()}`);
   }

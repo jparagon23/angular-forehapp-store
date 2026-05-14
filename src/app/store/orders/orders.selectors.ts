@@ -6,3 +6,7 @@ const selectOrdersState = createFeatureSelector<OrdersState>('orders');
 export const selectAllOrders = createSelector(selectOrdersState, s => s.orders);
 export const selectOrdersLoading = createSelector(selectOrdersState, s => s.loading);
 export const selectRecentOrders = createSelector(selectAllOrders, orders => orders.slice(0, 5));
+
+export const selectCreatingOrder    = createSelector(selectOrdersState, s => s.creatingOrder);
+export const selectCreatedOrder     = createSelector(selectOrdersState, s => s.createdOrder);
+export const selectCreateOrderError = createSelector(selectOrdersState, s => s.createOrderError);

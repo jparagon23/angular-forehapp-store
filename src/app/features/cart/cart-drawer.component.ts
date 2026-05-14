@@ -2,8 +2,11 @@ import { Component, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AsyncPipe, NgFor, NgIf } from '@angular/common';
 import { Router } from '@angular/router';
-import { selectCartIsOpen, selectCartItems, selectCartTotal, selectCartCount } from '../../store/cart/cart.selectors';
-import { closeCart, incrementQty, decrementQty, removeFromCart } from '../../store/cart/cart.actions';
+import {
+  selectCartIsOpen, selectSellerGroups, selectCartTotal,
+  selectCartCount, selectPriceChangedItems, selectCartLoading,
+} from '../../store/cart/cart.selectors';
+import { closeCart, removeCartItem, updateCartItem } from '../../store/cart/cart.actions';
 import { selectIsLoggedIn, selectAuthUser } from '../../store/auth/auth.selectors';
 import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
 
@@ -18,21 +21,30 @@ export class CartDrawerComponent {
   private store  = inject(Store);
   private router = inject(Router);
 
-  isOpen$     = this.store.select(selectCartIsOpen);
-  items$      = this.store.select(selectCartItems);
-  total$      = this.store.select(selectCartTotal);
-  count$      = this.store.select(selectCartCount);
-  isLoggedIn$ = this.store.select(selectIsLoggedIn);
-  authUser$   = this.store.select(selectAuthUser);
+  isOpen$            = this.store.select(selectCartIsOpen);
+  sellerGroups$      = this.store.select(selectSellerGroups);
+  total$             = this.store.select(selectCartTotal);
+  count$             = this.store.select(selectCartCount);
+  loading$           = this.store.select(selectCartLoading);
+  isLoggedIn$        = this.store.select(selectIsLoggedIn);
+  authUser$          = this.store.select(selectAuthUser);
+  priceChangedItems$ = this.store.select(selectPriceChangedItems);
 
-  close()                    { this.store.dispatch(closeCart()); }
-  increment(key: string)     { this.store.dispatch(incrementQty({ key })); }
-  decrement(key: string)     { this.store.dispatch(decrementQty({ key })); }
-  remove(key: string)        { this.store.dispatch(removeFromCart({ key })); }
+  close() { this.store.dispatch(closeCart()); }
 
-  varInfo(size: string | null, color: string | null): string {
-    return [size, color].filter(Boolean).join(' · ');
+  increment(itemId: number, currentQty: number) {
+    this.store.dispatch(updateCartItem({ itemId, quantity: currentQty + 1 }));
   }
+
+  decrement(itemId: number, currentQty: number) {
+    if (currentQty <= 1) {
+      this.store.dispatch(removeCartItem({ itemId }));
+      return;
+    }
+    this.store.dispatch(updateCartItem({ itemId, quantity: currentQty - 1 }));
+  }
+
+  remove(itemId: number) { this.store.dispatch(removeCartItem({ itemId })); }
 
   goToCheckout() {
     this.store.dispatch(closeCart());

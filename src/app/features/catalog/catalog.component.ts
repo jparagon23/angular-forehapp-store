@@ -6,14 +6,12 @@ import { combineLatest, map, take } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { loadProducts } from '../../store/products/products.actions';
 import { selectAllProducts, selectProductsLoading } from '../../store/products/products.selectors';
-import { addToCart, openCart } from '../../store/cart/cart.actions';
 import { addToWishlist, removeFromWishlist } from '../../store/wishlist/wishlist.actions';
 import { selectWishlistIds } from '../../store/wishlist/wishlist.selectors';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { CartDrawerComponent } from '../cart/cart-drawer.component';
 import { ToastComponent } from '../../shared/components/toast/toast.component';
 import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
-import { CartItem } from '../../core/models/cart-item.model';
 import { Product } from '../../core/models/product.model';
 import { ProductService } from '../../core/services/product.service';
 import { Category } from '../../core/models/seller-product.model';
@@ -69,13 +67,7 @@ export class CatalogComponent implements OnInit {
 
   addToCart(product: Product, event: Event) {
     event.stopPropagation();
-    const item: CartItem = {
-      key: String(product.id), id: product.id, name: product.name,
-      emoji: product.emoji, price: product.price, qty: 1, size: null, color: null,
-    };
-    this.store.dispatch(addToCart({ item }));
-    this.store.dispatch(openCart());
-    this.toastMessage.set('Producto agregado 🎾 — ' + Date.now());
+    this.router.navigate(['/product', product.id]);
   }
 
   toggleWishlist(product: Product, event: Event) {

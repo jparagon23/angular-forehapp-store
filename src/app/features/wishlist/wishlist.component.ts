@@ -6,7 +6,6 @@ import { take } from 'rxjs';
 import { selectWishlistItems, selectWishlistCount } from '../../store/wishlist/wishlist.selectors';
 import { removeFromWishlist } from '../../store/wishlist/wishlist.actions';
 import { selectIsLoggedIn } from '../../store/auth/auth.selectors';
-import { addToCart, openCart } from '../../store/cart/cart.actions';
 import { WishlistItem } from '../../core/models/wishlist-item.model';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { CartDrawerComponent } from '../cart/cart-drawer.component';
@@ -38,10 +37,6 @@ export class WishlistComponent implements OnInit {
   }
 
   addToCart(item: WishlistItem) {
-    this.store.dispatch(addToCart({
-      item: { key: String(item.id), id: item.id, name: item.name,
-              emoji: item.emoji, price: item.price, qty: 1, size: null, color: null },
-    }));
-    this.store.dispatch(openCart());
+    this.router.navigate(['/product', item.id]);
   }
 }
