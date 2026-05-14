@@ -1,90 +1,126 @@
-import { Component, computed, signal } from '@angular/core';
-import { CurrencyPipe, DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { CurrencyCopPipe } from '../../../shared/pipes/currency-cop.pipe';
-
-type OrderStatus = 'PENDING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
-
-interface SellerOrderItem { sku: string; name: string; qty: number; price: number; }
-interface SellerOrder {
-  id: string; buyer: string; date: string;
-  items: SellerOrderItem[]; total: number; status: OrderStatus;
-}
-
-const MOCK_ORDERS: SellerOrder[] = [
-  { id: 'ORD-1042', buyer: 'Carlos M.',    date: '2026-05-13T10:30:00',
-    items: [{ sku: 'WLS-PS97-G3-M',     name: 'Wilson Pro Staff 97',        qty: 1, price: 350000 }],
-    total: 350000, status: 'PENDING' },
-  { id: 'ORD-1039', buyer: 'Laura T.',     date: '2026-05-12T14:20:00',
-    items: [
-      { sku: 'NK-CAZOOM-BL-42',  name: 'Nike Court Air Zoom',          qty: 1, price: 245000 },
-      { sku: 'NK-SHIRT-M-BLK',   name: 'Nike Dri-FIT Camiseta',        qty: 2, price:  89000 },
-    ], total: 423000, status: 'SHIPPED' },
-  { id: 'ORD-1033', buyer: 'Andrés P.',    date: '2026-05-10T09:00:00',
-    items: [{ sku: 'WLS-CLASH100-R',    name: 'Wilson Clash 100',           qty: 1, price: 280000 }],
-    total: 280000, status: 'DELIVERED' },
-  { id: 'ORD-1028', buyer: 'Valentina C.', date: '2026-05-08T16:45:00',
-    items: [
-      { sku: 'HD-PRESTIGE-G2-M', name: 'Head Prestige MP',              qty: 1, price: 320000 },
-      { sku: 'WLS-UTOUR-BL-42',  name: 'Wilson Ultra Tour Zapatillas', qty: 1, price: 195000 },
-    ], total: 515000, status: 'DELIVERED' },
-  { id: 'ORD-1021', buyer: 'Sebastián L.', date: '2026-05-05T11:10:00',
-    items: [{ sku: 'BA-JETMACH-BL-43', name: 'Babolat Jet Mach',           qty: 1, price: 215000 }],
-    total: 215000, status: 'CANCELLED' },
-  { id: 'ORD-1018', buyer: 'María G.',     date: '2026-05-03T08:30:00',
-    items: [{ sku: 'WLS-PS97-G4-L',     name: 'Wilson Pro Staff 97',        qty: 1, price: 350000 }],
-    total: 350000, status: 'DELIVERED' },
-  { id: 'ORD-1015', buyer: 'Tomás R.',     date: '2026-05-01T15:00:00',
-    items: [{ sku: 'NK-SHIRT-L-WHT',    name: 'Nike Dri-FIT Camiseta',      qty: 3, price:  89000 }],
-    total: 267000, status: 'SHIPPED' },
-];
+import { OrderService } from '../../../core/services/order.service';
+import { SellerGroupStatus, SellerOrderGroupDetail } from '../../../core/models/order.model';
 
 @Component({
   selector: 'app-seller-orders',
   standalone: true,
-  imports: [NgFor, NgIf, NgClass, DatePipe, CurrencyPipe, CurrencyCopPipe],
+  imports: [NgFor, NgIf, NgClass, DatePipe, CurrencyCopPipe],
   templateUrl: './seller-orders.component.html',
   styleUrl: './seller-orders.component.scss',
 })
-export class SellerOrdersComponent {
-  activeFilter = signal<OrderStatus | null>(null);
-  expandedId   = signal<string | null>(null);
+export class SellerOrdersComponent implements OnInit {
+  private orderService = inject(OrderService);
+
+  groups       = signal<SellerOrderGroupDetail[]>([]);
+  loading      = signal(true);
+  error        = signal<string | null>(null);
+  activeFilter = signal<SellerGroupStatus | null>(null);
+  expandedId   = signal<number | null>(null);
+
+  shippingMode  = signal<Set<number>>(new Set());
+  trackingDraft = signal<Record<number, string>>({});
+  actionLoading = signal<Set<number>>(new Set());
 
   filtered = computed(() => {
     const f = this.activeFilter();
-    return f ? MOCK_ORDERS.filter(o => o.status === f) : MOCK_ORDERS;
+    return f ? this.groups().filter(g => g.status === f) : this.groups();
   });
 
-  counts = computed(() => ({
-    ALL:       MOCK_ORDERS.length,
-    PENDING:   MOCK_ORDERS.filter(o => o.status === 'PENDING').length,
-    SHIPPED:   MOCK_ORDERS.filter(o => o.status === 'SHIPPED').length,
-    DELIVERED: MOCK_ORDERS.filter(o => o.status === 'DELIVERED').length,
-    CANCELLED: MOCK_ORDERS.filter(o => o.status === 'CANCELLED').length,
-  }));
+  counts = computed(() => {
+    const gs = this.groups();
+    return {
+      ALL:       gs.length,
+      PENDING:   gs.filter(g => g.status === 'PENDING').length,
+      PREPARING: gs.filter(g => g.status === 'PREPARING').length,
+      SHIPPED:   gs.filter(g => g.status === 'SHIPPED').length,
+      DELIVERED: gs.filter(g => g.status === 'DELIVERED').length,
+      CANCELLED: gs.filter(g => g.status === 'CANCELLED').length,
+    };
+  });
 
-  toggleExpand(id: string) {
+  ngOnInit() {
+    this.orderService.getSellerOrderGroups().subscribe({
+      next:  groups => { this.groups.set(groups); this.loading.set(false); },
+      error: ()     => { this.error.set('No se pudieron cargar los pedidos.'); this.loading.set(false); },
+    });
+  }
+
+  toggleExpand(id: number) {
     this.expandedId.update(cur => cur === id ? null : id);
   }
 
-  statusLabel(s: OrderStatus): string {
-    const m: Record<OrderStatus, string> = {
-      PENDING: 'Pendiente', SHIPPED: 'Enviado',
-      DELIVERED: 'Entregado', CANCELLED: 'Cancelado',
+  startShip(groupId: number) {
+    this.shippingMode.update(s => { const n = new Set(s); n.add(groupId); return n; });
+    this.trackingDraft.update(d => ({ ...d, [groupId]: '' }));
+  }
+
+  cancelShip(groupId: number) {
+    this.shippingMode.update(s => { const n = new Set(s); n.delete(groupId); return n; });
+  }
+
+  setTracking(groupId: number, value: string) {
+    this.trackingDraft.update(d => ({ ...d, [groupId]: value }));
+  }
+
+  confirmShip(groupId: number) {
+    const tracking = (this.trackingDraft()[groupId] ?? '').trim();
+    if (!tracking) return;
+    this.setLoading(groupId, true);
+    this.orderService.shipSellerGroup(groupId, tracking).subscribe({
+      next: () => {
+        this.patchGroup(groupId, 'SHIPPED', { trackingNumber: tracking, shippedAt: new Date().toISOString() });
+        this.cancelShip(groupId);
+        this.setLoading(groupId, false);
+      },
+      error: () => this.setLoading(groupId, false),
+    });
+  }
+
+  confirmDeliver(groupId: number) {
+    this.setLoading(groupId, true);
+    this.orderService.deliverSellerGroup(groupId).subscribe({
+      next: () => {
+        this.patchGroup(groupId, 'DELIVERED', { deliveredAt: new Date().toISOString() });
+        this.setLoading(groupId, false);
+      },
+      error: () => this.setLoading(groupId, false),
+    });
+  }
+
+  relevantDate(g: SellerOrderGroupDetail): string | null {
+    return g.shippedAt ?? g.preparedAt ?? g.deliveredAt ?? null;
+  }
+
+  statusLabel(s: SellerGroupStatus): string {
+    const m: Record<SellerGroupStatus, string> = {
+      PENDING:   'Pendiente',
+      PREPARING: 'En preparación',
+      SHIPPED:   'Enviado',
+      DELIVERED: 'Entregado',
+      CANCELLED: 'Cancelado',
     };
     return m[s];
   }
 
-  statusClass(s: OrderStatus): string {
-    const m: Record<OrderStatus, string> = {
-      PENDING: 'so-pending', SHIPPED: 'so-shipped',
-      DELIVERED: 'so-delivered', CANCELLED: 'so-cancelled',
+  statusClass(s: SellerGroupStatus): string {
+    const m: Record<SellerGroupStatus, string> = {
+      PENDING:   'so-pending',
+      PREPARING: 'so-preparing',
+      SHIPPED:   'so-shipped',
+      DELIVERED: 'so-delivered',
+      CANCELLED: 'so-cancelled',
     };
     return m[s];
   }
 
-  markShipped(id: string, e: Event) {
-    e.stopPropagation();
-    const order = MOCK_ORDERS.find(o => o.id === id);
-    if (order) order.status = 'SHIPPED';
+  private setLoading(groupId: number, on: boolean) {
+    this.actionLoading.update(s => { const n = new Set(s); on ? n.add(groupId) : n.delete(groupId); return n; });
+  }
+
+  private patchGroup(groupId: number, status: SellerGroupStatus, patch: Partial<SellerOrderGroupDetail> = {}) {
+    this.groups.update(gs => gs.map(g => g.groupId === groupId ? { ...g, status, ...patch } : g));
   }
 }

@@ -7,30 +7,46 @@
 
 <!-- Filter pills -->
 <div class="so-filters">
-  <button class="so-pill" [class.so-pill-on]="activeFilter() === null"
-          (click)="activeFilter.set(null)">
+  <button class="so-pill" [class.so-pill-on]="activeFilter() === null" (click)="activeFilter.set(null)">
     Todos <span class="so-count">{{ counts().ALL }}</span>
   </button>
-  <button class="so-pill so-pill-pending" [class.so-pill-on]="activeFilter() === 'PENDING'"
-          (click)="activeFilter.set('PENDING')">
+  <button class="so-pill so-pill-pending" [class.so-pill-on]="activeFilter() === 'PENDING'" (click)="activeFilter.set('PENDING')">
     Pendientes <span class="so-count">{{ counts().PENDING }}</span>
   </button>
-  <button class="so-pill so-pill-shipped" [class.so-pill-on]="activeFilter() === 'SHIPPED'"
-          (click)="activeFilter.set('SHIPPED')">
+  <button class="so-pill so-pill-preparing" [class.so-pill-on]="activeFilter() === 'PREPARING'" (click)="activeFilter.set('PREPARING')">
+    En preparación <span class="so-count">{{ counts().PREPARING }}</span>
+  </button>
+  <button class="so-pill so-pill-shipped" [class.so-pill-on]="activeFilter() === 'SHIPPED'" (click)="activeFilter.set('SHIPPED')">
     Enviados <span class="so-count">{{ counts().SHIPPED }}</span>
   </button>
-  <button class="so-pill so-pill-delivered" [class.so-pill-on]="activeFilter() === 'DELIVERED'"
-          (click)="activeFilter.set('DELIVERED')">
+  <button class="so-pill so-pill-delivered" [class.so-pill-on]="activeFilter() === 'DELIVERED'" (click)="activeFilter.set('DELIVERED')">
     Entregados <span class="so-count">{{ counts().DELIVERED }}</span>
   </button>
-  <button class="so-pill so-pill-cancelled" [class.so-pill-on]="activeFilter() === 'CANCELLED'"
-          (click)="activeFilter.set('CANCELLED')">
+  <button class="so-pill so-pill-cancelled" [class.so-pill-on]="activeFilter() === 'CANCELLED'" (click)="activeFilter.set('CANCELLED')">
     Cancelados <span class="so-count">{{ counts().CANCELLED }}</span>
   </button>
 </div>
 
+<!-- Loading -->
+<div class="so-empty" *ngIf="loading()">
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"
+       stroke-linecap="round" stroke-linejoin="round" class="so-spin">
+    <path d="M21 12a9 9 0 11-6.219-8.56"/>
+  </svg>
+  <p>Cargando pedidos...</p>
+</div>
+
+<!-- Error -->
+<div class="so-empty" *ngIf="!loading() && error()">
+  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#e57373" stroke-width="1.5"
+       stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+  </svg>
+  <p>{{ error() }}</p>
+</div>
+
 <!-- Empty state -->
-<div class="so-empty" *ngIf="filtered().length === 0">
+<div class="so-empty" *ngIf="!loading() && !error() && filtered().length === 0">
   <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"
        stroke-linecap="round" stroke-linejoin="round">
     <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
@@ -40,53 +56,108 @@
 </div>
 
 <!-- Orders list -->
-<div class="so-list" *ngIf="filtered().length">
-  <div class="so-card" *ngFor="let o of filtered()" [class.so-card-open]="expandedId() === o.id">
+<div class="so-list" *ngIf="!loading() && !error() && filtered().length">
+  <div class="so-card" *ngFor="let g of filtered()" [class.so-card-open]="expandedId() === g.groupId">
 
     <!-- Card header (always visible) -->
-    <div class="so-card-head" (click)="toggleExpand(o.id)">
-      <div class="so-order-id">{{ o.id }}</div>
+    <div class="so-card-head" (click)="toggleExpand(g.groupId)">
+      <div class="so-order-id">#{{ g.orderId }}</div>
+
       <div class="so-buyer">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
              stroke-linecap="round" stroke-linejoin="round">
           <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
         </svg>
-        {{ o.buyer }}
+        {{ g.buyerName }}
       </div>
-      <div class="so-date">{{ o.date | date:'dd MMM yyyy' }}</div>
-      <div class="so-items-count">{{ o.items.length }} ítem{{ o.items.length !== 1 ? 's' : '' }}</div>
-      <div class="so-total">{{ o.total | currencyCop }}</div>
-      <span class="so-badge" [ngClass]="statusClass(o.status)">{{ statusLabel(o.status) }}</span>
+
+      <div class="so-date" *ngIf="relevantDate(g)">{{ relevantDate(g) | date:'dd MMM yyyy' }}</div>
+      <div class="so-items-count">{{ g.items.length }} ítem{{ g.items.length !== 1 ? 's' : '' }}</div>
+      <div class="so-total">{{ g.subtotal | currencyCop }}</div>
+      <span class="so-badge" [ngClass]="statusClass(g.status)">{{ statusLabel(g.status) }}</span>
+
+      <!-- Action area -->
       <div class="so-card-actions" (click)="$event.stopPropagation()">
-        <button *ngIf="o.status === 'PENDING'" class="so-btn so-btn-ship" (click)="markShipped(o.id, $event)">
-          Marcar enviado
+
+        <!-- PREPARING: mostrar botón o formulario inline de guía -->
+        <ng-container *ngIf="g.status === 'PREPARING'">
+          <button *ngIf="!shippingMode().has(g.groupId)"
+                  class="so-btn so-btn-ship"
+                  (click)="startShip(g.groupId)">
+            Marcar enviado
+          </button>
+          <ng-container *ngIf="shippingMode().has(g.groupId)">
+            <input class="so-tracking-input"
+                   type="text"
+                   placeholder="Número de guía"
+                   [value]="trackingDraft()[g.groupId] ?? ''"
+                   (input)="setTracking(g.groupId, $any($event.target).value)" />
+            <button class="so-btn so-btn-ship"
+                    [disabled]="!trackingDraft()[g.groupId]?.trim() || actionLoading().has(g.groupId)"
+                    (click)="confirmShip(g.groupId)">
+              {{ actionLoading().has(g.groupId) ? 'Enviando...' : 'Confirmar' }}
+            </button>
+            <button class="so-btn so-btn-cancel" (click)="cancelShip(g.groupId)">
+              Cancelar
+            </button>
+          </ng-container>
+        </ng-container>
+
+        <!-- SHIPPED: confirmar entrega -->
+        <button *ngIf="g.status === 'SHIPPED'"
+                class="so-btn so-btn-deliver"
+                [disabled]="actionLoading().has(g.groupId)"
+                (click)="confirmDeliver(g.groupId)">
+          {{ actionLoading().has(g.groupId) ? 'Guardando...' : 'Confirmar entrega' }}
         </button>
       </div>
-      <svg class="so-chevron" [class.so-chevron-open]="expandedId() === o.id"
+
+      <svg class="so-chevron" [class.so-chevron-open]="expandedId() === g.groupId"
            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="6 9 12 15 18 9"/>
       </svg>
     </div>
 
-    <!-- Expanded items -->
-    <div class="so-card-body" *ngIf="expandedId() === o.id">
+    <!-- Expanded body -->
+    <div class="so-card-body" *ngIf="expandedId() === g.groupId">
+      <div class="so-shipping-info">
+        <span class="so-shipping-addr">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+          {{ g.shippingAddress }}, {{ g.shippingCity }}, {{ g.shippingCountry }}
+        </span>
+        <span *ngIf="g.trackingNumber" class="so-tracking-tag">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+            <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+          </svg>
+          Guía: <strong>{{ g.trackingNumber }}</strong>
+        </span>
+      </div>
+
       <table class="so-items-table">
         <thead>
-          <tr><th>SKU</th><th>Producto</th><th>Cantidad</th><th>Precio unit.</th><th>Subtotal</th></tr>
+          <tr>
+            <th>SKU</th><th>Producto</th><th>Cant.</th><th>Precio unit.</th><th>Subtotal</th>
+          </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let item of o.items">
+          <tr *ngFor="let item of g.items">
             <td class="so-sku">{{ item.sku }}</td>
-            <td>{{ item.name }}</td>
-            <td>{{ item.qty }}</td>
-            <td>{{ item.price | currencyCop }}</td>
-            <td><strong>{{ item.price * item.qty | currencyCop }}</strong></td>
+            <td>{{ item.productTitle }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ item.unitPrice | currencyCop }}</td>
+            <td><strong>{{ item.subtotal | currencyCop }}</strong></td>
           </tr>
         </tbody>
       </table>
+
       <div class="so-card-total">
-        Total del pedido: <strong>{{ o.total | currencyCop }}</strong>
+        Subtotal del grupo: <strong>{{ g.subtotal | currencyCop }}</strong>
       </div>
     </div>
 

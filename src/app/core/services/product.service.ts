@@ -69,7 +69,7 @@ export class ProductService {
   }
 
   getProduct(id: number): Observable<Product | undefined> {
-    return this.http.get<any>(`${this.BASE}/products/${id}`).pipe(
+    return this.http.get<any>(`${this.BASE}/products/public/${id}`).pipe(
       map(raw => {
         if (!raw) return undefined;
         const minPrice = raw.variants?.length

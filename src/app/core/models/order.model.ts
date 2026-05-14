@@ -1,5 +1,7 @@
-// Buyer-facing API types
+// ── Shared ──────────────────────────────────────────────────────────────────
+
 export type OrderApiStatus = 'PENDING' | 'PAID' | 'CANCELLED';
+export type SellerGroupStatus = 'PENDING' | 'PREPARING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
 
 export interface OrderItemResponse {
   itemId: number;
@@ -11,12 +13,23 @@ export interface OrderItemResponse {
   subtotal: number;
 }
 
+// ── Buyer-facing ─────────────────────────────────────────────────────────────
+
+export interface OrderSummaryDto {
+  orderId: number;
+  status: OrderApiStatus;
+  total: number;
+  createdAt: string;
+}
+
 export interface OrderSellerGroup {
   groupId: number;
   sellerId: number;
   sellerName: string;
-  status: OrderApiStatus;
+  status: SellerGroupStatus;
   subtotal: number;
+  trackingNumber: string | null;
+  shippedAt: string | null;
   items: OrderItemResponse[];
 }
 
@@ -32,7 +45,26 @@ export interface OrderResponse {
   sellerGroups: OrderSellerGroup[];
 }
 
-// Admin/seller types
+// ── Seller-facing ─────────────────────────────────────────────────────────────
+
+export interface SellerOrderGroupDetail {
+  groupId: number;
+  orderId: number;
+  buyerName: string;
+  shippingAddress: string;
+  shippingCity: string;
+  shippingCountry: string;
+  status: SellerGroupStatus;
+  subtotal: number;
+  trackingNumber: string | null;
+  preparedAt: string | null;
+  shippedAt: string | null;
+  deliveredAt: string | null;
+  items: OrderItemResponse[];
+}
+
+// ── Admin panel (legacy mock) ─────────────────────────────────────────────────
+
 export type OrderStatus = 'Pendiente' | 'Enviado' | 'Entregado' | 'Cancelado';
 
 export interface Order {

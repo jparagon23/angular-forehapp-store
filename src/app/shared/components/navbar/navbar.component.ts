@@ -148,6 +148,11 @@ export class NavbarComponent {
     });
   }
 
+  navTo(path: string) {
+    this.accountOpen = false;
+    this.router.navigate([path]);
+  }
+
   openLocation() {
     this.locationOpen = true;
     if (!this.addrLoaded) {

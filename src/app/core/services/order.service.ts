@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { Order, OrderResponse, OrderStatus } from '../models/order.model';
+import { Order, OrderResponse, OrderStatus, OrderSummaryDto, SellerOrderGroupDetail } from '../models/order.model';
 import { environment } from '../../../environments/environment';
 
 const MOCK_ORDERS: Order[] = [
@@ -24,8 +24,24 @@ export class OrderService {
     return this.http.post<OrderResponse>(`${this.base}/orders`, { addressId });
   }
 
+  getBuyerOrders(): Observable<OrderSummaryDto[]> {
+    return this.http.get<OrderSummaryDto[]>(`${this.base}/orders`);
+  }
+
   getOrderById(orderId: number): Observable<OrderResponse> {
     return this.http.get<OrderResponse>(`${this.base}/orders/${orderId}`);
+  }
+
+  getSellerOrderGroups(): Observable<SellerOrderGroupDetail[]> {
+    return this.http.get<SellerOrderGroupDetail[]>(`${this.base}/seller/order-groups`);
+  }
+
+  shipSellerGroup(groupId: number, trackingNumber: string): Observable<void> {
+    return this.http.patch<void>(`${this.base}/seller/order-groups/${groupId}/ship`, { trackingNumber });
+  }
+
+  deliverSellerGroup(groupId: number): Observable<void> {
+    return this.http.patch<void>(`${this.base}/seller/order-groups/${groupId}/deliver`, {});
   }
 
   // Admin panel (mock)

@@ -180,16 +180,16 @@
 
         <ng-container *ngIf="!(isLoggedIn$ | async)">
           <div class="nb-drop-top">
-            <button class="nb-drop-signin" routerLink="/login" (click)="accountOpen = false">Iniciar sesión</button>
+            <button class="nb-drop-signin" (click)="navTo('/login')">Iniciar sesión</button>
             <p class="nb-drop-new">¿Eres nuevo?
-              <a routerLink="/register" class="nb-drop-link" (click)="accountOpen = false">Regístrate aquí</a>
+              <a class="nb-drop-link" (click)="navTo('/register')">Regístrate aquí</a>
             </p>
           </div>
           <div class="nb-drop-divider"></div>
           <div class="nb-drop-section">
             <strong class="nb-drop-heading">Mis cuentas</strong>
-            <a routerLink="/orders"   class="nb-drop-item" (click)="accountOpen = false">Mis pedidos</a>
-            <a routerLink="/wishlist" class="nb-drop-item" (click)="accountOpen = false">Lista de deseos</a>
+            <a class="nb-drop-item" (click)="navTo('/orders')">Mis pedidos</a>
+            <a class="nb-drop-item" (click)="navTo('/wishlist')">Lista de deseos</a>
           </div>
         </ng-container>
 
@@ -204,9 +204,9 @@
           <div class="nb-drop-divider"></div>
           <div class="nb-drop-section">
             <strong class="nb-drop-heading">Mis cuentas</strong>
-            <a routerLink="/orders"            class="nb-drop-item" (click)="accountOpen = false">Mis pedidos</a>
-            <a routerLink="/wishlist"          class="nb-drop-item" (click)="accountOpen = false">Lista de deseos</a>
-            <a routerLink="/account/addresses" class="nb-drop-item" (click)="accountOpen = false">Mis direcciones</a>
+            <a class="nb-drop-item" (click)="navTo('/orders')">Mis pedidos</a>
+            <a class="nb-drop-item" (click)="navTo('/wishlist')">Lista de deseos</a>
+            <a class="nb-drop-item" (click)="navTo('/account/addresses')">Mis direcciones</a>
           </div>
           <div class="nb-drop-divider"></div>
           <div class="nb-drop-section">

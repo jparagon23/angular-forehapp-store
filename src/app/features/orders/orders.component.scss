@@ -38,10 +38,11 @@
 // ── Status badges ─────────────────────────────────────────
 .status-badge {
   display: inline-block; padding: 4px 12px; border-radius: 20px;
-  font-size: .75rem; font-weight: 700; white-space: nowrap;
+  font-size: .75rem; font-weight: 700; white-space: nowrap; flex-shrink: 0;
   &.green  { background: #e6f9ec; color: #1a7a3a; }
   &.blue   { background: #e6f0ff; color: #1a4a9a; }
   &.orange { background: #fff4e6; color: #a05a00; }
+  &.purple { background: #f3e5f5; color: #6a1b9a; }
   &.red    { background: #fee; color: var(--red); }
 }
 
@@ -61,7 +62,6 @@
   display: flex; align-items: center; gap: 10px;
   font-size: .9rem; color: #444;
 }
-.oci-emoji { font-size: 1.4rem; width: 28px; text-align: center; flex-shrink: 0; }
 .oci-name  { flex: 1; font-weight: 500; }
 .oci-qty   { font-size: .8rem; color: #aaa; flex-shrink: 0; }
 .oci-price { font-weight: 700; color: var(--dark); flex-shrink: 0; }
@@ -77,6 +77,69 @@
   font-size: .95rem; color: #555;
   strong { font-size: 1.1rem; font-weight: 800; color: var(--dark); }
 }
+
+// ── Seller groups ─────────────────────────────────────────
+.oc-groups { display: flex; flex-direction: column; gap: 14px; margin: 14px 0; }
+
+.oc-group {
+  border: 1px solid #eaf2ea; border-radius: 8px; overflow: hidden;
+}
+
+.oc-group-head {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 14px; background: #f8fdf8;
+  border-bottom: 1px solid #eaf2ea;
+}
+.oc-group-left {
+  display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0;
+  svg { color: #aaa; flex-shrink: 0; }
+}
+.oc-seller-name { font-size: .83rem; font-weight: 700; color: #333; }
+
+.oc-tracking-tag {
+  display: flex; align-items: center; gap: 5px;
+  background: #e3f2fd; color: #1565c0;
+  padding: 3px 10px; border-radius: 20px; font-size: .76rem;
+  svg { flex-shrink: 0; }
+  strong { font-family: monospace; }
+}
+
+.oc-items {
+  display: flex; flex-direction: column; gap: 0;
+  padding: 0 14px;
+}
+.oc-item {
+  display: flex; align-items: center; gap: 10px;
+  font-size: .88rem; color: #444;
+  padding: 9px 0; border-bottom: 1px solid #f5f5f5;
+  &:last-child { border-bottom: none; }
+}
+.oci-sku   { font-family: monospace; font-size: .76rem; color: #aaa; flex-shrink: 0; }
+.oci-name  { flex: 1; font-weight: 500; }
+.oci-qty   { font-size: .8rem; color: #aaa; flex-shrink: 0; }
+.oci-price { font-weight: 700; color: var(--dark); flex-shrink: 0; }
+
+.oc-group-subtotal {
+  padding: 8px 14px; font-size: .82rem; color: #888; text-align: right;
+  background: #fafafa;
+  strong { color: #333; }
+}
+
+// ── Loading / error states ─────────────────────────────────
+.oc-state {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 60px 20px; color: #bbb; font-size: .92rem;
+}
+.oc-error { color: #e57373; }
+.oc-detail-loading {
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px 0; font-size: .85rem; color: #aaa;
+}
+
+@keyframes oc-rotate {
+  to { transform: rotate(360deg); }
+}
+.oc-spin { animation: oc-rotate .8s linear infinite; }
 
 // ── Footer ────────────────────────────────────────────────
 .back-row { margin-top: 28px; }

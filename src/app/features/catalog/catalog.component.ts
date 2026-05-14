@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AsyncPipe, NgFor, NgIf } from '@angular/common';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
-import { combineLatest, map, take } from 'rxjs';
+import { combineLatest, map, take, catchError, of } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { loadProducts } from '../../store/products/products.actions';
 import { selectAllProducts, selectProductsLoading } from '../../store/products/products.selectors';
@@ -48,14 +48,14 @@ export class CatalogComponent implements OnInit {
 
   ngOnInit() {
     combineLatest([
-      this.productService.getCategories().pipe(take(1)),
+      this.productService.getCategories().pipe(catchError(() => of([])), take(1)),
       this.route.queryParams,
     ]).subscribe(([categories, params]) => {
       this.categories = categories;
       const search     = params['q']   || undefined;
       const catName    = params['cat'] || undefined;
       const categoryId = catName
-        ? categories.find(c => c.name === catName)?.id
+        ? categories.find((c: Category) => c.name === catName)?.id
         : undefined;
       this.store.dispatch(loadProducts({ search, categoryId }));
     });

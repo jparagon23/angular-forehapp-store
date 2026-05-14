@@ -443,7 +443,7 @@ $green-h: #4fc217;
 
 .nb-drop-item {
   font-size: .85rem; color: #222;
-  padding: 3px 0;
+  padding: 3px 0; cursor: pointer;
   transition: color .12s;
   &:hover { color: $green; text-decoration: underline; }
 }
