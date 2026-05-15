@@ -5,22 +5,98 @@
     <div class="order-card">
       <h1 class="card-title">Resumen del pedido</h1>
 
-      <div class="items-list">
-        <div class="order-item" *ngFor="let item of items$ | async">
-          <div class="oi-thumb">📦</div>
-          <div class="oi-info">
-            <p class="oi-name">{{ item.productTitle }}</p>
-            <p class="oi-variant">{{ item.sku }}</p>
-            <p class="oi-unit">{{ item.unitPrice | currencyCop }} × {{ item.quantity }}</p>
-          </div>
-          <div class="oi-total">{{ item.subtotal | currencyCop }}</div>
+      <div *ngFor="let group of sellerGroups$ | async" class="seller-group">
+
+        <!-- Seller header -->
+        <div class="group-header">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
+            <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+          </svg>
+          <span>{{ group.sellerName }}</span>
+          <span class="group-subtotal">Subtotal: {{ group.subtotal | currencyCop }}</span>
         </div>
+
+        <!-- Items -->
+        <div class="items-list">
+          <div class="order-item" *ngFor="let item of group.items">
+            <div class="oi-thumb">📦</div>
+            <div class="oi-info">
+              <p class="oi-name">{{ item.productTitle }}</p>
+              <p class="oi-variant">{{ item.sku }}</p>
+              <p class="oi-unit">{{ item.unitPrice | currencyCop }} × {{ item.quantity }}</p>
+            </div>
+            <div class="oi-total">{{ item.subtotal | currencyCop }}</div>
+          </div>
+        </div>
+
+        <!-- Coupon field -->
+        <div class="coupon-section">
+          <ng-container *ngIf="!appliedCoupons[group.sellerId]; else couponApplied">
+            <div class="coupon-input-row">
+              <input
+                class="coupon-input"
+                type="text"
+                placeholder="Cupón de {{ group.sellerName }}"
+                [(ngModel)]="couponInputs[group.sellerId]"
+                (ngModelChange)="couponErrors[group.sellerId] = ''"
+                (keydown.enter)="applyCoupon(group.sellerId, group.subtotal)"
+                [disabled]="couponLoading[group.sellerId]"
+                [class.has-error]="couponErrors[group.sellerId]"
+                maxlength="50"
+              />
+              <button
+                class="btn-apply-coupon"
+                (click)="applyCoupon(group.sellerId, group.subtotal)"
+                [disabled]="couponLoading[group.sellerId] || !(couponInputs[group.sellerId] || '').trim()">
+                <span *ngIf="!couponLoading[group.sellerId]">Aplicar</span>
+                <span class="mini-spin" *ngIf="couponLoading[group.sellerId]"></span>
+              </button>
+            </div>
+            <p class="coupon-error" *ngIf="couponErrors[group.sellerId]">
+              {{ couponErrors[group.sellerId] }}
+            </p>
+          </ng-container>
+
+          <ng-template #couponApplied>
+            <div class="coupon-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span>
+                {{ appliedCoupons[group.sellerId].code }}
+                <ng-container *ngIf="appliedCoupons[group.sellerId].discountType === 'PORCENTAJE'">
+                  — {{ appliedCoupons[group.sellerId].discountValue }}% descuento
+                </ng-container>
+                <ng-container *ngIf="appliedCoupons[group.sellerId].discountType === 'MONTO_FIJO'">
+                  — {{ appliedCoupons[group.sellerId].discountValue | currencyCop }} descuento
+                </ng-container>
+              </span>
+              <span class="coupon-saving">−{{ appliedCoupons[group.sellerId].discountAmount | currencyCop }}</span>
+              <button class="btn-remove-coupon" (click)="removeCoupon(group.sellerId)" title="Quitar cupón">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            <div class="group-final-row">
+              <span>Total {{ group.sellerName }}:</span>
+              <strong>{{ getGroupTotal(group.sellerId, group.subtotal) | currencyCop }}</strong>
+            </div>
+          </ng-template>
+        </div>
+
       </div>
 
+      <!-- Summary rows -->
       <div class="summary-rows">
         <div class="sum-row">
           <span>Subtotal ({{ count$ | async }} artículos)</span>
           <span>{{ total$ | async | currencyCop }}</span>
+        </div>
+        <div class="sum-row discount-row" *ngIf="totalDiscount > 0">
+          <span>Descuentos aplicados</span>
+          <span class="discount-val">−{{ totalDiscount | currencyCop }}</span>
         </div>
         <div class="sum-row">
           <span>Envío</span>
@@ -30,7 +106,7 @@
 
       <div class="total-row">
         <span>Total del pedido</span>
-        <strong class="total-val">{{ total$ | async | currencyCop }}</strong>
+        <strong class="total-val">{{ totalWithDiscounts | currencyCop }}</strong>
       </div>
     </div>
 
@@ -62,13 +138,11 @@
           </button>
         </div>
 
-        <!-- Loading -->
         <div class="ship-loading" *ngIf="addressesLoading$ | async">
           <div class="mini-spinner"></div>
           <span>Cargando direcciones...</span>
         </div>
 
-        <!-- No addresses yet -->
         <div class="ship-empty" *ngIf="!(addressesLoading$ | async) && (addresses$ | async)?.length === 0">
           <p>No tienes direcciones guardadas.</p>
           <button class="btn-add-addr" (click)="openAddressForm()">
@@ -79,10 +153,8 @@
           </button>
         </div>
 
-        <!-- Addresses loaded -->
         <ng-container *ngIf="!(addressesLoading$ | async) && (addresses$ | async) as addresses">
 
-          <!-- Selected address display -->
           <div class="ship-selected" *ngIf="!showAddressPicker && getSelected(addresses) as sel">
             <div class="sel-info">
               <p class="sel-alias">{{ sel.alias || 'Dirección' }}</p>
@@ -92,7 +164,6 @@
             </div>
           </div>
 
-          <!-- Address picker list -->
           <div class="ship-picker" *ngIf="showAddressPicker">
             <div class="pick-option" *ngFor="let addr of addresses"
                  [class.active]="addr.id === selectedAddressId"
@@ -134,7 +205,6 @@
         </div>
       </div>
 
-      <!-- Error de creación de orden -->
       <div class="confirm-error" *ngIf="createOrderError$ | async as err">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -156,7 +226,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
-          Confirmar y pagar · {{ total$ | async | currencyCop }}
+          Confirmar y pagar · {{ totalWithDiscounts | currencyCop }}
         </ng-container>
         <ng-template #loadingTpl>
           <span class="btn-spinner"></span>

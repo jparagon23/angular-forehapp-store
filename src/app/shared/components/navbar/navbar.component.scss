@@ -299,6 +299,27 @@ $green-h: #4fc217;
   @media (max-width: 740px) { display: none; }
 }
 
+// ── Wishlist
+.nb-wishlist {
+  @extend %nb-hover;
+  display: flex; align-items: center; gap: 5px;
+  background: none; color: #fff; padding: 5px 10px; flex-shrink: 0; cursor: pointer;
+}
+.nb-wishlist-icon-wrap {
+  position: relative; display: flex; align-items: center;
+}
+.nb-wishlist-icon {
+  width: 28px; height: 28px; stroke: #fff;
+}
+.nb-wishlist-count {
+  position: absolute; top: -8px; right: -9px;
+  background: #e53e3e; color: #fff;
+  font-size: .7rem; font-weight: 800;
+  min-width: 20px; height: 20px; border-radius: 10px; padding: 0 5px;
+  display: flex; align-items: center; justify-content: center;
+  animation: pop .2s ease;
+}
+
 // ── Cart
 .nb-cart {
   @extend %nb-hover;
@@ -372,6 +393,7 @@ $green-h: #4fc217;
 // ── Account dropdown ───────────────────────────────────────
 .nb-account-wrap {
   position: relative;
+  flex-shrink: 0;
 
   // Puente invisible que cubre el hueco entre el botón y el dropdown
   // así mouseleave no se dispara mientras el mouse baja hacia el menú
@@ -381,6 +403,25 @@ $green-h: #4fc217;
     top: 100%; left: 0; right: 0;
     height: 10px;
   }
+}
+
+// Mobile account icon (shown only ≤740px)
+.nb-mobile-acct {
+  display: none;
+  align-items: center; justify-content: center;
+  background: none; cursor: pointer; position: relative;
+  padding: 5px 8px; flex-shrink: 0;
+  border: 1px solid transparent; border-radius: 3px;
+  transition: border-color .12s;
+  &:hover { border-color: #fff; }
+  svg { width: 26px; height: 26px; stroke: #fff; }
+  @media (max-width: 740px) { display: flex; }
+}
+
+.nb-acct-dot {
+  position: absolute; top: 5px; right: 6px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: $green; border: 1.5px solid $dark;
 }
 
 .nb-account-drop {
@@ -393,6 +434,10 @@ $green-h: #4fc217;
   overflow: hidden;
 
   &.open { display: block; }
+
+  @media (max-width: 400px) {
+    width: min(220px, calc(100vw - 20px));
+  }
 }
 
 .nb-drop-arrow {
@@ -468,4 +513,19 @@ $green-h: #4fc217;
   cursor: pointer; padding: 4px 0;
   transition: color .12s;
   &:hover { text-decoration: underline; }
+}
+
+// ── Mobile adjustments ────────────────────────────────────
+@media (max-width: 480px) {
+  .nb-top {
+    padding: 6px 8px;
+    gap: 0;
+  }
+  .nb-search-input { padding: 0 10px; font-size: .9rem; }
+  .nb-search-btn {
+    padding: 0 13px;
+    svg { width: 18px; height: 18px; }
+  }
+  .nb-search { margin: 0 4px; }
+  .nb-logo { padding: 5px 6px; gap: 6px; }
 }

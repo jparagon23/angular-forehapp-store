@@ -237,6 +237,107 @@
   color: #aaa; font-size: .95rem; padding: 32px 0; text-align: center;
 }
 
+.rv-title {
+  display: block; font-size: .95rem; font-weight: 700; color: var(--dark);
+  margin-bottom: 6px;
+}
+
+// Loading spinner
+.rv-loading {
+  display: flex; justify-content: center; padding: 40px 0;
+}
+@keyframes rv-rotate { to { transform: rotate(360deg); } }
+.rv-spin { animation: rv-rotate .8s linear infinite; }
+
+// My review banner
+.my-review-banner {
+  background: #f0f9ec; border: 1px solid #c8e6c9; border-radius: 14px;
+  padding: 20px 24px; margin-bottom: 24px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.my-review-header {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.my-review-label {
+  font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--green);
+}
+.rv-status {
+  font-size: .76rem; font-weight: 700; padding: 2px 10px; border-radius: 20px;
+  &--PENDIENTE  { background: #fff8e1; color: #f57f17; }
+  &--APROBADO   { background: #e8f5e9; color: #2e7d32; }
+  &--RECHAZADO  { background: #fce4e4; color: #c62828; }
+}
+
+// Write review CTA
+.write-review-wrap {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 28px;
+  padding: 18px 22px; background: #fff; border: 1px dashed #c8e6c9; border-radius: 12px;
+  flex-wrap: wrap;
+}
+.write-review-hint { font-size: .88rem; color: #888; flex: 1; margin: 0; }
+.btn-write-review {
+  padding: 9px 20px; background: var(--green); color: #fff; border: none;
+  border-radius: 8px; font-size: .88rem; font-weight: 700; cursor: pointer;
+  transition: background .15s; white-space: nowrap; flex-shrink: 0;
+  &:hover { background: var(--green-dark); }
+}
+
+// Review form
+.rv-form {
+  background: #fff; border: 1px solid #eaf3e6; border-radius: 14px;
+  padding: 24px 28px; margin-bottom: 28px; display: flex; flex-direction: column; gap: 14px;
+}
+.rv-form-title {
+  font-size: 1.05rem; font-weight: 800; color: var(--dark); margin: 0;
+}
+.star-selector {
+  display: flex; align-items: center; gap: 4px;
+}
+.star-pick {
+  font-size: 1.8rem; background: none; border: none; cursor: pointer;
+  color: #ddd; line-height: 1; padding: 0;
+  transition: color .1s, transform .1s;
+  &.filled { color: #f5a623; }
+  &:hover  { transform: scale(1.2); color: #f5a623; }
+}
+.rv-rating-label { font-size: .82rem; color: #888; margin-left: 6px; }
+.rv-input {
+  width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #dce8dc;
+  font-size: .9rem; outline: none; font-family: inherit; box-sizing: border-box;
+  &:focus { border-color: var(--green); box-shadow: 0 0 0 2px rgba(66,170,20,.1); }
+}
+.rv-textarea {
+  @extend .rv-input; resize: vertical;
+}
+.rv-error {
+  font-size: .83rem; color: #c62828; background: #fce4e4;
+  padding: 8px 12px; border-radius: 6px;
+}
+.rv-form-btns { display: flex; gap: 10px; }
+.btn-submit-rv {
+  padding: 9px 22px; background: var(--green); color: #fff; border: none;
+  border-radius: 8px; font-size: .88rem; font-weight: 700; cursor: pointer;
+  transition: background .15s;
+  &:hover:not(:disabled) { background: var(--green-dark); }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}
+.btn-cancel-rv {
+  padding: 9px 18px; background: #f5f5f5; color: #555;
+  border: 1px solid #ddd; border-radius: 8px; font-size: .88rem;
+  font-weight: 600; cursor: pointer;
+  &:hover { border-color: #aaa; }
+}
+
+// Pagination
+.rv-pagination { display: flex; justify-content: center; padding: 20px 0 4px; }
+.btn-load-more {
+  padding: 9px 24px; background: #fff; border: 1px solid var(--green);
+  color: var(--green); border-radius: 8px; font-size: .88rem; font-weight: 700;
+  cursor: pointer; transition: background .15s;
+  &:hover:not(:disabled) { background: #f0fcea; }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}
+
 /* ── RELATED PRODUCTS ────────────────────────────────────── */
 .related-section {
   padding: 56px 0 80px;
@@ -285,10 +386,73 @@
   font-size: .95rem; font-weight: 800; color: var(--dark); margin-top: 4px;
 }
 
+/* ── SKELETON ────────────────────────────────────────────── */
+@keyframes shimmer {
+  from { background-position: -700px 0; }
+  to   { background-position:  700px 0; }
+}
+
+.sk {
+  border-radius: 10px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
+  background-size: 1400px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+.sk-img {
+  width: 100%; aspect-ratio: 1/1; border-radius: 24px;
+  @media (max-width: 720px) { aspect-ratio: 4/3; }
+}
+
+.sk-thumbs {
+  display: flex; gap: 10px; margin-top: 16px; justify-content: center;
+}
+.sk-thumb {
+  width: 72px; height: 72px; border-radius: 14px; flex-shrink: 0;
+}
+
+.sk-dots {
+  display: flex; gap: 8px; justify-content: center; margin-top: 12px;
+}
+.sk-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+}
+
+.sk-info {
+  display: flex; flex-direction: column; gap: 14px; padding-top: 4px;
+}
+
+.sk-badge  { height: 24px; width: 90px; border-radius: 20px; }
+.sk-title  { height: 34px; width: 85%; border-radius: 8px; }
+.sk-title-sm { width: 55%; height: 28px; }
+.sk-line   { height: 16px; width: 100%; border-radius: 6px; }
+.sk-line-md { width: 80%; }
+.sk-line-sm { width: 60%; }
+.sk-price  { height: 44px; width: 50%; border-radius: 8px; margin-top: 6px; }
+
+.sk-opts {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px;
+}
+.sk-opt {
+  height: 40px; width: 68px; border-radius: 9px;
+}
+
+.sk-btn-add {
+  height: 56px; width: 100%; border-radius: 14px; margin-top: 8px;
+}
+
 /* ── MISC ────────────────────────────────────────────────── */
 .not-found { text-align: center; padding: 100px 20px; color: #aaa; }
 .not-found h2 { font-size: 1.6rem; margin-bottom: 12px; color: var(--dark); }
 .not-found a { color: var(--green); }
+
+// ── Mobile ────────────────────────────────────────────────
+@media (max-width: 480px) {
+  .breadcrumb { padding: 16px 16px 0; }
+  .product-layout { margin-top: 16px; }
+  .related-section { padding: 36px 0 50px; }
+  .related-grid { gap: 10px; }
+}
 
 .site-footer {
   background: var(--dark); color: #aaa;

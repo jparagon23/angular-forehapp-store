@@ -1,19 +1,20 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { AsyncPipe, DatePipe, NgFor, NgIf } from '@angular/common';
-import { Observable, combineLatest, map } from 'rxjs';
+import { AsyncPipe, DatePipe, NgFor, NgIf, TitleCasePipe } from '@angular/common';
+import { Observable, combineLatest, map, take } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { loadProduct, loadProducts } from '../../store/products/products.actions';
+import { clearSelectedProduct, loadProduct, loadProducts } from '../../store/products/products.actions';
 import { selectSelectedProduct, selectProductsLoading, selectAllProducts } from '../../store/products/products.selectors';
 import { addCartItem, openCart } from '../../store/cart/cart.actions';
+import { selectIsLoggedIn } from '../../store/auth/auth.selectors';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { CartDrawerComponent } from '../cart/cart-drawer.component';
 import { ToastComponent } from '../../shared/components/toast/toast.component';
 import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
 import { DetailVariant, Product } from '../../core/models/product.model';
-import { Review } from '../../core/models/review.model';
-import { ProductService } from '../../core/services/product.service';
+import { ReviewResponse, ProductRatingSummary } from '../../core/models/review.model';
+import { ReviewService } from '../../core/services/review.service';
 
 const COLOR_HEX: Record<string, string> = {
   'Blanco': '#f0f0f0', 'Negro': '#1a1a1a', 'Azul Royal': '#1565c0',
@@ -24,24 +25,41 @@ const COLOR_HEX: Record<string, string> = {
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [AsyncPipe, DatePipe, NgFor, NgIf, RouterLink, NavbarComponent, CartDrawerComponent, ToastComponent, CurrencyCopPipe],
+  imports: [AsyncPipe, DatePipe, NgFor, NgIf, TitleCasePipe, RouterLink, NavbarComponent, CartDrawerComponent, ToastComponent, CurrencyCopPipe],
   templateUrl: './product-detail.component.html',
   styleUrl: './product-detail.component.scss',
 })
 export class ProductDetailComponent implements OnInit {
-  private store = inject(Store);
-  private route = inject(ActivatedRoute);
-  private productService = inject(ProductService);
+  private store         = inject(Store);
+  private route         = inject(ActivatedRoute);
+  private reviewService = inject(ReviewService);
 
-  product$ = this.store.select(selectSelectedProduct);
-  loading$ = this.store.select(selectProductsLoading);
-  reviews$!: Observable<Review[]>;
+  product$          = this.store.select(selectSelectedProduct);
+  loading$          = this.store.select(selectProductsLoading);
   relatedProducts$!: Observable<Product[]>;
+
+  isLoggedIn        = toSignal(this.store.select(selectIsLoggedIn), { initialValue: false });
 
   selectedAttributes = signal<Record<string, string>>({});
   qty          = signal(1);
   toastMessage = signal('');
   currentSlide = signal(0);
+
+  // Reviews state
+  reviews         = signal<ReviewResponse[]>([]);
+  reviewSummary   = signal<ProductRatingSummary | null>(null);
+  reviewsLoading  = signal(false);
+  reviewsPage     = signal(0);
+  reviewsTotalPg  = signal(0);
+  myReview        = signal<ReviewResponse | null>(null);
+  formVisible     = signal(false);
+  rvRating        = signal(0);
+  rvTitle         = signal('');
+  rvComment       = signal('');
+  rvSubmitting    = signal(false);
+  rvError         = signal('');
+
+  private currentProductId = 0;
 
   readonly colorHex = COLOR_HEX;
   readonly slideBackgrounds = [
@@ -50,10 +68,10 @@ export class ProductDetailComponent implements OnInit {
     'linear-gradient(135deg, #fdf5e2, #faf8f0)',
     'linear-gradient(135deg, #fde8f2, #faf0f6)',
   ];
+  readonly starNums = [1, 2, 3, 4, 5];
 
   private productSignal = toSignal(this.store.select(selectSelectedProduct));
 
-  // Atributos dinámicos: computed síncrono, se recalcula cuando cambia el producto
   attributeGroups = computed(() => {
     const p = this.productSignal();
     if (!p?.variants?.length) return [];
@@ -67,15 +85,26 @@ export class ProductDetailComponent implements OnInit {
     return [...map.entries()].map(([name, vals]) => ({ name, values: [...vals] }));
   });
 
+  displayRating = computed(() =>
+    Math.round((this.reviewSummary()?.averageRating ?? 0) * 10) / 10
+  );
+
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
+    this.currentProductId = id;
+
+    this.store.dispatch(clearSelectedProduct());
     this.store.dispatch(loadProducts({}));
     this.store.dispatch(loadProduct({ id }));
     this.currentSlide.set(0);
     this.qty.set(1);
     this.selectedAttributes.set({});
 
-    this.reviews$ = this.productService.getReviews(id);
+    this.loadReviews(id, 0);
+
+    this.store.select(selectIsLoggedIn).pipe(take(1)).subscribe(loggedIn => {
+      if (loggedIn) this.loadMyReview();
+    });
 
     this.relatedProducts$ = combineLatest([
       this.store.select(selectAllProducts),
@@ -85,6 +114,66 @@ export class ProductDetailComponent implements OnInit {
         product ? all.filter(p => p.cat === product.cat && p.id !== product.id).slice(0, 4) : []
       )
     );
+  }
+
+  loadReviews(productId: number, page: number) {
+    this.reviewsLoading.set(true);
+    this.reviewService.getProductReviews(productId, page).subscribe({
+      next: res => {
+        this.reviews.update(prev => page === 0 ? res.reviews : [...prev, ...res.reviews]);
+        if (res.summary) this.reviewSummary.set(res.summary);
+        this.reviewsPage.set(res.currentPage);
+        this.reviewsTotalPg.set(res.totalPages);
+        this.reviewsLoading.set(false);
+      },
+      error: () => this.reviewsLoading.set(false),
+    });
+  }
+
+  loadMoreReviews() {
+    this.loadReviews(this.currentProductId, this.reviewsPage() + 1);
+  }
+
+  private loadMyReview() {
+    this.reviewService.getMyReviews().subscribe({
+      next: reviews => {
+        const mine = reviews.find(r => r.productId === this.currentProductId) ?? null;
+        this.myReview.set(mine);
+      },
+    });
+  }
+
+  setRating(n: number) { this.rvRating.set(n); }
+
+  submitReview() {
+    const rating = this.rvRating();
+    if (!rating) return;
+    this.rvSubmitting.set(true);
+    this.rvError.set('');
+    this.reviewService.createReview(this.currentProductId, {
+      rating,
+      title:   this.rvTitle().trim() || undefined,
+      comment: this.rvComment().trim() || undefined,
+    }).subscribe({
+      next: review => {
+        this.myReview.set(review);
+        this.formVisible.set(false);
+        this.rvSubmitting.set(false);
+        this.toastMessage.set('Reseña enviada. Será visible en el plazo de 24 horas. — ' + Date.now());
+      },
+      error: err => {
+        this.rvSubmitting.set(false);
+        const status = err?.status;
+        if (status === 409) this.rvError.set('Ya tienes una reseña para este producto.');
+        else this.rvError.set('No se pudo enviar la reseña. Intenta de nuevo.');
+      },
+    });
+  }
+
+  statusLabel(s: string): string {
+    if (s === 'APROBADO') return '✅ Aprobada';
+    if (s === 'RECHAZADO') return '❌ Rechazada';
+    return '⏳ En revisión';
   }
 
   setSlide(i: number) { this.currentSlide.set(i); }
@@ -103,7 +192,6 @@ export class ProductDetailComponent implements OnInit {
     ) ?? null;
   }
 
-  // null = no hay variante completamente seleccionada aún
   availableStock(product: Product): number | null {
     const groups = this.attributeGroups();
     const sel = this.selectedAttributes();
@@ -134,17 +222,19 @@ export class ProductDetailComponent implements OnInit {
   }
 
   addToCart(product: Product) {
-    const variant = this.selectedVariant(product);
-    const variantId = variant?.id ?? product.variants?.[0]?.id;
+    const variant   = this.selectedVariant(product);
+    const target    = variant ?? product.variants?.[0];
+    const variantId = target?.id;
     if (!variantId) return;
-    this.store.dispatch(addCartItem({ variantId, quantity: this.qty() }));
+    this.store.dispatch(addCartItem({
+      variantId,
+      quantity:     this.qty(),
+      productTitle: product.name,
+      sku:          target.sku,
+      unitPrice:    target.price ?? product.price,
+    }));
     this.store.dispatch(openCart());
     this.toastMessage.set(`${product.name} agregado al carrito 🎾 — ${Date.now()}`);
-  }
-
-  avgRating(reviews: Review[]): number {
-    if (!reviews.length) return 0;
-    return Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) * 10) / 10;
   }
 
   starsArray(rating: number): string[] {

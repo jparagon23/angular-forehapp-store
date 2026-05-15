@@ -1,0 +1,159 @@
+<app-admin-topbar title="Devoluciones y reembolsos"></app-admin-topbar>
+
+<!-- ── Approved section (in-session) ─────────────────────────────────── -->
+<div class="ret-approved-section" *ngIf="approvedReturns().length > 0">
+  <div class="ret-section-head">
+    <span class="ret-section-title">Aprobadas — pendientes de reembolso</span>
+    <span class="ret-section-count">{{ approvedReturns().length }}</span>
+  </div>
+
+  <div class="ret-approved-list">
+    <div class="ret-approved-card" *ngFor="let r of approvedReturns()">
+      <div class="ret-approved-info">
+        <span class="ret-acard-buyer">{{ r.buyerName }}</span>
+        <span class="ret-acard-meta">Orden #{{ r.orderId }} · Devolución #{{ r.returnId }}</span>
+      </div>
+      <span class="ret-acard-amount">{{ r.refundAmount | currencyCop }}</span>
+      <button class="ret-refunded-btn"
+              [disabled]="refundingId() === r.returnId"
+              (click)="markRefunded(r.returnId)">
+        {{ refundingId() === r.returnId ? 'Procesando...' : '💰 Marcar como reembolsada' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Header ─────────────────────────────────────────────────────────── -->
+<div class="ret-header">
+  <div>
+    <p class="ret-sub">Solicitudes de devolución pendientes de revisión</p>
+  </div>
+  <span class="ret-badge" *ngIf="total() > 0">{{ total() }} pendiente{{ total() !== 1 ? 's' : '' }}</span>
+</div>
+
+<!-- Loading -->
+<div class="ret-empty" *ngIf="loading()">
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"
+       stroke-linecap="round" class="ret-spin">
+    <path d="M21 12a9 9 0 11-6.219-8.56"/>
+  </svg>
+</div>
+
+<!-- Empty -->
+<div class="ret-empty" *ngIf="!loading() && pendingReturns().length === 0">
+  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5"
+       stroke-linecap="round" stroke-linejoin="round">
+    <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+    <polyline points="22 4 12 14.01 9 11.01"/>
+  </svg>
+  <p>No hay devoluciones pendientes.</p>
+</div>
+
+<!-- Returns list -->
+<div class="ret-list" *ngIf="!loading() && pendingReturns().length > 0">
+  <div class="ret-card" *ngFor="let r of pendingReturns()">
+
+    <!-- Card head -->
+    <div class="ret-card-head">
+      <div class="ret-head-left">
+        <span class="ret-card-id">Devolución #{{ r.returnId }}</span>
+        <span class="ret-card-buyer">{{ r.buyerName }}</span>
+        <span class="ret-card-order">Orden #{{ r.orderId }} · Grupo #{{ r.orderGroupId }}</span>
+      </div>
+      <div class="ret-head-right">
+        <span class="ret-type-tag">{{ returnTypeLabel(r.returnType) }}</span>
+        <span class="ret-date">{{ r.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+      </div>
+    </div>
+
+    <!-- Reason -->
+    <p class="ret-reason">"{{ r.reason }}"</p>
+
+    <!-- Items -->
+    <div class="ret-items">
+      <div class="ret-item" *ngFor="let item of r.items">
+        <span class="ret-item-sku">{{ item.variantSku }}</span>
+        <span class="ret-item-name">{{ item.productTitle }}</span>
+        <span class="ret-item-qty">× {{ item.quantityToReturn }}</span>
+        <span class="ret-item-price">{{ item.subtotal | currencyCop }}</span>
+      </div>
+      <div class="ret-items-total">
+        Subtotal estimado: <strong>{{ calcEstimatedTotal(r) | currencyCop }}</strong>
+        <span class="ret-items-note">(el monto real lo defines al aprobar)</span>
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="ret-actions">
+      <button class="ret-btn ret-btn-approve"
+              [class.ret-btn-active]="activeAction()?.returnId === r.returnId && activeAction()?.mode === 'approve'"
+              [disabled]="processingId() === r.returnId"
+              (click)="setAction(r.returnId, 'approve')">
+        ✅ Aprobar
+      </button>
+      <button class="ret-btn ret-btn-reject"
+              [class.ret-btn-active]="activeAction()?.returnId === r.returnId && activeAction()?.mode === 'reject'"
+              [disabled]="processingId() === r.returnId"
+              (click)="setAction(r.returnId, 'reject')">
+        ❌ Rechazar
+      </button>
+    </div>
+
+    <!-- Approve form -->
+    <div class="ret-action-form"
+         *ngIf="activeAction()?.returnId === r.returnId && activeAction()?.mode === 'approve'">
+      <div class="ret-form-row">
+        <label class="ret-form-label">Monto a reembolsar (COP) *</label>
+        <input type="number" class="ret-form-input" placeholder="Ej: 55000"
+               [value]="formRefundAmount()"
+               (input)="onAmountInput($event)"
+               min="0" step="1">
+      </div>
+      <div class="ret-form-row">
+        <label class="ret-form-label">Nota para el comprador (opcional)</label>
+        <textarea class="ret-form-textarea" rows="2" maxlength="1000"
+                  placeholder="Instrucciones o confirmación para el comprador..."
+                  [value]="formAdminNotes()"
+                  (input)="onNotesInput($event)"></textarea>
+      </div>
+      <div class="ret-form-error" *ngIf="formError()">{{ formError() }}</div>
+      <div class="ret-form-actions">
+        <button class="ret-form-cancel" (click)="clearAction()">Cancelar</button>
+        <button class="ret-form-confirm ret-form-confirm-approve"
+                [disabled]="processingId() === r.returnId"
+                (click)="confirmApprove(r)">
+          {{ processingId() === r.returnId ? 'Aprobando...' : 'Confirmar aprobación' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Reject form -->
+    <div class="ret-action-form ret-action-form-reject"
+         *ngIf="activeAction()?.returnId === r.returnId && activeAction()?.mode === 'reject'">
+      <div class="ret-form-row">
+        <label class="ret-form-label">Motivo del rechazo * <span class="ret-form-required">(visible para el comprador)</span></label>
+        <textarea class="ret-form-textarea" rows="3" maxlength="1000"
+                  placeholder="Explica por qué se rechaza la solicitud..."
+                  [value]="formAdminNotes()"
+                  (input)="onNotesInput($event)"></textarea>
+      </div>
+      <div class="ret-form-error" *ngIf="formError()">{{ formError() }}</div>
+      <div class="ret-form-actions">
+        <button class="ret-form-cancel" (click)="clearAction()">Cancelar</button>
+        <button class="ret-form-confirm ret-form-confirm-reject"
+                [disabled]="processingId() === r.returnId"
+                (click)="confirmReject(r)">
+          {{ processingId() === r.returnId ? 'Rechazando...' : 'Confirmar rechazo' }}
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Pagination -->
+<div class="ret-pagination" *ngIf="totalPages() > 1">
+  <button class="ret-page-btn" [disabled]="page() === 0" (click)="prevPage()">← Anterior</button>
+  <span>Página {{ page() + 1 }} de {{ totalPages() }}</span>
+  <button class="ret-page-btn" [disabled]="page() >= totalPages() - 1" (click)="nextPage()">Siguiente →</button>
+</div>

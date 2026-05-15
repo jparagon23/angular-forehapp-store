@@ -1,8 +1,24 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { CartResponse } from '../models/cart.model';
+import { CartItemResponse, CartResponse, CartSellerGroup } from '../models/cart.model';
+
+/* Shape que devuelve POST /cart/items/batch (campos distintos al modelo interno) */
+interface BatchItem {
+  id: number;
+  variantId: number;
+  sku: string;
+  productTitle: string;
+  quantity: number;
+  currentPrice: number;
+  subtotal: number;
+  priceChanged: boolean;
+  originalPrice: number | null;
+}
+interface BatchGroup  { sellerId: number; sellerName: string; subtotal: number; items: BatchItem[]; }
+interface BatchCartResponse { id: number | null; status: string; updatedAt: string | null; total: number; sellerGroups: BatchGroup[]; }
 
 @Injectable({ providedIn: 'root' })
 export class CartService {
@@ -17,6 +33,12 @@ export class CartService {
     return this.http.post<CartResponse>(`${this.BASE}/cart/items`, { variantId, quantity });
   }
 
+  addItemsBatch(items: { variantId: number; quantity: number }[]): Observable<CartResponse> {
+    return this.http.post<BatchCartResponse>(`${this.BASE}/cart/items/batch`, items).pipe(
+      map(raw => this.mapBatch(raw))
+    );
+  }
+
   updateItem(itemId: number, quantity: number): Observable<CartResponse> {
     return this.http.patch<CartResponse>(`${this.BASE}/cart/items/${itemId}`, { quantity });
   }
@@ -27,5 +49,25 @@ export class CartService {
 
   clearCart(): Observable<void> {
     return this.http.delete<void>(`${this.BASE}/cart`);
+  }
+
+  private mapBatch(raw: BatchCartResponse): CartResponse {
+    const sellerGroups: CartSellerGroup[] = raw.sellerGroups.map(g => ({
+      sellerId:   g.sellerId,
+      sellerName: g.sellerName,
+      subtotal:   g.subtotal,
+      items:      g.items.map((i): CartItemResponse => ({
+        itemId:        i.id,
+        variantId:     i.variantId,
+        sku:           i.sku,
+        productTitle:  i.productTitle,
+        quantity:      i.quantity,
+        unitPrice:     i.currentPrice,
+        subtotal:      i.subtotal,
+        priceChanged:  i.priceChanged,
+        previousPrice: i.originalPrice,
+      })),
+    }));
+    return { cartId: raw.id, status: raw.status, updatedAt: raw.updatedAt, total: raw.total, sellerGroups };
   }
 }

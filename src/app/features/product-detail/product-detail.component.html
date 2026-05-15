@@ -4,7 +4,7 @@
   <a routerLink="/">← Volver al catálogo</a>
 </nav>
 
-<ng-container *ngIf="product$ | async as product; else notFound">
+<ng-container *ngIf="product$ | async as product; else loadingOrNotFound">
 
   <!-- MAIN PRODUCT LAYOUT -->
   <div class="product-layout">
@@ -105,42 +105,131 @@
   </div>
 
   <!-- REVIEWS SECTION -->
-  <section class="reviews-section" *ngIf="reviews$ | async as reviews">
+  <section class="reviews-section">
     <div class="section-inner">
       <h2 class="section-title">Reseñas de clientes</h2>
 
-      <ng-container *ngIf="reviews.length > 0; else noReviews">
-        <div class="rating-summary">
-          <div class="avg-block">
-            <span class="avg-num">{{ avgRating(reviews) }}</span>
-            <div class="avg-stars">
-              <span *ngFor="let s of starsArray(avgRating(reviews))" class="star">{{ s }}</span>
+      <!-- Rating summary -->
+      <div class="rating-summary" *ngIf="reviewSummary() && reviewSummary()!.totalReviews > 0">
+        <div class="avg-block">
+          <span class="avg-num">{{ displayRating() }}</span>
+          <div class="avg-stars">
+            <span *ngFor="let s of starsArray(displayRating())" class="star">{{ s }}</span>
+          </div>
+          <span class="avg-count">{{ reviewSummary()!.totalReviews }} reseña{{ reviewSummary()!.totalReviews !== 1 ? 's' : '' }}</span>
+        </div>
+      </div>
+
+      <!-- User's own review or write form -->
+      <ng-container *ngIf="isLoggedIn()">
+
+        <!-- Already reviewed -->
+        <div class="my-review-banner" *ngIf="myReview()">
+          <div class="my-review-header">
+            <span class="my-review-label">Tu reseña</span>
+            <span class="rv-status rv-status--{{ myReview()!.status }}">{{ statusLabel(myReview()!.status) }}</span>
+          </div>
+          <div class="review-header">
+            <div class="reviewer-avatar">{{ myReview()!.reviewerName[0].toUpperCase() }}</div>
+            <div class="reviewer-meta">
+              <span class="reviewer-name">{{ myReview()!.reviewerName | titlecase }}</span>
             </div>
-            <span class="avg-count">{{ reviews.length }} reseña{{ reviews.length !== 1 ? 's' : '' }}</span>
+            <span class="review-date">{{ myReview()!.createdAt | date:'dd/MM/yyyy' }}</span>
+          </div>
+          <div class="review-stars">
+            <span *ngFor="let s of starsArray(myReview()!.rating)" class="star">{{ s }}</span>
+          </div>
+          <strong class="rv-title" *ngIf="myReview()!.title">{{ myReview()!.title }}</strong>
+          <p class="review-text" *ngIf="myReview()!.comment">{{ myReview()!.comment }}</p>
+        </div>
+
+        <!-- Write review CTA -->
+        <div class="write-review-wrap" *ngIf="!myReview() && !formVisible()">
+          <p class="write-review-hint">¿Compraste este producto? Comparte tu experiencia.</p>
+          <button class="btn-write-review" (click)="formVisible.set(true)">✏ Escribir reseña</button>
+        </div>
+
+        <!-- Review form -->
+        <div class="rv-form" *ngIf="formVisible() && !myReview()">
+          <h3 class="rv-form-title">Escribe tu reseña</h3>
+
+          <div class="star-selector">
+            <button *ngFor="let n of starNums"
+                    class="star-pick"
+                    [class.filled]="n <= rvRating()"
+                    (click)="setRating(n)">★</button>
+            <span class="rv-rating-label" *ngIf="rvRating()">{{ rvRating() }} de 5</span>
+          </div>
+
+          <input class="rv-input"
+                 type="text"
+                 placeholder="Título (opcional, máx. 100 caracteres)"
+                 maxlength="100"
+                 [value]="rvTitle()"
+                 (input)="rvTitle.set($any($event.target).value)" />
+
+          <textarea class="rv-textarea"
+                    rows="4"
+                    placeholder="Comentario (opcional, máx. 1000 caracteres)"
+                    maxlength="1000"
+                    [value]="rvComment()"
+                    (input)="rvComment.set($any($event.target).value)"></textarea>
+
+          <p class="rv-error" *ngIf="rvError()">{{ rvError() }}</p>
+
+          <div class="rv-form-btns">
+            <button class="btn-submit-rv"
+                    [disabled]="rvRating() === 0 || rvSubmitting()"
+                    (click)="submitReview()">
+              {{ rvSubmitting() ? 'Enviando...' : 'Enviar reseña' }}
+            </button>
+            <button class="btn-cancel-rv" (click)="formVisible.set(false)">Cancelar</button>
           </div>
         </div>
 
-        <div class="review-list">
-          <div class="review-card" *ngFor="let r of reviews">
-            <div class="review-header">
-              <div class="reviewer-avatar">{{ r.author[0] }}</div>
-              <div class="reviewer-meta">
-                <span class="reviewer-name">{{ r.author }}</span>
-                <span class="verified-badge" *ngIf="r.verified">✓ Compra verificada</span>
-              </div>
-              <span class="review-date">{{ r.date | date:'MMM d, y' }}</span>
-            </div>
-            <div class="review-stars">
-              <span *ngFor="let s of starsArray(r.rating)" class="star">{{ s }}</span>
-            </div>
-            <p class="review-text">{{ r.comment }}</p>
-          </div>
-        </div>
       </ng-container>
 
-      <ng-template #noReviews>
-        <p class="no-reviews">Aún no hay reseñas para este producto. ¡Sé el primero en compartir tu experiencia!</p>
-      </ng-template>
+      <!-- Loading -->
+      <div class="rv-loading" *ngIf="reviewsLoading() && reviews().length === 0">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"
+             stroke-linecap="round" class="rv-spin">
+          <path d="M21 12a9 9 0 11-6.219-8.56"/>
+        </svg>
+      </div>
+
+      <!-- Reviews list -->
+      <div class="review-list" *ngIf="reviews().length > 0">
+        <div class="review-card" *ngFor="let r of reviews()">
+          <div class="review-header">
+            <div class="reviewer-avatar">{{ r.reviewerName[0].toUpperCase() }}</div>
+            <div class="reviewer-meta">
+              <span class="reviewer-name">{{ r.reviewerName | titlecase }}</span>
+            </div>
+            <span class="review-date">{{ r.createdAt | date:'dd MMM yyyy' }}</span>
+          </div>
+          <div class="review-stars">
+            <span *ngFor="let s of starsArray(r.rating)" class="star">{{ s }}</span>
+          </div>
+          <strong class="rv-title" *ngIf="r.title">{{ r.title }}</strong>
+          <p class="review-text" *ngIf="r.comment">{{ r.comment }}</p>
+        </div>
+      </div>
+
+      <!-- Empty -->
+      <p class="no-reviews"
+         *ngIf="!reviewsLoading() && reviews().length === 0 && reviewSummary() !== null && reviewSummary()!.totalReviews === 0">
+        Aún no hay reseñas para este producto. ¡Sé el primero en compartir tu experiencia!
+      </p>
+
+      <!-- Load more -->
+      <div class="rv-pagination" *ngIf="reviewsPage() < reviewsTotalPg() - 1">
+        <button class="btn-load-more"
+                [disabled]="reviewsLoading()"
+                (click)="loadMoreReviews()">
+          {{ reviewsLoading() ? 'Cargando...' : 'Ver más reseñas' }}
+        </button>
+      </div>
+
     </div>
   </section>
 
@@ -167,11 +256,46 @@
 
 </ng-container>
 
-<ng-template #notFound>
-  <div *ngIf="!(loading$ | async)" class="not-found">
-    <h2>Producto no encontrado</h2>
-    <p>El producto que buscas no existe. <a routerLink="/">Volver al catálogo →</a></p>
-  </div>
+<ng-template #loadingOrNotFound>
+  <!-- Skeleton mientras carga -->
+  <ng-container *ngIf="loading$ | async; else notFound">
+    <div class="product-layout">
+
+      <!-- Carousel skeleton -->
+      <div class="carousel-wrap">
+        <div class="sk sk-img"></div>
+        <div class="sk-thumbs">
+          <div class="sk sk-thumb" *ngFor="let t of [1,2,3,4]"></div>
+        </div>
+        <div class="sk-dots">
+          <div class="sk sk-dot" *ngFor="let t of [1,2,3,4]"></div>
+        </div>
+      </div>
+
+      <!-- Info skeleton -->
+      <div class="sk-info">
+        <div class="sk sk-badge"></div>
+        <div class="sk sk-title"></div>
+        <div class="sk sk-title sk-title-sm"></div>
+        <div class="sk sk-line"></div>
+        <div class="sk sk-line sk-line-md"></div>
+        <div class="sk sk-line sk-line-sm"></div>
+        <div class="sk sk-price"></div>
+        <div class="sk-opts">
+          <div class="sk sk-opt" *ngFor="let t of [1,2,3,4]"></div>
+        </div>
+        <div class="sk sk-btn-add"></div>
+      </div>
+
+    </div>
+  </ng-container>
+
+  <ng-template #notFound>
+    <div class="not-found">
+      <h2>Producto no encontrado</h2>
+      <p>El producto que buscas no existe. <a routerLink="/">Volver al catálogo →</a></p>
+    </div>
+  </ng-template>
 </ng-template>
 
 <footer class="site-footer">

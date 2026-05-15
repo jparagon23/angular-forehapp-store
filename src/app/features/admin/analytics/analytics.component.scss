@@ -1,7 +1,169 @@
 @use '../shared/admin-styles';
 
-.info-card {
-  background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 28px 32px;
-  p { font-size: 1rem; color: var(--dark); margin-bottom: 16px; }
-  ul { list-style: disc; padding-left: 20px; color: var(--muted); line-height: 2; }
+/* ── Range bar ─────────────────────────────────────── */
+.range-bar {
+  margin-bottom: 24px;
+  display: flex; flex-direction: column; gap: 12px;
 }
+
+.presets {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+
+.preset-btn {
+  padding: 7px 16px; border-radius: 20px; border: 1.5px solid var(--border);
+  background: #fff; font-size: .82rem; font-weight: 600; color: #555;
+  cursor: pointer; transition: all .15s;
+  &:hover  { border-color: #4caf50; color: #2e7d32; }
+  &.active { background: #4caf50; color: #fff; border-color: #4caf50; }
+}
+
+.custom-range {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 14px 18px; background: #f9f9f9;
+  border: 1px solid var(--border); border-radius: 12px;
+}
+
+.date-input {
+  border: 1.5px solid var(--border); border-radius: 8px; padding: 7px 12px;
+  font-size: .88rem; outline: none; font-family: inherit;
+  &:focus { border-color: #4caf50; }
+}
+.date-sep { font-size: .9rem; color: #bbb; }
+
+/* ── KPI grid ──────────────────────────────────────── */
+.kpi-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px; margin-bottom: 24px;
+  &.loading .kpi-card { opacity: .55; pointer-events: none; }
+}
+
+.kpi-card {
+  background: #fff; border-radius: 14px; padding: 20px 22px;
+  border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.04);
+  transition: box-shadow .15s;
+  &:hover { box-shadow: 0 4px 14px rgba(0,0,0,.08); }
+
+  &.kpi-green { border-left: 4px solid #4caf50; }
+  &.kpi-warn  { border-left: 4px solid #ff9800; background: #fffde7; }
+}
+
+/* ── Chart card ────────────────────────────────────── */
+.chart-card {
+  background: #fff; border-radius: 16px;
+  border: 1px solid var(--border); margin-bottom: 24px;
+  overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+
+.chart-header {
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid #f5f5f5;
+  h3 { font-size: 1rem; font-weight: 800; color: #1a1a2e; margin: 0 0 2px; }
+}
+.chart-sub { font-size: .78rem; color: #aaa; display: block; margin-top: 2px; }
+
+.chart-body { padding: 10px 12px 14px; }
+
+.chart-skeleton {
+  height: 290px; background: linear-gradient(90deg, #f5f5f5 25%, #eee 50%, #f5f5f5 75%);
+  background-size: 800px 100%;
+  animation: sk 1.4s infinite linear;
+  margin: 16px;
+  border-radius: 10px;
+  &.tall { height: 400px; }
+}
+@keyframes sk {
+  from { background-position: -800px 0; }
+  to   { background-position:  800px 0; }
+}
+
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 48px 24px; color: #bbb;
+  .empty-icon { font-size: 2.5rem; margin-bottom: 10px; }
+  p { font-size: .88rem; margin: 0; }
+}
+
+/* ── Dos columnas ──────────────────────────────────── */
+.two-col {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+  @media (max-width: 900px) { grid-template-columns: 1fr; }
+}
+
+/* ── Tabla de productos bajo el chart ─────────────── */
+.prod-table {
+  margin-top: 8px; padding: 0 4px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+
+.prod-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 12px; border-radius: 10px;
+  border: 1px solid #f0f0f0; background: #fafafa;
+  transition: background .12s;
+  &:hover { background: #edf7ea; }
+}
+
+.prod-rank {
+  width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .75rem; font-weight: 800; flex-shrink: 0;
+  background: #e8f5e9; color: #2e7d32;
+  &.gold   { background: #fff8e1; color: #f57f17; }
+  &.silver { background: #f5f5f5; color: #616161; }
+  &.bronze { background: #fbe9e7; color: #bf360c; }
+}
+
+.prod-info { flex: 1; min-width: 0; }
+.prod-name {
+  font-size: .88rem; font-weight: 600; color: #1a1a2e;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;
+}
+.prod-sku { font-size: .75rem; color: #aaa; display: block; }
+
+.prod-nums { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
+.prod-units { font-size: .78rem; color: #888; }
+.prod-rev   { font-size: .88rem; font-weight: 700; color: #1a1a2e; }
+
+/* ── Vendedores ────────────────────────────────────── */
+.seller-list {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 4px 4px;
+}
+
+.seller-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 14px; border-radius: 12px;
+  border: 1px solid #f0f0f0; background: #fafafa;
+  transition: background .12s;
+  &:hover { background: #edf7ea; }
+}
+
+.seller-rank-wrap { flex-shrink: 0; }
+.seller-rank {
+  font-size: .82rem; font-weight: 800; padding: 4px 9px;
+  border-radius: 10px; background: #e8f5e9; color: #2e7d32;
+  &.gold   { background: #fff8e1; color: #f57f17; }
+  &.silver { background: #f5f5f5; color: #616161; }
+  &.bronze { background: #fbe9e7; color: #bf360c; }
+}
+
+.seller-info { flex: 1; min-width: 0; }
+.seller-name {
+  font-size: .9rem; font-weight: 600; color: #1a1a2e;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  display: block; margin-bottom: 6px;
+}
+
+.seller-bar-wrap {
+  height: 6px; background: #eee; border-radius: 4px; overflow: hidden;
+}
+.seller-bar {
+  height: 100%; background: linear-gradient(90deg, #81c784, #4caf50);
+  border-radius: 4px; transition: width .5s ease;
+}
+
+.seller-nums { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; gap: 2px; }
+.seller-orders { font-size: .75rem; color: #999; }
+.seller-rev    { font-size: .9rem; font-weight: 700; color: #1a1a2e; }

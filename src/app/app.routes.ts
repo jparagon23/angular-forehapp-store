@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 import { sellerGuard } from './core/guards/seller.guard';
+import { adminGuard } from './core/guards/admin.guard';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -45,6 +47,15 @@ export const routes: Routes = [
   {
     path: 'wishlist',
     loadComponent: () => import('./features/wishlist/wishlist.component').then(m => m.WishlistComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'my-reviews',
+    loadComponent: () => import('./features/my-reviews/my-reviews.component').then(m => m.MyReviewsComponent),
+  },
+  {
+    path: 'my-returns',
+    loadComponent: () => import('./features/my-returns/my-returns.component').then(m => m.MyReturnsComponent),
   },
   {
     path: 'account/addresses',
@@ -76,11 +87,17 @@ export const routes: Routes = [
         loadComponent: () => import('./features/seller/orders/seller-orders.component').then(m => m.SellerOrdersComponent),
         canActivate: [sellerGuard],
       },
+      {
+        path: 'coupons',
+        loadComponent: () => import('./features/seller/coupons/seller-coupons.component').then(m => m.SellerCouponsComponent),
+        canActivate: [sellerGuard],
+      },
     ],
   },
   {
     path: 'admin',
     loadComponent: () => import('./features/admin/admin.component').then(m => m.AdminComponent),
+    canActivate: [adminGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', loadComponent: () => import('./features/admin/dashboard/dashboard.component').then(m => m.DashboardComponent) },
@@ -90,6 +107,8 @@ export const routes: Routes = [
       { path: 'analytics', loadComponent: () => import('./features/admin/analytics/analytics.component').then(m => m.AnalyticsComponent) },
       { path: 'customers', loadComponent: () => import('./features/admin/customers/customers-admin.component').then(m => m.CustomersAdminComponent) },
       { path: 'discounts', loadComponent: () => import('./features/admin/discounts/discounts-admin.component').then(m => m.DiscountsAdminComponent) },
+      { path: 'reviews',  loadComponent: () => import('./features/admin/reviews/reviews-admin.component').then(m => m.ReviewsAdminComponent) },
+      { path: 'returns',  loadComponent: () => import('./features/admin/returns/returns-admin.component').then(m => m.ReturnsAdminComponent) },
     ]
   },
   { path: '**', redirectTo: '' },

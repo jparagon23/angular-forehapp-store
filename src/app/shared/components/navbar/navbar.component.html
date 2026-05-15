@@ -161,19 +161,31 @@
     </div>
 
     <!-- Account -->
-    <div class="nb-account nb-block nb-account-wrap"
+    <div class="nb-account-wrap"
          (mouseenter)="accountOpen = true"
          (mouseleave)="accountOpen = false">
 
-      <ng-container *ngIf="!(isLoggedIn$ | async)">
-        <span class="nb-top-sup">Hola, ingresa</span>
-        <span class="nb-top-main">Identifícate ▾</span>
-      </ng-container>
+      <!-- Desktop: text block (hidden ≤740px via .nb-block) -->
+      <div class="nb-account nb-block" (click)="$event.stopPropagation()">
+        <ng-container *ngIf="!(isLoggedIn$ | async)">
+          <span class="nb-top-sup">Hola, ingresa</span>
+          <span class="nb-top-main">Identifícate ▾</span>
+        </ng-container>
+        <ng-container *ngIf="isLoggedIn$ | async">
+          <span class="nb-top-sup">Hola, {{ (authUser$ | async)?.name }}</span>
+          <span class="nb-top-main">Mi cuenta ▾</span>
+        </ng-container>
+      </div>
 
-      <ng-container *ngIf="isLoggedIn$ | async">
-        <span class="nb-top-sup">Hola, {{ (authUser$ | async)?.name }}</span>
-        <span class="nb-top-main">Mi cuenta ▾</span>
-      </ng-container>
+      <!-- Mobile: icon button (visible only ≤740px) -->
+      <button class="nb-mobile-acct" (click)="toggleAccount($event)" aria-label="Mi cuenta">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 20c0-4 3.58-7 8-7s8 3 8 7"/>
+        </svg>
+        <span class="nb-acct-dot" *ngIf="isLoggedIn$ | async"></span>
+      </button>
 
       <div class="nb-account-drop" [class.open]="accountOpen" (click)="$event.stopPropagation()">
         <div class="nb-drop-arrow"></div>
@@ -206,6 +218,8 @@
             <strong class="nb-drop-heading">Mis cuentas</strong>
             <a class="nb-drop-item" (click)="navTo('/orders')">Mis pedidos</a>
             <a class="nb-drop-item" (click)="navTo('/wishlist')">Lista de deseos</a>
+            <a class="nb-drop-item" (click)="navTo('/my-reviews')">Mis reseñas</a>
+            <a class="nb-drop-item" (click)="navTo('/my-returns')">Mis devoluciones</a>
             <a class="nb-drop-item" (click)="navTo('/account/addresses')">Mis direcciones</a>
           </div>
           <div class="nb-drop-divider"></div>
@@ -225,8 +239,21 @@
       <span class="nb-top-main">Pedidos</span>
     </button>
 
-    <!-- Cart -->
-    <button class="nb-cart" (click)="openCart()">
+    <!-- Wishlist (solo para logueados) -->
+    <button class="nb-wishlist" (click)="navTo('/wishlist')"
+            *ngIf="isLoggedIn$ | async">
+      <div class="nb-wishlist-icon-wrap">
+        <svg class="nb-wishlist-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+        </svg>
+        <span class="nb-wishlist-count" *ngIf="(wishlistCount$ | async)! > 0">{{ wishlistCount$ | async }}</span>
+      </div>
+      <span class="nb-cart-label">Deseos</span>
+    </button>
+
+    <!-- Cart: only for BUYER role (CUSTOMER in backend) and guests -->
+    <button class="nb-cart" (click)="openCart()"
+            *ngIf="(userRole$ | async) !== 'SELLER' && (userRole$ | async) !== 'STORE_ADMIN'">
       <div class="nb-cart-icon-wrap">
         <svg class="nb-cart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>

@@ -1,0 +1,94 @@
+<app-navbar></app-navbar>
+
+<div class="mrt-page">
+  <div class="mrt-wrap">
+
+    <div class="mrt-header">
+      <h1>Mis devoluciones</h1>
+      <p class="mrt-sub">Historial de solicitudes de devolución y reembolso</p>
+    </div>
+
+    <!-- Loading -->
+    <div class="mrt-empty" *ngIf="loading()">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"
+           stroke-linecap="round" class="mrt-spin">
+        <path d="M21 12a9 9 0 11-6.219-8.56"/>
+      </svg>
+    </div>
+
+    <!-- Empty -->
+    <div class="mrt-empty" *ngIf="!loading() && returns().length === 0">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 16l-4-4-4 4M12 12V3"/>
+        <path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/>
+      </svg>
+      <p>No tienes solicitudes de devolución.</p>
+      <a routerLink="/orders" class="mrt-cta">Ver mis pedidos</a>
+    </div>
+
+    <!-- Returns list -->
+    <div class="mrt-list" *ngIf="!loading() && returns().length > 0">
+      <div class="mrt-card" *ngFor="let r of returns()">
+
+        <!-- Card head -->
+        <div class="mrt-card-top">
+          <div class="mrt-order-info">
+            <span class="mrt-order-id">Orden #{{ r.orderId }}</span>
+            <span class="mrt-type-badge">{{ returnTypeLabel(r.returnType) }}</span>
+          </div>
+          <div class="mrt-card-right">
+            <span class="mrt-status" [ngClass]="'mrt-status--' + r.status">
+              {{ statusIcon(r.status) }} {{ statusLabel(r.status) }}
+            </span>
+            <span class="mrt-date">Solicitada: {{ r.createdAt | date:'dd/MM/yyyy' }}</span>
+          </div>
+        </div>
+
+        <!-- Reason -->
+        <p class="mrt-reason">"{{ r.reason }}"</p>
+
+        <!-- Items -->
+        <div class="mrt-items">
+          <div class="mrt-item" *ngFor="let item of r.items">
+            <div class="mrt-item-info">
+              <span class="mrt-item-name">{{ item.productTitle }}</span>
+              <span class="mrt-item-sku">{{ item.variantSku }}</span>
+            </div>
+            <span class="mrt-item-qty">× {{ item.quantityToReturn }}</span>
+            <span class="mrt-item-price">{{ item.subtotal | currencyCop }}</span>
+          </div>
+        </div>
+
+        <!-- Refund amount -->
+        <div class="mrt-refund" *ngIf="r.refundAmount !== null && r.status !== 'RECHAZADA'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+          </svg>
+          Monto a reembolsar: <strong>{{ r.refundAmount | currencyCop }}</strong>
+        </div>
+
+        <!-- Admin notes -->
+        <div class="mrt-admin-note" *ngIf="r.adminNotes" [ngClass]="'mrt-note--' + r.status">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          {{ r.adminNotes }}
+        </div>
+
+        <!-- Hint for pending -->
+        <p class="mrt-pending-hint" *ngIf="r.status === 'PENDIENTE'">
+          Revisaremos tu solicitud y recibirás una respuesta pronto.
+        </p>
+
+      </div>
+    </div>
+
+    <div class="mrt-back" *ngIf="!loading()">
+      <a routerLink="/orders">← Volver a mis pedidos</a>
+    </div>
+
+  </div>
+</div>
+
+<app-cart-drawer></app-cart-drawer>

@@ -7,7 +7,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { loadProducts } from '../../store/products/products.actions';
 import { selectAllProducts, selectProductsLoading } from '../../store/products/products.selectors';
 import { addToWishlist, removeFromWishlist } from '../../store/wishlist/wishlist.actions';
-import { selectWishlistIds } from '../../store/wishlist/wishlist.selectors';
+import { selectWishlistProductIds, selectWishlistProductIdToItemId } from '../../store/wishlist/wishlist.selectors';
+import { selectIsLoggedIn } from '../../store/auth/auth.selectors';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { CartDrawerComponent } from '../cart/cart-drawer.component';
 import { ToastComponent } from '../../shared/components/toast/toast.component';
@@ -32,7 +33,9 @@ export class CatalogComponent implements OnInit {
   loading$     = this.store.select(selectProductsLoading);
   toastMessage = signal('');
 
-  wishlistIds = toSignal(this.store.select(selectWishlistIds), { initialValue: [] as number[] });
+  wishlistProductIds  = toSignal(this.store.select(selectWishlistProductIds),         { initialValue: [] as number[] });
+  wishlistItemMap     = toSignal(this.store.select(selectWishlistProductIdToItemId),  { initialValue: new Map<number, number>() });
+  isLoggedIn          = toSignal(this.store.select(selectIsLoggedIn),                 { initialValue: false });
 
   filteredProducts$ = this.store.select(selectAllProducts);
 
@@ -63,7 +66,7 @@ export class CatalogComponent implements OnInit {
 
   clearFilter()       { this.router.navigate(['/']); }
   goToProduct(id: number) { this.router.navigate(['/product', id]); }
-  isWishlisted(id: number) { return this.wishlistIds().includes(id); }
+  isWishlisted(id: number): boolean { return this.wishlistProductIds().includes(id); }
 
   addToCart(product: Product, event: Event) {
     event.stopPropagation();
@@ -73,12 +76,10 @@ export class CatalogComponent implements OnInit {
   toggleWishlist(product: Product, event: Event) {
     event.stopPropagation();
     if (this.isWishlisted(product.id)) {
-      this.store.dispatch(removeFromWishlist({ id: product.id }));
+      const itemId = this.wishlistItemMap().get(product.id);
+      if (itemId) this.store.dispatch(removeFromWishlist({ itemId }));
     } else {
-      this.store.dispatch(addToWishlist({
-        item: { id: product.id, name: product.name, brand: product.brand,
-                emoji: product.emoji, price: product.price, cat: product.cat },
-      }));
+      this.store.dispatch(addToWishlist({ productId: product.id }));
       this.toastMessage.set('Guardado en lista de deseos ♥ — ' + Date.now());
     }
   }

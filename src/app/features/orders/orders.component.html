@@ -125,6 +125,30 @@
                   Subtotal: <strong>{{ g.subtotal | currencyCop }}</strong>
                 </div>
 
+                <!-- Return action row (only for DELIVERED groups) -->
+                <div class="oc-return-row" *ngIf="g.status === 'DELIVERED'">
+                  <button class="ret-request-btn"
+                          *ngIf="!hasReturn(g.groupId)"
+                          (click)="openReturnForm(g, detail.orderId)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="1 4 1 10 7 10"/>
+                      <path d="M3.51 15a9 9 0 102.13-9.36L1 10"/>
+                    </svg>
+                    Solicitar devolución
+                  </button>
+                  <a class="ret-existing-link" routerLink="/my-returns" *ngIf="hasReturn(g.groupId)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                      <polyline points="14 2 14 8 20 8"/>
+                      <line x1="16" y1="13" x2="8" y2="13"/>
+                      <line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                    Ver solicitud de devolución →
+                  </a>
+                </div>
+
               </div>
             </div>
 
@@ -142,6 +166,104 @@
 
     <div class="back-row" *ngIf="!loading()">
       <a routerLink="/" class="btn-back">← Seguir comprando</a>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Return form modal ──────────────────────────────────────────────────── -->
+<div class="ret-overlay" *ngIf="returnFormVisible()" (click)="closeReturnForm()">
+  <div class="ret-modal" (click)="$event.stopPropagation()">
+
+    <div class="ret-modal-head">
+      <div>
+        <h2 class="ret-modal-title">Solicitar devolución</h2>
+        <span class="ret-seller-tag" *ngIf="returnActiveGroup()">
+          {{ returnActiveGroup()!.sellerName }}
+        </span>
+      </div>
+      <button class="ret-close-btn" (click)="closeReturnForm()" aria-label="Cerrar">✕</button>
+    </div>
+
+    <!-- Return type -->
+    <div class="ret-section">
+      <p class="ret-section-label">Tipo de solicitud *</p>
+      <div class="ret-type-options">
+        <label class="ret-type-opt">
+          <input type="radio" name="returnType" value="DEVOLUCION"
+                 [checked]="returnType() === 'DEVOLUCION'"
+                 (change)="onReturnTypeChange($event)">
+          <span>Devolver el producto físicamente</span>
+        </label>
+        <label class="ret-type-opt">
+          <input type="radio" name="returnType" value="REEMBOLSO_PARCIAL"
+                 [checked]="returnType() === 'REEMBOLSO_PARCIAL'"
+                 (change)="onReturnTypeChange($event)">
+          <span>Reembolso parcial <span class="ret-type-hint">(algunos ítems)</span></span>
+        </label>
+        <label class="ret-type-opt">
+          <input type="radio" name="returnType" value="REEMBOLSO_COMPLETO"
+                 [checked]="returnType() === 'REEMBOLSO_COMPLETO'"
+                 (change)="onReturnTypeChange($event)">
+          <span>Reembolso completo del pedido</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Reason -->
+    <div class="ret-section">
+      <label class="ret-section-label" for="ret-reason">Motivo *</label>
+      <textarea id="ret-reason" class="ret-textarea" rows="3" maxlength="1000"
+                placeholder="Describe el problema con tu pedido... (máx. 1000 caracteres)"
+                [value]="returnReason()"
+                (input)="onReturnReasonInput($event)"></textarea>
+      <span class="ret-char-count">{{ returnReason().length }}/1000</span>
+    </div>
+
+    <!-- Items -->
+    <div class="ret-section">
+      <p class="ret-section-label">Ítems a incluir en la solicitud</p>
+      <div class="ret-items">
+        <div class="ret-item" *ngFor="let item of returnFormItems(); let i = index">
+          <label class="ret-item-check">
+            <input type="checkbox" [checked]="item.checked" (change)="toggleReturnItem(i)">
+          </label>
+          <div class="ret-item-info">
+            <span class="ret-item-name">{{ item.productTitle }}</span>
+            <span class="ret-item-sku">{{ item.sku }}</span>
+          </div>
+          <div class="ret-item-qty-wrap" *ngIf="item.checked">
+            <span class="ret-qty-label">Cant.:</span>
+            <input type="number" class="ret-qty-input"
+                   [min]="1" [max]="item.quantityOrdered"
+                   [value]="item.quantityToReturn"
+                   (input)="updateReturnQty(i, $event)">
+            <span class="ret-qty-max">de {{ item.quantityOrdered }}</span>
+          </div>
+          <span class="ret-item-price" *ngIf="item.checked">
+            {{ item.unitPrice * item.quantityToReturn | currencyCop }}
+          </span>
+        </div>
+      </div>
+
+      <div class="ret-estimated" *ngIf="returnEstimatedTotal() > 0">
+        Monto estimado:
+        <strong>{{ returnEstimatedTotal() | currencyCop }}</strong>
+        <span class="ret-estimated-note">— referencial, el monto real lo define el administrador</span>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div class="ret-form-error" *ngIf="returnError()">{{ returnError() }}</div>
+
+    <!-- Actions -->
+    <div class="ret-modal-actions">
+      <button class="ret-cancel-btn" (click)="closeReturnForm()" [disabled]="returnSubmitting()">
+        Cancelar
+      </button>
+      <button class="ret-submit-btn" (click)="submitReturn()" [disabled]="returnSubmitting()">
+        {{ returnSubmitting() ? 'Enviando...' : 'Enviar solicitud' }}
+      </button>
     </div>
 
   </div>

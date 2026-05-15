@@ -32,6 +32,7 @@ export const productsReducer = createReducer(
   on(ProductsActions.loadProductsFailure, (state, { error }) =>
     ({ ...state, loading: false, error })),
 
+  on(ProductsActions.clearSelectedProduct, state => ({ ...state, selectedId: null, loading: true })),
   on(ProductsActions.loadProduct, state => ({ ...state, loading: true })),
   on(ProductsActions.loadProductSuccess, (state, { product }) =>
     adapter.upsertOne(product, { ...state, selectedId: product.id, loading: false })),

@@ -33,6 +33,7 @@ export class CartDrawerComponent {
   close() { this.store.dispatch(closeCart()); }
 
   increment(itemId: number, currentQty: number) {
+    if (currentQty >= 9999) return;
     this.store.dispatch(updateCartItem({ itemId, quantity: currentQty + 1 }));
   }
 

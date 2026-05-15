@@ -1,23 +1,174 @@
 <app-admin-topbar title="Análisis de Ventas"></app-admin-topbar>
 
 <div class="content">
-  <div class="kpi-grid">
-    <div class="kpi-card" *ngFor="let k of kpis">
-      <div class="kpi-top">
-        <span class="kpi-icon">{{ k.icon }}</span>
-        <span class="kpi-badge" [class.up]="k.up" [class.down]="!k.up">{{ k.badge }}</span>
-      </div>
-      <div class="kpi-val">{{ k.val }}</div>
-      <div class="kpi-label">{{ k.label }}</div>
+
+  <!-- Selector de rango -->
+  <div class="range-bar">
+    <div class="presets">
+      <button
+        *ngFor="let p of presets"
+        class="preset-btn"
+        [class.active]="activePreset === p.key"
+        (click)="select(p.key)">
+        {{ p.label }}
+      </button>
+      <button class="preset-btn" [class.active]="activePreset === 'custom'" (click)="select('custom')">
+        Personalizado
+      </button>
+    </div>
+
+    <div class="custom-range" *ngIf="showCustom">
+      <input type="date" [(ngModel)]="customFrom" class="date-input" />
+      <span class="date-sep">—</span>
+      <input type="date" [(ngModel)]="customTo" class="date-input" />
+      <button class="btn btn-green btn-sm" (click)="applyCustom()">Aplicar</button>
     </div>
   </div>
 
-  <div class="info-card">
-    <p>📊 Los gráficos de analytics estarán disponibles cuando se integre el servicio real de datos.</p>
-    <ul>
-      <li>Pedidos por día (últimas 2 semanas)</li>
-      <li>Producto más vendido por mes</li>
-      <li>Ingresos vs Meta mensual</li>
-    </ul>
+  <!-- Error -->
+  <div class="alert alert-warn" *ngIf="error">
+    ⚠️ No se pudo cargar el reporte. Verifica la conexión con el servidor.
+  </div>
+
+  <!-- KPI cards -->
+  <div class="kpi-grid" [class.loading]="loading">
+    <div class="kpi-card">
+      <div class="kpi-top"><span class="kpi-icon">🛒</span></div>
+      <div class="kpi-val">{{ summary?.totalOrders ?? '—' }}</div>
+      <div class="kpi-label">Órdenes pagadas</div>
+    </div>
+    <div class="kpi-card kpi-green">
+      <div class="kpi-top"><span class="kpi-icon">💰</span></div>
+      <div class="kpi-val">{{ (summary?.totalRevenue ?? 0) | currencyCop }}</div>
+      <div class="kpi-label">Ingresos totales</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-top"><span class="kpi-icon">🎯</span></div>
+      <div class="kpi-val">{{ (summary?.averageTicket ?? 0) | currencyCop }}</div>
+      <div class="kpi-label">Ticket promedio</div>
+    </div>
+    <div class="kpi-card kpi-warn" *ngIf="summary?.cancelledOrders">
+      <div class="kpi-top"><span class="kpi-icon">❌</span></div>
+      <div class="kpi-val">{{ summary?.cancelledOrders ?? '—' }}</div>
+      <div class="kpi-label">Órdenes canceladas</div>
+    </div>
+    <div class="kpi-card" [class.kpi-warn]="(summary?.cancelledOrders ?? 0) === 0">
+      <div class="kpi-top"><span class="kpi-icon">🔄</span></div>
+      <div class="kpi-val">{{ summary?.totalReturns ?? '—' }}</div>
+      <div class="kpi-label">Devoluciones aprobadas</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-top"><span class="kpi-icon">↩️</span></div>
+      <div class="kpi-val">{{ (summary?.totalRefunded ?? 0) | currencyCop }}</div>
+      <div class="kpi-label">Total reembolsado</div>
+    </div>
+  </div>
+
+  <!-- Gráfico de ingresos -->
+  <div class="chart-card" [class.loading]="loading">
+    <div class="chart-header">
+      <h3>Ingresos en el período</h3>
+      <span class="chart-sub">Agrupado automáticamente por rango</span>
+    </div>
+    <div class="chart-body" *ngIf="!loading">
+      <div class="empty-state" *ngIf="revSeries.length === 0">
+        <span class="empty-icon">📊</span>
+        <p>Sin datos para el período seleccionado</p>
+      </div>
+      <apx-chart
+        *ngIf="revSeries.length > 0"
+        [series]="revSeries"
+        [chart]="revChart"
+        [stroke]="revStroke"
+        [fill]="revFill"
+        [xaxis]="revXaxis"
+        [yaxis]="revYaxis"
+        [grid]="revGrid"
+        [dataLabels]="revDataLabels"
+        [tooltip]="revTooltip"
+        [colors]="revColors">
+      </apx-chart>
+    </div>
+    <div class="chart-skeleton" *ngIf="loading"></div>
+  </div>
+
+  <!-- Dos columnas: productos + vendedores -->
+  <div class="two-col">
+
+    <!-- Top productos -->
+    <div class="chart-card" [class.loading]="loading">
+      <div class="chart-header">
+        <h3>Top Productos</h3>
+        <span class="chart-sub">Por ingresos generados</span>
+      </div>
+      <div class="chart-body" *ngIf="!loading">
+        <div class="empty-state" *ngIf="prodSeries.length === 0">
+          <span class="empty-icon">📦</span>
+          <p>Sin productos vendidos en el período</p>
+        </div>
+        <apx-chart
+          *ngIf="prodSeries.length > 0"
+          [series]="prodSeries"
+          [chart]="prodChart"
+          [plotOptions]="prodPlot"
+          [xaxis]="prodXaxis"
+          [yaxis]="prodYaxis"
+          [dataLabels]="prodDataLabels"
+          [tooltip]="prodTooltip"
+          [colors]="prodColors"
+          [grid]="prodGrid">
+        </apx-chart>
+        <!-- Tabla de unidades debajo del chart -->
+        <div class="prod-table" *ngIf="topProducts.length > 0">
+          <div class="prod-row" *ngFor="let p of topProducts; let i = index">
+            <span class="prod-rank" [class.gold]="i===0" [class.silver]="i===1" [class.bronze]="i===2">{{ i+1 }}</span>
+            <div class="prod-info">
+              <span class="prod-name">{{ p.productTitle }}</span>
+              <span class="prod-sku">{{ p.variantSku }}</span>
+            </div>
+            <div class="prod-nums">
+              <span class="prod-units">{{ p.unitsSold }} uds</span>
+              <span class="prod-rev">{{ p.revenue | currencyCop }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="chart-skeleton tall" *ngIf="loading"></div>
+    </div>
+
+    <!-- Vendedores -->
+    <div class="chart-card" [class.loading]="loading">
+      <div class="chart-header">
+        <h3>Ranking de Vendedores</h3>
+        <span class="chart-sub">Ordenados por ingresos</span>
+      </div>
+      <div class="chart-body" *ngIf="!loading">
+        <div class="empty-state" *ngIf="sellers.length === 0">
+          <span class="empty-icon">🏪</span>
+          <p>Sin ventas registradas en el período</p>
+        </div>
+        <div class="seller-list" *ngIf="sellers.length > 0">
+          <div class="seller-row" *ngFor="let s of sellers; let i = index">
+            <div class="seller-rank-wrap">
+              <span class="seller-rank" [class.gold]="i===0" [class.silver]="i===1" [class.bronze]="i===2">#{{ i+1 }}</span>
+            </div>
+            <div class="seller-info">
+              <span class="seller-name">{{ s.sellerName }}</span>
+              <div class="seller-bar-wrap">
+                <div class="seller-bar"
+                  [style.width.%]="sellers[0].totalRevenue > 0 ? (s.totalRevenue / sellers[0].totalRevenue) * 100 : 0">
+                </div>
+              </div>
+            </div>
+            <div class="seller-nums">
+              <span class="seller-orders">{{ s.totalOrders }} órd.</span>
+              <span class="seller-rev">{{ s.totalRevenue | currencyCop }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="chart-skeleton tall" *ngIf="loading"></div>
+    </div>
+
   </div>
 </div>

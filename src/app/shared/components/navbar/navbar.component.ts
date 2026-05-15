@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, inject, signal } from '@angular/core';
 import { Router, RouterLink, NavigationEnd } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { AsyncPipe, NgFor, NgIf, UpperCasePipe } from '@angular/common';
@@ -6,6 +6,7 @@ import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject } from 'rxjs';
 import { filter, map, startWith, take, debounceTime, distinctUntilChanged, switchMap, catchError, of } from 'rxjs';
 import { selectCartCount } from '../../../store/cart/cart.selectors';
+import { selectWishlistCount } from '../../../store/wishlist/wishlist.selectors';
 import { openCart } from '../../../store/cart/cart.actions';
 import { selectIsLoggedIn, selectAuthUser, selectUserRole } from '../../../store/auth/auth.selectors';
 import { logout } from '../../../store/auth/auth.actions';
@@ -38,6 +39,7 @@ export class NavbarComponent {
   private addrLoaded = false;
 
   cartCount$        = this.store.select(selectCartCount);
+  wishlistCount$    = this.store.select(selectWishlistCount);
   isLoggedIn$       = this.store.select(selectIsLoggedIn);
   authUser$         = this.store.select(selectAuthUser);
   userRole$         = this.store.select(selectUserRole);
@@ -131,6 +133,17 @@ export class NavbarComponent {
 
   goToCategory(cat: string | null) {
     this.router.navigate(['/'], { queryParams: cat ? { cat } : {} });
+  }
+
+  @HostListener('document:click')
+  onDocumentClick() {
+    this.accountOpen = false;
+    this.locationOpen = false;
+  }
+
+  toggleAccount(e: Event) {
+    e.stopPropagation();
+    this.accountOpen = !this.accountOpen;
   }
 
   openCart() { this.store.dispatch(openCart()); }

@@ -1,0 +1,72 @@
+<app-navbar></app-navbar>
+
+<div class="mr-page">
+  <div class="mr-wrap">
+
+    <div class="mr-header">
+      <h1>Mis reseñas</h1>
+      <p class="mr-sub">Historial de reseñas que has escrito</p>
+    </div>
+
+    <!-- Loading -->
+    <div class="mr-empty" *ngIf="loading()">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"
+           stroke-linecap="round" class="mr-spin">
+        <path d="M21 12a9 9 0 11-6.219-8.56"/>
+      </svg>
+    </div>
+
+    <!-- Empty -->
+    <div class="mr-empty" *ngIf="!loading() && reviews().length === 0">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+      </svg>
+      <p>Todavía no has escrito ninguna reseña.</p>
+      <a routerLink="/" class="mr-cta">Explorar productos</a>
+    </div>
+
+    <!-- Reviews list -->
+    <div class="mr-list" *ngIf="!loading() && reviews().length > 0">
+      <div class="mr-card" *ngFor="let r of reviews()">
+
+        <div class="mr-card-top">
+          <div class="mr-product-info">
+            <a class="mr-product-name" [routerLink]="['/product', r.productId]">{{ r.productTitle }}</a>
+            <div class="mr-stars">
+              <span *ngFor="let s of starsArray(r.rating)" class="mr-star">{{ s }}</span>
+            </div>
+          </div>
+          <div class="mr-card-right">
+            <span class="mr-status mr-status--{{ r.status }}">{{ statusLabel(r.status) }}</span>
+            <span class="mr-date">{{ r.createdAt | date:'dd/MM/yyyy' }}</span>
+          </div>
+        </div>
+
+        <strong class="mr-title" *ngIf="r.title">{{ r.title }}</strong>
+        <p class="mr-comment" *ngIf="r.comment">{{ r.comment }}</p>
+        <p class="mr-no-comment" *ngIf="!r.title && !r.comment">Solo calificación, sin comentario.</p>
+
+        <p class="mr-pending-hint" *ngIf="r.status === 'PENDIENTE'">
+          Será visible en el plazo de 24 horas.
+        </p>
+
+        <button class="mr-delete"
+                *ngIf="canDelete(r)"
+                [disabled]="deletingId() === r.reviewId"
+                (click)="deleteReview(r)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+            <path d="M10 11v6"/><path d="M14 11v6"/>
+            <path d="M9 6V4h6v2"/>
+          </svg>
+          {{ deletingId() === r.reviewId ? 'Eliminando...' : 'Eliminar' }}
+        </button>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<app-cart-drawer></app-cart-drawer>

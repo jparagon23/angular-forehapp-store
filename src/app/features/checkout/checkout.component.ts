@@ -2,10 +2,10 @@ import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { AsyncPipe, NgFor, NgIf, UpperCasePipe } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { filter, take } from 'rxjs/operators';
-import { selectCartItems, selectCartTotal, selectCartCount } from '../../store/cart/cart.selectors';
+import { selectSellerGroups, selectCartTotal, selectCartCount } from '../../store/cart/cart.selectors';
 import { selectIsLoggedIn, selectAuthUser } from '../../store/auth/auth.selectors';
 import { loadAddresses, createAddress } from '../../store/addresses/addresses.actions';
 import { selectAllAddresses, selectAddressesLoading, selectAddressesSaving } from '../../store/addresses/addresses.selectors';
@@ -13,24 +13,27 @@ import { createOrder, resetCreateOrder } from '../../store/orders/orders.actions
 import { selectCreatingOrder, selectCreatedOrder, selectCreateOrderError } from '../../store/orders/orders.selectors';
 import { Address, CreateAddressRequest } from '../../core/models/address.model';
 import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
+import { CouponService } from '../../core/services/coupon.service';
+import { AppliedCoupon, CouponValidationResponse } from '../../core/models/coupon.model';
 
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [AsyncPipe, NgFor, NgIf, RouterLink, CurrencyCopPipe, UpperCasePipe, ReactiveFormsModule],
+  imports: [AsyncPipe, NgFor, NgIf, RouterLink, CurrencyCopPipe, UpperCasePipe, ReactiveFormsModule, FormsModule],
   templateUrl: './checkout.component.html',
   styleUrl: './checkout.component.scss',
 })
 export class CheckoutComponent implements OnInit, OnDestroy {
-  private store  = inject(Store);
-  private router = inject(Router);
-  private fb     = inject(FormBuilder);
+  private store         = inject(Store);
+  private router        = inject(Router);
+  private fb            = inject(FormBuilder);
+  private couponService = inject(CouponService);
 
-  items$      = this.store.select(selectCartItems);
-  total$      = this.store.select(selectCartTotal);
-  count$      = this.store.select(selectCartCount);
-  authUser$   = this.store.select(selectAuthUser);
-  isLoggedIn$ = this.store.select(selectIsLoggedIn);
+  sellerGroups$ = this.store.select(selectSellerGroups);
+  total$        = this.store.select(selectCartTotal);
+  count$        = this.store.select(selectCartCount);
+  authUser$     = this.store.select(selectAuthUser);
+  isLoggedIn$   = this.store.select(selectIsLoggedIn);
 
   addresses$        = this.store.select(selectAllAddresses);
   addressesLoading$ = this.store.select(selectAddressesLoading);
@@ -43,6 +46,14 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   showAddressPicker = false;
   showAddressForm   = false;
 
+  // coupon state keyed by sellerId
+  couponInputs:   Record<number, string>                 = {};
+  couponLoading:  Record<number, boolean>                = {};
+  couponErrors:   Record<number, string>                 = {};
+  appliedCoupons: Record<number, AppliedCoupon>          = {};
+
+  cartTotal = 0;
+
   addressForm = this.fb.group({
     alias:   [''],
     street:  ['', [Validators.required, Validators.maxLength(255)]],
@@ -54,6 +65,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   private addrSub?:  Subscription;
   private orderSub?: Subscription;
+  private totalSub?: Subscription;
 
   ngOnInit() {
     this.store.dispatch(resetCreateOrder());
@@ -73,22 +85,26 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       });
     });
 
-    this.items$.pipe(take(1)).subscribe(items => {
-      if (items.length === 0) this.router.navigate(['/']);
+    this.sellerGroups$.pipe(take(1)).subscribe(groups => {
+      if (groups.length === 0) this.router.navigate(['/']);
     });
 
-    // Redirect to MercadoPago when order is created
+    this.totalSub = this.total$.subscribe(t => (this.cartTotal = t));
+
     this.orderSub = this.store.select(selectCreatedOrder).pipe(
       filter(order => order !== null && order.checkoutUrl !== null),
       take(1),
     ).subscribe(order => {
-      window.location.href = order!.checkoutUrl!;
+      this.redeemAll(order!.orderId).then(() => {
+        window.location.href = order!.checkoutUrl!;
+      });
     });
   }
 
   ngOnDestroy() {
     this.addrSub?.unsubscribe();
     this.orderSub?.unsubscribe();
+    this.totalSub?.unsubscribe();
   }
 
   getSelected(addresses: Address[]): Address | null {
@@ -122,14 +138,9 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       zipCode:   v.zipCode || undefined,
       isDefault: true,
     };
-
     this.store.dispatch(createAddress({ req }));
-
-    this.addressesSaving$.pipe(
-      filter(saving => saving),
-      take(1),
-    ).subscribe(() => {
-      this.addressesSaving$.pipe(filter(saving => !saving), take(1)).subscribe(() => {
+    this.addressesSaving$.pipe(filter(s => s), take(1)).subscribe(() => {
+      this.addressesSaving$.pipe(filter(s => !s), take(1)).subscribe(() => {
         this.addresses$.pipe(take(1)).subscribe(addresses => {
           const newAddr = addresses.find(a => a.isDefault) ?? addresses[addresses.length - 1];
           if (newAddr) this.selectedAddressId = newAddr.id;
@@ -143,6 +154,66 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   hasFormError(field: string): boolean {
     const c = this.addressForm.get(field);
     return !!(c?.invalid && c.touched);
+  }
+
+  applyCoupon(sellerId: number, subtotal: number) {
+    const code = (this.couponInputs[sellerId] ?? '').trim().toUpperCase();
+    if (!code) return;
+    this.couponLoading[sellerId] = true;
+    this.couponErrors[sellerId]  = '';
+    this.couponService.validate({ code, sellerId, orderAmount: subtotal }).subscribe({
+      next: (res: CouponValidationResponse) => {
+        this.appliedCoupons[sellerId] = {
+          sellerId,
+          code: res.code,
+          discountAmount: res.discountAmount,
+          finalAmount:    res.finalAmount,
+          discountType:   res.discountType,
+          discountValue:  res.discountValue,
+        };
+        this.couponLoading[sellerId] = false;
+      },
+      error: (err) => {
+        const msg = err?.error?.message ?? 'Cupón no válido';
+        this.couponErrors[sellerId]  = msg;
+        this.couponLoading[sellerId] = false;
+        delete this.appliedCoupons[sellerId];
+      },
+    });
+  }
+
+  removeCoupon(sellerId: number) {
+    delete this.appliedCoupons[sellerId];
+    this.couponInputs[sellerId] = '';
+    this.couponErrors[sellerId] = '';
+  }
+
+  get totalWithDiscounts(): number {
+    const totalDiscount = Object.values(this.appliedCoupons)
+      .reduce((sum, c) => sum + c.discountAmount, 0);
+    return this.cartTotal - totalDiscount;
+  }
+
+  get totalDiscount(): number {
+    return Object.values(this.appliedCoupons).reduce((sum, c) => sum + c.discountAmount, 0);
+  }
+
+  getGroupTotal(sellerId: number, subtotal: number): number {
+    return this.appliedCoupons[sellerId]?.finalAmount ?? subtotal;
+  }
+
+  private async redeemAll(orderId: number): Promise<void> {
+    const groups = Object.values(this.appliedCoupons);
+    await Promise.all(
+      groups.map(c =>
+        this.couponService.redeem({
+          code:        c.code,
+          sellerId:    c.sellerId,
+          orderAmount: c.finalAmount + c.discountAmount,
+          orderId,
+        }).toPromise().catch(() => {})
+      )
+    );
   }
 
   confirm() {

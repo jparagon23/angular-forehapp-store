@@ -3,54 +3,68 @@
 <div class="content">
   <div class="table-card">
     <div class="table-header">
-      <h3>Cupones y descuentos</h3>
-      <button class="btn btn-green" (click)="modalOpen.set(true)">+ Nuevo cupón</button>
+      <h3>Cupones de todos los sellers</h3>
+      <span class="total-badge" *ngIf="total() > 0">{{ total() }} total</span>
     </div>
-    <table>
+
+    <!-- Loading -->
+    <div class="ad-loading" *ngIf="loading()">
+      <div class="mini-spin"></div>
+      Cargando cupones...
+    </div>
+
+    <!-- Error -->
+    <div class="ad-error" *ngIf="error() && !loading()">{{ error() }}</div>
+
+    <!-- Empty -->
+    <div class="ad-empty" *ngIf="!loading() && !error() && coupons().length === 0">
+      No hay cupones registrados en la plataforma.
+    </div>
+
+    <!-- Table -->
+    <table *ngIf="!loading() && coupons().length > 0">
       <thead>
-        <tr><th>Código</th><th>Descuento</th><th>Aplicable a</th><th>Usos</th><th>Validez</th><th>Estado</th><th>Acciones</th></tr>
+        <tr>
+          <th>Código</th>
+          <th>Seller</th>
+          <th>Descuento</th>
+          <th>Usos</th>
+          <th>Vigencia</th>
+          <th>Estado</th>
+        </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let d of discounts$ | async">
-          <td><strong style="letter-spacing:1px">{{ d.code }}</strong></td>
-          <td>{{ d.val }}{{ d.type === '%' ? '%' : ' COP' }}</td>
-          <td>{{ d.scope }}</td>
-          <td>{{ d.used }}/{{ d.uses }}</td>
-          <td style="font-size:.82rem">{{ d.from }} → {{ d.to }}</td>
+        <tr *ngFor="let c of coupons()">
           <td>
-            <span class="stock-badge" [class]="d.active ? 'stock-ok' : 'stock-out'">
-              {{ d.active ? 'Activo' : 'Vencido' }}
-            </span>
+            <strong class="code-chip">{{ c.code }}</strong>
+            <span class="code-desc" *ngIf="c.description">{{ c.description }}</span>
+          </td>
+          <td class="td-seller">{{ c.sellerName }}</td>
+          <td class="td-discount">{{ discountLabel(c) }}</td>
+          <td class="td-uses">{{ usesLabel(c) }}</td>
+          <td style="font-size:.82rem">
+            {{ c.validFrom | date:'dd/MM/yy':'':'es-CO' }}
+            <span *ngIf="c.validUntil"> → {{ c.validUntil | date:'dd/MM/yy':'':'es-CO' }}</span>
+            <span *ngIf="!c.validUntil" class="no-exp"> → ∞</span>
           </td>
           <td>
-            <div class="action-btns">
-              <button class="btn btn-outline btn-sm" (click)="toggle(d.code)">{{ d.active ? 'Pausar' : 'Activar' }}</button>
-              <button class="btn btn-red btn-sm" (click)="delete(d.code)">🗑</button>
-            </div>
+            <span class="status-badge" [class]="'status-' + statusIcon(c)">
+              <ng-container [ngSwitch]="statusIcon(c)">
+                <ng-container *ngSwitchCase="'activa'">Activa</ng-container>
+                <ng-container *ngSwitchCase="'vencida'">Vencida</ng-container>
+                <ng-container *ngSwitchCase="'inactiva'">Inactiva</ng-container>
+              </ng-container>
+            </span>
           </td>
         </tr>
       </tbody>
     </table>
-  </div>
-</div>
 
-<div class="modal-overlay" [class.open]="modalOpen()">
-  <div class="modal">
-    <h2>Nuevo cupón de descuento</h2>
-    <div class="form-grid">
-      <div class="form-group"><label>Código</label><input [(ngModel)]="form.code" placeholder="TENIS20" style="text-transform:uppercase" /></div>
-      <div class="form-group"><label>Tipo</label>
-        <select [(ngModel)]="form.type"><option value="%">Porcentaje (%)</option><option value="COP">Monto fijo (COP)</option></select>
-      </div>
-      <div class="form-group"><label>Valor</label><input type="number" [(ngModel)]="form.val" /></div>
-      <div class="form-group"><label>Usos máximos</label><input type="number" [(ngModel)]="form.uses" /></div>
-      <div class="form-group full"><label>Aplicable a</label>
-        <select [(ngModel)]="form.scope"><option *ngFor="let s of scopes" [value]="s">{{ s }}</option></select>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-outline" (click)="modalOpen.set(false)">Cancelar</button>
-      <button class="btn btn-green" (click)="save()">Crear cupón</button>
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="totalPages > 1">
+      <button [disabled]="page() === 0" (click)="prevPage()">← Anterior</button>
+      <span>Página {{ page() + 1 }} de {{ totalPages }}</span>
+      <button [disabled]="(page() + 1) * 20 >= total()" (click)="nextPage()">Siguiente →</button>
     </div>
   </div>
 </div>

@@ -8,7 +8,14 @@ export const loadCart        = createAction('[Cart] Load');
 export const loadCartSuccess = createAction('[Cart] Load Success', props<{ cart: CartResponse }>());
 export const loadCartFailure = createAction('[Cart] Load Failure', props<{ error: string }>());
 
-export const addCartItem        = createAction('[Cart] Add Item', props<{ variantId: number; quantity: number }>());
+export const addCartItem        = createAction('[Cart] Add Item', props<{
+  variantId: number;
+  quantity: number;
+  // Display info for guest cart (not sent to backend)
+  productTitle?: string;
+  sku?: string;
+  unitPrice?: number;
+}>());
 export const addCartItemSuccess = createAction('[Cart] Add Item Success', props<{ cart: CartResponse }>());
 export const addCartItemFailure = createAction('[Cart] Add Item Failure', props<{ error: string }>());
 
