@@ -32,6 +32,7 @@ import { Component, Input, OnChanges } from '@angular/core';
 })
 export class ToastComponent implements OnChanges {
   @Input() message = '';
+  @Input() trigger = 0;
   @Input() type: 'success' | 'error' = 'success';
   visible = false;
   private timer: any;

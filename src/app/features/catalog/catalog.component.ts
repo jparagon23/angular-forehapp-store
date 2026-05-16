@@ -35,6 +35,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
 
   loading$     = this.store.select(selectProductsLoading);
   toastMessage = signal('');
+  toastTrigger = signal(0);
 
   wishlistItemMap = toSignal(this.store.select(selectWishlistProductIdToItemId), { initialValue: new Map<number, number>() });
   isLoggedIn          = toSignal(this.store.select(selectIsLoggedIn),                 { initialValue: false });
@@ -54,7 +55,10 @@ export class CatalogComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.sub.add(
       this.actions$.pipe(ofType(addToWishlistFailure)).subscribe(({ error }) => {
-        if (error) this.toastMessage.set(error + ' — ' + Date.now());
+        if (error) {
+          this.toastMessage.set(error);
+          this.toastTrigger.update(n => n + 1);
+        }
       })
     );
 
@@ -90,7 +94,8 @@ export class CatalogComponent implements OnInit, OnDestroy {
       if (itemId) this.store.dispatch(removeFromWishlist({ itemId }));
     } else {
       this.store.dispatch(addToWishlist({ productId: product.id }));
-      this.toastMessage.set('Guardado en lista de deseos ♥ — ' + Date.now());
+      this.toastMessage.set('Guardado en lista de deseos ♥');
+      this.toastTrigger.update(n => n + 1);
     }
   }
 
