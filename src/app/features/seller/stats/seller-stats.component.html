@@ -103,23 +103,12 @@
   <div class="ss-chart-card" [class.ss-loading-card]="loading">
 
     <div *ngIf="!loading">
-      <div class="ss-empty" *ngIf="prodSeries.length === 0">
+      <div class="ss-empty" *ngIf="topProducts.length === 0">
         <span class="ss-empty-icon">📊</span>
         <p>Sin ventas en el período seleccionado</p>
       </div>
 
-      <apx-chart
-        *ngIf="prodSeries.length > 0"
-        [series]="prodSeries"
-        [chart]="prodChart"
-        [plotOptions]="prodPlot"
-        [xaxis]="prodXaxis"
-        [yaxis]="prodYaxis"
-        [dataLabels]="prodDataLabels"
-        [grid]="prodGrid"
-        [tooltip]="prodTooltip"
-        [colors]="prodColors">
-      </apx-chart>
+      <div #apexChart [style.display]="topProducts.length > 0 ? 'block' : 'none'"></div>
 
       <!-- lista detalle debajo del chart -->
       <div class="ss-top-list" *ngIf="topProducts.length > 0">

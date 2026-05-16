@@ -57,7 +57,10 @@
 
         <div class="wl-info">
           <p class="wl-name">{{ item.productTitle }}</p>
-          <p class="wl-price">Desde {{ item.minPrice | currencyCop }}</p>
+          <p class="wl-price">
+            <ng-container *ngIf="item.variantCount > 0; else noPrice">Desde {{ item.minPrice | currencyCop }}</ng-container>
+            <ng-template #noPrice>Precio no disponible</ng-template>
+          </p>
           <p class="wl-variants">{{ item.variantCount }} variante{{ item.variantCount !== 1 ? 's' : '' }} disponible{{ item.variantCount !== 1 ? 's' : '' }}</p>
           <p class="wl-date">Agregado: {{ item.addedAt | date:'dd/MM/yyyy' }}</p>
         </div>

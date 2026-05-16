@@ -1,20 +1,16 @@
-import { Component, computed, inject, OnInit } from '@angular/core';
+import { Component, computed, inject, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { AsyncPipe, NgFor, NgIf, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
-import {
-  ApexAxisChartSeries, ApexChart, ApexXAxis, ApexYAxis,
-  ApexDataLabels, ApexGrid, ApexTooltip, ApexPlotOptions,
-  NgApexchartsModule,
-} from 'ng-apexcharts';
+import ApexCharts from 'apexcharts';
 
 import { loadSellerProducts } from '../../../store/seller/seller.actions';
 import { selectSellerProducts, selectSellerLoading } from '../../../store/seller/seller.selectors';
 import { CurrencyCopPipe } from '../../../shared/pipes/currency-cop.pipe';
 import { ReportService } from '../../../core/services/report.service';
-import { DateRange, GroupBy, ReportSummary, TopProduct } from '../../../core/models/report.model';
+import { DateRange, ReportSummary, TopProduct } from '../../../core/models/report.model';
 
 interface Preset { label: string; key: string; }
 const PRESETS: Preset[] = [
@@ -28,13 +24,16 @@ const PRESETS: Preset[] = [
 @Component({
   selector: 'app-seller-stats',
   standalone: true,
-  imports: [AsyncPipe, NgFor, NgIf, NgClass, FormsModule, RouterLink, NgApexchartsModule, CurrencyCopPipe],
+  imports: [AsyncPipe, NgFor, NgIf, NgClass, FormsModule, RouterLink, CurrencyCopPipe],
   templateUrl: './seller-stats.component.html',
   styleUrl: './seller-stats.component.scss',
 })
-export class SellerStatsComponent implements OnInit {
+export class SellerStatsComponent implements OnInit, OnDestroy {
   private svc   = inject(ReportService);
   private store = inject(Store);
+
+  @ViewChild('apexChart') apexChartEl?: ElementRef;
+  private chartInstance?: ApexCharts;
 
   presets      = PRESETS;
   activePreset = 'last30';
@@ -48,7 +47,6 @@ export class SellerStatsComponent implements OnInit {
   summary: ReportSummary | null = null;
   topProducts: TopProduct[]     = [];
 
-  /* NgRx — stock del catálogo propio */
   private products  = toSignal(this.store.select(selectSellerProducts), { initialValue: [] });
   catalogLoading$   = this.store.select(selectSellerLoading);
   activeProducts    = computed(() => this.products().filter(p => p.status === 'ACTIVE').length);
@@ -56,23 +54,13 @@ export class SellerStatsComponent implements OnInit {
   outOfStock        = computed(() => this.products().filter(p => p.status === 'OUT_OF_STOCK').length);
   lowStock          = computed(() => this.products().flatMap(p => p.variants).filter(v => v.stock > 0 && v.stock <= 5).length);
 
-  /* ── ApexCharts: top productos (horizontal bar) ─── */
-  prodSeries: ApexAxisChartSeries = [];
-  prodChart: ApexChart = {
-    type: 'bar', height: 250,
-    toolbar: { show: false }, fontFamily: 'inherit',
-  };
-  prodPlot: ApexPlotOptions    = { bar: { horizontal: true, barHeight: '58%', borderRadius: 5 } };
-  prodXaxis: ApexXAxis         = { labels: { formatter: (v: string) => this.fmtShort(Number(v)), style: { fontSize: '11px', colors: '#999' } } };
-  prodYaxis: ApexYAxis         = { labels: { style: { fontSize: '12px' } } };
-  prodDataLabels: ApexDataLabels = { enabled: false };
-  prodGrid: ApexGrid           = { strokeDashArray: 4, borderColor: '#f0f0f0', yaxis: { lines: { show: false } } };
-  prodTooltip: ApexTooltip     = { y: { formatter: (v: number) => '$' + v.toLocaleString('es-CO') } };
-  prodColors                   = ['#66bb6a'];
-
   ngOnInit() {
     this.store.dispatch(loadSellerProducts());
     this.loadReport('last30');
+  }
+
+  ngOnDestroy() {
+    this.chartInstance?.destroy();
   }
 
   select(key: string) {
@@ -110,10 +98,31 @@ export class SellerStatsComponent implements OnInit {
   }
 
   private buildChart(data: TopProduct[]) {
+    this.chartInstance?.destroy();
+    this.chartInstance = undefined;
+
+    if (!data.length) return;
+
     const items = [...data].reverse();
-    this.prodSeries = items.length
-      ? [{ name: 'Ingresos', data: items.map(p => ({ x: p.productTitle, y: p.revenue })) }]
-      : [];
+    const options = {
+      series: [{ name: 'Ingresos', data: items.map(p => ({ x: p.productTitle, y: p.revenue })) }],
+      chart: { type: 'bar' as const, height: 250, toolbar: { show: false }, fontFamily: 'inherit' },
+      plotOptions: { bar: { horizontal: true, barHeight: '58%', borderRadius: 5 } },
+      xaxis: { labels: { formatter: (v: string) => this.fmtShort(Number(v)), style: { fontSize: '11px', colors: ['#999'] } } },
+      yaxis: { labels: { style: { fontSize: '12px' } } },
+      dataLabels: { enabled: false },
+      grid: { strokeDashArray: 4, borderColor: '#f0f0f0', yaxis: { lines: { show: false } } },
+      tooltip: { y: { formatter: (v: number) => '$' + v.toLocaleString('es-CO') } },
+      colors: ['#66bb6a'],
+    };
+
+    // setTimeout lets Angular render the #apexChart div before we mount the chart
+    setTimeout(() => {
+      if (this.apexChartEl) {
+        this.chartInstance = new ApexCharts(this.apexChartEl.nativeElement, options);
+        this.chartInstance.render();
+      }
+    }, 0);
   }
 
   private buildRange(key: string): DateRange {

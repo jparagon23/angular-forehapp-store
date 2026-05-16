@@ -43,7 +43,7 @@ export const wishlistReducer = createReducer(
   on(A.removeFromWishlistFailure, state => ({ ...state, actionLoading: false })),
 
   on(A.clearWishlist,        state => ({ ...state, actionLoading: true })),
-  on(A.clearWishlistSuccess, state => ({ ...state, actionLoading: false, wishlistId: null, items: [] })),
+  on(A.clearWishlistSuccess, state => ({ ...state, actionLoading: false, items: [] })),
   on(A.clearWishlistFailure, state => ({ ...state, actionLoading: false })),
 
   on(A.resetWishlistState, () => initialState),

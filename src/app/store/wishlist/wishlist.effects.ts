@@ -1,11 +1,18 @@
 import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { catchError, map, switchMap } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { concat, of } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 import { WishlistService } from '../../core/services/wishlist.service';
 import * as WishlistActions from './wishlist.actions';
 import { loginSuccess } from '../auth/auth.actions';
 import { logout } from '../auth/auth.actions';
+
+function extractError(err: unknown): string {
+  if (err instanceof HttpErrorResponse) return err.error?.message ?? err.message;
+  if (err instanceof Error) return err.message;
+  return 'Error desconocido';
+}
 
 @Injectable()
 export class WishlistEffects {
@@ -32,7 +39,7 @@ export class WishlistEffects {
       switchMap(() =>
         this.wishlistService.getWishlist().pipe(
           map(response => WishlistActions.loadWishlistSuccess({ response })),
-          catchError(error => of(WishlistActions.loadWishlistFailure({ error: error.message })))
+          catchError(error => of(WishlistActions.loadWishlistFailure({ error: extractError(error) })))
         )
       )
     )
@@ -44,7 +51,16 @@ export class WishlistEffects {
       switchMap(({ productId }) =>
         this.wishlistService.addItem(productId).pipe(
           map(response => WishlistActions.addToWishlistSuccess({ response })),
-          catchError(error => of(WishlistActions.addToWishlistFailure({ error: error.message })))
+          catchError((error: unknown) => {
+            if (error instanceof HttpErrorResponse && error.status === 409) {
+              // Producto ya en wishlist o race condition: resetear loading y resincronizar
+              return concat(
+                of(WishlistActions.addToWishlistFailure({ error: '' })),
+                of(WishlistActions.loadWishlist())
+              );
+            }
+            return of(WishlistActions.addToWishlistFailure({ error: extractError(error) }));
+          })
         )
       )
     )
@@ -56,7 +72,7 @@ export class WishlistEffects {
       switchMap(({ itemId }) =>
         this.wishlistService.removeItem(itemId).pipe(
           map(response => WishlistActions.removeFromWishlistSuccess({ response })),
-          catchError(error => of(WishlistActions.removeFromWishlistFailure({ error: error.message })))
+          catchError(error => of(WishlistActions.removeFromWishlistFailure({ error: extractError(error) })))
         )
       )
     )
@@ -68,7 +84,7 @@ export class WishlistEffects {
       switchMap(() =>
         this.wishlistService.clearWishlist().pipe(
           map(() => WishlistActions.clearWishlistSuccess()),
-          catchError(error => of(WishlistActions.clearWishlistFailure({ error: error.message })))
+          catchError(error => of(WishlistActions.clearWishlistFailure({ error: extractError(error) })))
         )
       )
     )

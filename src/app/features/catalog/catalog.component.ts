@@ -1,13 +1,14 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { Store } from '@ngrx/store';
+import { Actions, ofType } from '@ngrx/effects';
 import { AsyncPipe, NgFor, NgIf } from '@angular/common';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
-import { combineLatest, map, take, catchError, of } from 'rxjs';
+import { combineLatest, map, take, catchError, of, Subscription } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { loadProducts } from '../../store/products/products.actions';
 import { selectAllProducts, selectProductsLoading } from '../../store/products/products.selectors';
-import { addToWishlist, removeFromWishlist } from '../../store/wishlist/wishlist.actions';
-import { selectWishlistProductIds, selectWishlistProductIdToItemId } from '../../store/wishlist/wishlist.selectors';
+import { addToWishlist, addToWishlistFailure, removeFromWishlist } from '../../store/wishlist/wishlist.actions';
+import { selectWishlistProductIdToItemId } from '../../store/wishlist/wishlist.selectors';
 import { selectIsLoggedIn } from '../../store/auth/auth.selectors';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { CartDrawerComponent } from '../cart/cart-drawer.component';
@@ -24,17 +25,18 @@ import { Category } from '../../core/models/seller-product.model';
   templateUrl: './catalog.component.html',
   styleUrl: './catalog.component.scss',
 })
-export class CatalogComponent implements OnInit {
+export class CatalogComponent implements OnInit, OnDestroy {
   private store          = inject(Store);
+  private actions$       = inject(Actions);
   private router         = inject(Router);
   private route          = inject(ActivatedRoute);
   private productService = inject(ProductService);
+  private sub            = new Subscription();
 
   loading$     = this.store.select(selectProductsLoading);
   toastMessage = signal('');
 
-  wishlistProductIds  = toSignal(this.store.select(selectWishlistProductIds),         { initialValue: [] as number[] });
-  wishlistItemMap     = toSignal(this.store.select(selectWishlistProductIdToItemId),  { initialValue: new Map<number, number>() });
+  wishlistItemMap = toSignal(this.store.select(selectWishlistProductIdToItemId), { initialValue: new Map<number, number>() });
   isLoggedIn          = toSignal(this.store.select(selectIsLoggedIn),                 { initialValue: false });
 
   filteredProducts$ = this.store.select(selectAllProducts);
@@ -50,6 +52,12 @@ export class CatalogComponent implements OnInit {
   private categories: Category[] = [];
 
   ngOnInit() {
+    this.sub.add(
+      this.actions$.pipe(ofType(addToWishlistFailure)).subscribe(({ error }) => {
+        if (error) this.toastMessage.set(error + ' — ' + Date.now());
+      })
+    );
+
     combineLatest([
       this.productService.getCategories().pipe(catchError(() => of([])), take(1)),
       this.route.queryParams,
@@ -64,9 +72,11 @@ export class CatalogComponent implements OnInit {
     });
   }
 
+  ngOnDestroy() { this.sub.unsubscribe(); }
+
   clearFilter()       { this.router.navigate(['/']); }
   goToProduct(id: number) { this.router.navigate(['/product', id]); }
-  isWishlisted(id: number): boolean { return this.wishlistProductIds().includes(id); }
+  isWishlisted(id: number): boolean { return this.wishlistItemMap().has(id); }
 
   addToCart(product: Product, event: Event) {
     event.stopPropagation();
