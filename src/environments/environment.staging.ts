@@ -1,4 +1,4 @@
 export const environment = {
   production: false,
-  apiBaseUrl: 'https://TU-BACKEND-STAGING.com/api/v1',
+  apiBaseUrl: 'https://forehappp-store-production.up.railway.app/api/v1',
 };
