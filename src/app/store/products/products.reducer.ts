@@ -13,7 +13,7 @@ const adapter = createEntityAdapter<Product>();
 
 const initialState: ProductsState = adapter.getInitialState({
   selectedId: null,
-  loading: false,
+  loading: true,
   error: null,
 });
 
