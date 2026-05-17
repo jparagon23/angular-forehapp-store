@@ -187,7 +187,7 @@
   <button class="sp-clear-link" (click)="clearFilters()">Limpiar filtros</button>
 </div>
 
-<div class="sp-status-guide" *ngIf="allProducts().length">
+<div class="sp-status-guide" *ngIf="!(loading$ | async) && allProducts().length">
   <span class="sp-guide-label">Flujo de publicación:</span>
   <span class="sp-badge status-draft">Borrador</span>
   <span class="sp-guide-arrow">→ Publicar →</span>
@@ -199,7 +199,7 @@
   <span class="sp-guide-hint">· Haz clic en una fila para ver y gestionar sus variantes</span>
 </div>
 
-<div class="sp-table-wrap" *ngIf="filteredProducts().length">
+<div class="sp-table-wrap" *ngIf="!(loading$ | async) && filteredProducts().length">
   <div class="sp-results-bar" *ngIf="hasFilters()">
     {{ filteredProducts().length }} resultado{{ filteredProducts().length !== 1 ? 's' : '' }} de {{ allProducts().length }}
     <button class="sp-clear-link" (click)="clearFilters()">× Limpiar</button>
