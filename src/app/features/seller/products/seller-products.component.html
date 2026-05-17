@@ -246,6 +246,7 @@
           <td>{{ p.createdAt | date:'dd/MM/yy' }}</td>
           <td>
             <div class="sp-actions" (click)="$event.stopPropagation()">
+              <a [routerLink]="['/seller/products', p.id, 'edit']" class="btn-action btn-edit">Editar</a>
               <button *ngIf="p.status === 'DRAFT'"       class="btn-action btn-publish"    (click)="publish(p.id)">Publicar</button>
               <button *ngIf="p.status === 'ACTIVE'"      class="btn-action btn-deactivate" (click)="deactivate(p.id)">Desactivar</button>
               <button *ngIf="p.status === 'INACTIVE' || p.status === 'OUT_OF_STOCK'"

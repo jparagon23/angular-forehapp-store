@@ -1,0 +1,181 @@
+<!-- Header -->
+<div class="edit-header">
+  <div>
+    <h1 class="edit-title">
+      <span *ngIf="loading()">Cargando…</span>
+      <span *ngIf="!loading() && product()">{{ product()!.title }}</span>
+    </h1>
+    <p class="edit-subtitle" *ngIf="product()">
+      {{ product()!.brand }} · {{ product()!.category }}
+      <span class="edit-status-badge status-{{ product()!.status.toLowerCase() }}">
+        {{ product()!.status }}
+      </span>
+    </p>
+  </div>
+  <a routerLink="/seller/products" class="edit-back">← Mis Productos</a>
+</div>
+
+<div class="edit-error-global" *ngIf="loadError()">{{ loadError() }}</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     Información básica
+══════════════════════════════════════════════════════════ -->
+<div class="edit-card" *ngIf="!loading() && !loadError()">
+  <h2 class="edit-card-title">Información básica</h2>
+
+  <form [formGroup]="infoForm" (ngSubmit)="saveInfo()" novalidate>
+    <div class="form-group form-group--full">
+      <label>Título <span class="req">*</span></label>
+      <input formControlName="title" type="text" maxlength="255" />
+      <span class="form-error" *ngIf="infoForm.get('title')?.touched && infoForm.get('title')?.hasError('required')">El título es obligatorio.</span>
+      <span class="form-error" *ngIf="infoForm.get('title')?.hasError('maxlength')">Máximo 255 caracteres.</span>
+    </div>
+
+    <div class="form-group form-group--full" style="margin-top: 14px;">
+      <label>Descripción</label>
+      <textarea formControlName="description" rows="3" placeholder="Describe tu producto…"></textarea>
+    </div>
+
+    <div class="form-error form-error--global" *ngIf="saveError()">{{ saveError() }}</div>
+    <div class="save-ok" *ngIf="saveOk()">Cambios guardados correctamente.</div>
+
+    <div class="edit-actions">
+      <button type="submit" class="btn-primary" [disabled]="saving()">
+        {{ saving() ? 'Guardando…' : 'Guardar cambios' }}
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     Variantes
+══════════════════════════════════════════════════════════ -->
+<div class="edit-card" *ngIf="!loading() && !loadError()">
+  <h2 class="edit-card-title">Variantes</h2>
+
+  <!-- Lista de variantes existentes -->
+  <div class="variant-list" *ngIf="variants().length">
+    <div class="variant-row" *ngFor="let v of variants()">
+      <div class="variant-info">
+        <strong>{{ v.sku }}</strong>
+        <span>$ {{ v.price | number:'1.2-2' }}</span>
+        <span *ngIf="v.compareAtPrice" class="variant-compare">
+          Antes: $ {{ v.compareAtPrice | number:'1.2-2' }}
+        </span>
+        <span [class.stock-warn]="v.stock === 0">Stock: {{ v.stock }}</span>
+        <span class="variant-attrs" *ngIf="v.attributes?.length">
+          <ng-container *ngFor="let a of v.attributes; let last = last">
+            {{ a.attribute }}: {{ a.value }}{{ !last ? ' · ' : '' }}
+          </ng-container>
+        </span>
+      </div>
+      <button class="btn-remove" (click)="removeVariant(v.id)" title="Eliminar variante">✕</button>
+    </div>
+  </div>
+
+  <div class="variant-empty" *ngIf="!variants().length">
+    Sin variantes. Agrega al menos una para poder publicar el producto.
+  </div>
+
+  <!-- Formulario nueva variante -->
+  <form [formGroup]="variantForm" (ngSubmit)="addVariant()" novalidate class="variant-form">
+    <h3 class="variant-form-title">Agregar variante</h3>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>SKU <span class="req">*</span></label>
+        <input formControlName="sku" type="text" placeholder="Ej: PROD-001-BLK" />
+        <span class="form-error" *ngIf="variantForm.get('sku')?.touched && variantForm.get('sku')?.hasError('required')">El SKU es obligatorio.</span>
+      </div>
+      <div class="form-group">
+        <label>Precio <span class="req">*</span></label>
+        <input formControlName="price" type="number" min="0.01" step="0.01" placeholder="0.00" />
+        <span class="form-error" *ngIf="variantForm.get('price')?.touched && variantForm.get('price')?.invalid">Precio mayor a 0 requerido.</span>
+      </div>
+      <div class="form-group">
+        <label>Precio tachado <span class="opt">(opcional)</span></label>
+        <input formControlName="compareAtPrice" type="number" min="0.01" step="0.01" placeholder="0.00" />
+      </div>
+      <div class="form-group">
+        <label>Stock <span class="req">*</span></label>
+        <input formControlName="stock" type="number" min="0" step="1" placeholder="0" />
+        <span class="form-error" *ngIf="variantForm.get('stock')?.touched && variantForm.get('stock')?.invalid">Stock >= 0 requerido.</span>
+      </div>
+    </div>
+
+    <!-- Atributos de la categoría -->
+    <div class="form-row" *ngIf="categoryAttrs().length">
+      <div class="form-group" *ngFor="let attr of categoryAttrs()">
+        <label>{{ attr.name }} <span class="req" *ngIf="attr.required">*</span></label>
+        <select [(ngModel)]="selectedAttrValues[attr.attributeId]" [ngModelOptions]="{standalone: true}">
+          <option [value]="null">— Seleccionar —</option>
+          <option *ngFor="let v of attr.values" [value]="v.id">{{ v.description }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-error form-error--global" *ngIf="variantError()">{{ variantError() }}</div>
+
+    <div class="edit-actions">
+      <button type="submit" class="btn-secondary" [disabled]="addingVariant()">
+        {{ addingVariant() ? 'Agregando…' : '+ Agregar variante' }}
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     Imágenes
+══════════════════════════════════════════════════════════ -->
+<div class="edit-card" *ngIf="!loading() && !loadError()">
+  <h2 class="edit-card-title">Imágenes</h2>
+  <p class="edit-card-hint">JPEG, PNG o WebP · máx. 5 MB por archivo.</p>
+
+  <div class="img-grid" *ngIf="loadingImages()">
+    <div class="img-item img-skeleton" *ngFor="let i of [1,2,3]"></div>
+  </div>
+
+  <div class="img-grid" *ngIf="!loadingImages()">
+    <div class="img-item" *ngFor="let img of images()">
+      <div class="img-skeleton" *ngIf="!loadedImageIds().has(img.id)"></div>
+      <img
+        [src]="img.url"
+        alt="Imagen del producto"
+        [style.display]="loadedImageIds().has(img.id) ? 'block' : 'none'"
+        (load)="onImageLoad(img.id)"
+      />
+      <button class="img-remove" (click)="removeImage(img.id)" title="Eliminar imagen">✕</button>
+    </div>
+
+    <div class="img-item img-skeleton" *ngIf="uploadingImage()"></div>
+
+    <div class="img-empty" *ngIf="!images().length && !uploadingImage()">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5">
+        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21 15 16 10 5 21"/>
+      </svg>
+      <span>Sin imágenes</span>
+    </div>
+  </div>
+
+  <div class="img-upload-area">
+    <label class="img-upload-btn" [class.loading]="uploadingImage()">
+      <span *ngIf="!uploadingImage()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+        </svg>
+        Subir imagen
+      </span>
+      <span *ngIf="uploadingImage()">Subiendo…</span>
+      <input
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        (change)="onFileSelected($event)"
+        [disabled]="uploadingImage()"
+        hidden
+      />
+    </label>
+  </div>
+
+  <div class="form-error form-error--global" *ngIf="imageError()">{{ imageError() }}</div>
+</div>

@@ -83,6 +83,11 @@ export const routes: Routes = [
         canActivate: [sellerGuard],
       },
       {
+        path: 'products/:id/edit',
+        loadComponent: () => import('./features/seller/products/edit/product-edit.component').then(m => m.ProductEditComponent),
+        canActivate: [sellerGuard],
+      },
+      {
         path: 'orders',
         loadComponent: () => import('./features/seller/orders/seller-orders.component').then(m => m.SellerOrdersComponent),
         canActivate: [sellerGuard],

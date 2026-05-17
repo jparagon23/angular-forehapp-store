@@ -435,6 +435,7 @@
   cursor: pointer;
   transition: opacity .15s;
   &:hover { opacity: .8; }
+  &.btn-edit       { background: #f5f5f5; color: #333; text-decoration: none; display: inline-flex; align-items: center; }
   &.btn-publish    { background: #4caf50; color: #fff; }
   &.btn-deactivate { background: #ff9800; color: #fff; }
   &.btn-activate   { background: #1976d2; color: #fff; }
