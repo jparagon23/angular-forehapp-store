@@ -26,7 +26,12 @@
   aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;
   transition: background .4s ease;
   box-shadow: 0 8px 32px rgba(66,170,20,.1);
+  position: relative; overflow: hidden;
   @media (max-width: 720px) { aspect-ratio: 4/3; }
+}
+
+.slide-skeleton {
+  position: absolute; inset: 0; border-radius: 24px; z-index: 1;
 }
 
 .carousel-emoji {
@@ -37,6 +42,8 @@
 .slide-real-img {
   width: 100%; height: 100%; object-fit: cover;
   border-radius: 24px; display: block;
+  opacity: 0; transition: opacity .3s;
+  &.loaded { opacity: 1; }
 }
 
 .carousel-btn {
@@ -69,6 +76,8 @@
 
 .thumb-real-img {
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  opacity: 0; transition: opacity .2s;
+  &.loaded { opacity: 1; }
 }
 
 .carousel-dots {
@@ -365,8 +374,14 @@
   position: relative; overflow: hidden;
 }
 
+.related-img .img-skeleton {
+  position: absolute; inset: 0; z-index: 1;
+}
+
 .related-real-img {
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  z-index: 2; opacity: 0; transition: opacity .3s;
+  &.loaded { opacity: 1; }
 }
 
 .related-info {

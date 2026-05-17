@@ -14,9 +14,11 @@
       <div class="carousel-main">
         <button class="carousel-btn prev" (click)="prevSlide()">&#8249;</button>
         <div class="carousel-slide" [style.background]="slideBackgrounds[currentSlide()]">
+          <div class="slide-skeleton sk" *ngIf="currentSlide() === 0 && product.image && !slideImgLoaded()"></div>
           <img *ngIf="currentSlide() === 0 && product.image"
-               class="slide-real-img" [src]="product.image" [alt]="product.name"
-               (error)="onImgError($event)">
+               class="slide-real-img" [class.loaded]="slideImgLoaded()"
+               [src]="product.image" [alt]="product.name"
+               (load)="onSlideImgLoad()" (error)="onImgError($event)">
           <span class="carousel-emoji" *ngIf="currentSlide() !== 0 || !product.image">{{ product.emoji }}</span>
         </div>
         <button class="carousel-btn next" (click)="nextSlide()">&#8250;</button>
@@ -29,7 +31,8 @@
           [style.background]="bg"
           (click)="setSlide(i)">
           <img *ngIf="i === 0 && product.image" class="thumb-real-img"
-               [src]="product.image" [alt]="product.name" (error)="onImgError($event)">
+               [src]="product.image" [alt]="product.name"
+               (load)="onImgLoad($event)" (error)="onImgError($event)">
           <span *ngIf="i !== 0 || !product.image">{{ product.emoji }}</span>
         </button>
       </div>
@@ -240,9 +243,10 @@
       <div class="related-grid">
         <a class="related-card" *ngFor="let rp of related" [routerLink]="['/product', rp.id]">
           <div class="related-img" [style.background]="slideBackgrounds[0]">
-            <img *ngIf="rp.image" [src]="rp.image" [alt]="rp.name" class="related-real-img"
-                 (error)="onImgError($event)">
             <span *ngIf="!rp.image">{{ rp.emoji }}</span>
+            <div class="img-skeleton sk" *ngIf="rp.image"></div>
+            <img *ngIf="rp.image" [src]="rp.image" [alt]="rp.name" class="related-real-img"
+                 (load)="onImgLoad($event)" (error)="onImgError($event)">
           </div>
           <div class="related-info">
             <span class="related-brand">{{ rp.brand }}</span>

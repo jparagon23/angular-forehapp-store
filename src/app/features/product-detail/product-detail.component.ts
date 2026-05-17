@@ -41,9 +41,10 @@ export class ProductDetailComponent implements OnInit {
   isLoggedIn        = toSignal(this.store.select(selectIsLoggedIn), { initialValue: false });
 
   selectedAttributes = signal<Record<string, string>>({});
-  qty          = signal(1);
-  toastMessage = signal('');
-  currentSlide = signal(0);
+  qty            = signal(1);
+  toastMessage   = signal('');
+  currentSlide   = signal(0);
+  slideImgLoaded = signal(false);
 
   // Reviews state
   reviews         = signal<ReviewResponse[]>([]);
@@ -176,9 +177,16 @@ export class ProductDetailComponent implements OnInit {
     return '⏳ En revisión';
   }
 
-  setSlide(i: number) { this.currentSlide.set(i); }
-  prevSlide() { this.currentSlide.update(i => (i - 1 + this.slideBackgrounds.length) % this.slideBackgrounds.length); }
-  nextSlide() { this.currentSlide.update(i => (i + 1) % this.slideBackgrounds.length); }
+  setSlide(i: number) { this.slideImgLoaded.set(false); this.currentSlide.set(i); }
+  prevSlide() { this.slideImgLoaded.set(false); this.currentSlide.update(i => (i - 1 + this.slideBackgrounds.length) % this.slideBackgrounds.length); }
+  nextSlide() { this.slideImgLoaded.set(false); this.currentSlide.update(i => (i + 1) % this.slideBackgrounds.length); }
+  onSlideImgLoad() { this.slideImgLoaded.set(true); }
+  onImgLoad(event: Event) {
+    const img = event.target as HTMLImageElement;
+    img.classList.add('loaded');
+    const skeleton = img.parentElement?.querySelector('.img-skeleton') as HTMLElement | null;
+    if (skeleton) skeleton.style.display = 'none';
+  }
 
   selectAttribute(name: string, value: string) {
     this.selectedAttributes.update(attrs => ({ ...attrs, [name]: value }));
@@ -245,6 +253,9 @@ export class ProductDetailComponent implements OnInit {
   }
 
   onImgError(event: Event) {
-    (event.target as HTMLImageElement).style.display = 'none';
+    const img = event.target as HTMLImageElement;
+    img.style.display = 'none';
+    const skeleton = img.parentElement?.querySelector('.img-skeleton') as HTMLElement | null;
+    if (skeleton) skeleton.style.display = 'none';
   }
 }
