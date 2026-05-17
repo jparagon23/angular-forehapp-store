@@ -1,18 +1,19 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DecimalPipe, NgFor, NgIf } from '@angular/common';
+import { DatePipe, DecimalPipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { forkJoin } from 'rxjs';
 import { SellerProductService } from '../../../../core/services/seller-product.service';
 import {
   Category, CategoryAttribute,
+  InventoryMovement, InventoryRequest, MovementReason, MovementsPage,
   ProductImage, ProductVariant, SellerProduct,
 } from '../../../../core/models/seller-product.model';
 
 @Component({
   selector: 'app-product-edit',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, NgFor, NgIf, RouterLink, DecimalPipe],
+  imports: [ReactiveFormsModule, FormsModule, NgFor, NgIf, NgClass, RouterLink, DecimalPipe, DatePipe],
   templateUrl: './product-edit.component.html',
   styleUrl: './product-edit.component.scss',
 })
@@ -21,9 +22,9 @@ export class ProductEditComponent implements OnInit {
   private route   = inject(ActivatedRoute);
   private fb      = inject(FormBuilder);
 
-  product    = signal<SellerProduct | null>(null);
-  loading    = signal(true);
-  loadError  = signal<string | null>(null);
+  product   = signal<SellerProduct | null>(null);
+  loading   = signal(true);
+  loadError = signal<string | null>(null);
 
   // ── Información básica ───────────────────────────────────────
   infoForm = this.fb.group({
@@ -35,8 +36,8 @@ export class ProductEditComponent implements OnInit {
   saveOk    = signal(false);
 
   // ── Variantes ────────────────────────────────────────────────
-  variants       = signal<ProductVariant[]>([]);
-  categoryAttrs  = signal<CategoryAttribute[]>([]);
+  variants      = signal<ProductVariant[]>([]);
+  categoryAttrs = signal<CategoryAttribute[]>([]);
   selectedAttrValues: Record<number, number | null> = {};
 
   variantForm = this.fb.group({
@@ -47,6 +48,31 @@ export class ProductEditComponent implements OnInit {
   });
   addingVariant = signal(false);
   variantError  = signal<string | null>(null);
+
+  // ── Inventario modal ─────────────────────────────────────────
+  invOpen      = signal(false);
+  invVariantId = signal(0);
+  invSku       = signal('');
+  invStock     = signal(0);
+  invQuantity  = signal<number | null>(null);
+  invReason    = signal<InventoryRequest['reason']>('RESTOCK');
+  invError     = signal('');
+  invLoading   = signal(false);
+
+  // ── Movimientos modal ────────────────────────────────────────
+  movOpen         = signal(false);
+  movVariantId    = signal(0);
+  movSku          = signal('');
+  movLoading      = signal(false);
+  movError        = signal('');
+  movements       = signal<InventoryMovement[]>([]);
+  movPage         = signal(0);
+  movTotalPages   = signal(0);
+  movTotalItems   = signal(0);
+  movIsFirst      = signal(true);
+  movIsLast       = signal(true);
+  movReasonFilter = signal<MovementReason | null>(null);
+  readonly movPageSize = 10;
 
   // ── Imágenes ─────────────────────────────────────────────────
   images         = signal<ProductImage[]>([]);
@@ -90,11 +116,8 @@ export class ProductEditComponent implements OnInit {
 
   private loadImages() {
     this.service.getImages(this.productId).subscribe({
-      next: imgs => {
-        this.images.set(imgs);
-        this.loadingImages.set(false);
-      },
-      error: () => this.loadingImages.set(false),
+      next: imgs => { this.images.set(imgs); this.loadingImages.set(false); },
+      error: ()   => this.loadingImages.set(false),
     });
   }
 
@@ -134,11 +157,9 @@ export class ProductEditComponent implements OnInit {
     this.addingVariant.set(true);
     this.variantError.set(null);
     this.service.addVariant(this.productId, {
-      sku: sku!,
-      price: price!,
+      sku: sku!, price: price!,
       compareAtPrice: compareAtPrice ?? undefined,
-      stock: stock!,
-      attributeValueIds,
+      stock: stock!, attributeValueIds,
     }).subscribe({
       next: variant => {
         this.variants.update(v => [...v, variant]);
@@ -157,6 +178,102 @@ export class ProductEditComponent implements OnInit {
     this.service.deleteVariant(this.productId, variantId).subscribe({
       next: () => this.variants.update(v => v.filter(x => x.id !== variantId)),
     });
+  }
+
+  // ── Inventario modal ─────────────────────────────────────────
+  openInvModal(v: ProductVariant) {
+    this.invVariantId.set(v.id);
+    this.invSku.set(v.sku);
+    this.invStock.set(v.stock);
+    this.invQuantity.set(null);
+    this.invReason.set('RESTOCK');
+    this.invError.set('');
+    this.invOpen.set(true);
+  }
+
+  closeInvModal() { this.invOpen.set(false); }
+
+  submitInventory() {
+    const qty = this.invQuantity();
+    if (!qty) { this.invError.set('La cantidad no puede ser 0.'); return; }
+    if (qty < 0 && this.invReason() !== 'ADJUSTMENT') {
+      this.invError.set('Solo "Ajuste manual" permite cantidades negativas.');
+      return;
+    }
+    this.invLoading.set(true);
+    this.service.updateInventory(this.productId, this.invVariantId(), {
+      quantity: qty,
+      reason: this.invReason(),
+    }).subscribe({
+      next: () => {
+        this.variants.update(vs => vs.map(v =>
+          v.id === this.invVariantId() ? { ...v, stock: v.stock + qty! } : v
+        ));
+        this.invLoading.set(false);
+        this.invOpen.set(false);
+      },
+      error: err => {
+        this.invError.set(err.error?.message ?? 'Error al ajustar el inventario.');
+        this.invLoading.set(false);
+      },
+    });
+  }
+
+  // ── Movimientos modal ────────────────────────────────────────
+  openMovements(v: ProductVariant) {
+    this.movVariantId.set(v.id);
+    this.movSku.set(v.sku);
+    this.movPage.set(0);
+    this.movReasonFilter.set(null);
+    this.movOpen.set(true);
+    this.fetchMovements();
+  }
+
+  closeMovements() { this.movOpen.set(false); }
+
+  setMovFilter(reason: MovementReason | null) {
+    this.movReasonFilter.set(reason);
+    this.movPage.set(0);
+    this.fetchMovements();
+  }
+
+  movPrev() { if (!this.movIsFirst()) { this.movPage.update(p => p - 1); this.fetchMovements(); } }
+  movNext() { if (!this.movIsLast())  { this.movPage.update(p => p + 1); this.fetchMovements(); } }
+
+  private fetchMovements() {
+    this.movLoading.set(true);
+    this.movError.set('');
+    this.service.getInventoryMovements(
+      this.productId, this.movVariantId(),
+      { page: this.movPage(), size: this.movPageSize, reason: this.movReasonFilter() ?? undefined }
+    ).subscribe({
+      next: (page: MovementsPage) => {
+        this.movements.set(page.content);
+        this.movTotalPages.set(page.totalPages);
+        this.movTotalItems.set(page.totalElements);
+        this.movIsFirst.set(page.first);
+        this.movIsLast.set(page.last);
+        this.movLoading.set(false);
+      },
+      error: err => {
+        this.movError.set(err.error?.message ?? 'Error al cargar el historial.');
+        this.movLoading.set(false);
+      },
+    });
+  }
+
+  movReasonLabel(r: MovementReason): string {
+    const map: Record<MovementReason, string> = {
+      RESTOCK: 'Reposición', RETURN: 'Devolución', ADJUSTMENT: 'Ajuste', SALE: 'Venta',
+    };
+    return map[r];
+  }
+
+  movReasonClass(r: MovementReason): string {
+    const map: Record<MovementReason, string> = {
+      RESTOCK: 'mov-restock', RETURN: 'mov-return', ADJUSTMENT: 'mov-adj', SALE: 'mov-sale',
+    };
+    return map[r];
   }
 
   // ── Imágenes ─────────────────────────────────────────────────
