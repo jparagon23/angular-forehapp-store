@@ -68,6 +68,11 @@ export class ProductCreateComponent implements OnInit {
   images         = signal<ProductImage[]>([]);
   uploadingImage = signal(false);
   imageError     = signal<string | null>(null);
+  loadedImageIds = signal(new Set<number>());
+
+  onImageLoad(id: number) {
+    this.loadedImageIds.update(s => new Set([...s, id]));
+  }
 
   // ── Step 4 – publish ─────────────────────────────────────────
   publishing    = signal(false);
