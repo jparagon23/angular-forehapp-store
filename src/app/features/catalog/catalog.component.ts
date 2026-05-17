@@ -103,7 +103,17 @@ export class CatalogComponent implements OnInit, OnDestroy {
     return !!(p.variations?.sizes?.length || p.variations?.colors?.length);
   }
 
+  onImgLoad(event: Event) {
+    const img = event.target as HTMLImageElement;
+    img.classList.add('loaded');
+    const skeleton = img.parentElement?.querySelector('.img-skeleton') as HTMLElement | null;
+    if (skeleton) skeleton.style.display = 'none';
+  }
+
   onImgError(event: Event) {
-    (event.target as HTMLImageElement).style.display = 'none';
+    const img = event.target as HTMLImageElement;
+    img.style.display = 'none';
+    const skeleton = img.parentElement?.querySelector('.img-skeleton') as HTMLElement | null;
+    if (skeleton) skeleton.style.display = 'none';
   }
 }

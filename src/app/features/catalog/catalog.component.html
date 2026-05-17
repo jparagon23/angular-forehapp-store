@@ -24,8 +24,9 @@
       <div class="card" *ngFor="let product of products" (click)="goToProduct(product.id)">
         <div class="card-img">
           <span class="prod-emoji">{{ product.emoji }}</span>
+          <div class="img-skeleton" *ngIf="product.image"></div>
           <img class="prod-img" [src]="product.image" [alt]="product.name"
-               (error)="onImgError($event)">
+               (load)="onImgLoad($event)" (error)="onImgError($event)">
           <div class="card-img-overlay">Ver producto →</div>
           <button *ngIf="isLoggedIn()" class="wish-btn" [class.active]="isWishlisted(product.id)"
                   (click)="toggleWishlist(product, $event)" aria-label="Lista de deseos">
