@@ -193,11 +193,12 @@
   <p class="wiz-card-hint">Sube al menos una imagen. Formatos: JPEG, PNG, WebP. Máx. 5 MB por archivo.</p>
 
   <!-- Grid de imágenes -->
-  <div class="img-grid" *ngIf="images().length">
+  <div class="img-grid" *ngIf="images().length || uploadingImage()">
     <div class="img-item" *ngFor="let img of images()">
       <img [src]="img.url" alt="Imagen producto" />
       <button class="img-remove" (click)="removeImage(img.id)" title="Eliminar">✕</button>
     </div>
+    <div class="img-item img-skeleton" *ngIf="uploadingImage()"></div>
   </div>
 
   <div class="img-upload-area">
