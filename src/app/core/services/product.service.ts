@@ -16,6 +16,7 @@ interface ApiProductSummary {
   minPrice: number;
   variantCount: number;
   createdAt: string;
+  thumbnailUrl: string | null;
 }
 
 interface PageResponse<T> {
@@ -125,7 +126,7 @@ export class ProductService {
     return {
       id:         raw.id,
       emoji:      EMOJI_MAP[raw.category] ?? '📦',
-      image:      '',
+      image:      raw.thumbnailUrl ?? '',
       brand:      raw.brand,
       name:       raw.title,
       desc:       raw.line ?? '',
