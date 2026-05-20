@@ -80,7 +80,9 @@
 
 <footer class="site-footer">
   &copy; 2026 <span>Forehapp Store</span> — Todos los derechos reservados
-  &nbsp;·&nbsp; <a routerLink="/admin">Panel Admin →</a>
+  <ng-container *ngIf="(userRole$ | async) === 'STORE_ADMIN'">
+    &nbsp;·&nbsp; <a routerLink="/admin">Panel Admin →</a>
+  </ng-container>
 </footer>
 
 <app-cart-drawer></app-cart-drawer>

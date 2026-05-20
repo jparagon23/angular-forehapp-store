@@ -9,7 +9,7 @@ import { loadProducts } from '../../store/products/products.actions';
 import { selectAllProducts, selectProductsLoading } from '../../store/products/products.selectors';
 import { addToWishlist, addToWishlistFailure, removeFromWishlist } from '../../store/wishlist/wishlist.actions';
 import { selectWishlistProductIdToItemId } from '../../store/wishlist/wishlist.selectors';
-import { selectIsLoggedIn } from '../../store/auth/auth.selectors';
+import { selectIsLoggedIn, selectUserRole } from '../../store/auth/auth.selectors';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { CartDrawerComponent } from '../cart/cart-drawer.component';
 import { ToastComponent } from '../../shared/components/toast/toast.component';
@@ -34,6 +34,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
   private sub            = new Subscription();
 
   loading$     = this.store.select(selectProductsLoading);
+  userRole$    = this.store.select(selectUserRole);
   toastMessage = signal('');
   toastTrigger = signal(0);
 

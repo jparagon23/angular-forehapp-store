@@ -125,6 +125,18 @@ export class SellerOrdersComponent implements OnInit {
     return g.shippedAt ?? g.preparedAt ?? g.deliveredAt ?? null;
   }
 
+  paymentLabel(g: SellerOrderGroupDetail): string {
+    if (g.paymentMethod === 'CASH_ON_DELIVERY') return 'Contra entrega';
+    if (g.orderPaymentStatus === 'PAID' || g.orderPaymentStatus === 'PAYMENT_CONFIRMED') return 'Pagado';
+    return 'Pago pendiente';
+  }
+
+  paymentClass(g: SellerOrderGroupDetail): string {
+    if (g.paymentMethod === 'CASH_ON_DELIVERY') return 'so-pay-cod';
+    if (g.orderPaymentStatus === 'PAID' || g.orderPaymentStatus === 'PAYMENT_CONFIRMED') return 'so-pay-paid';
+    return 'so-pay-pending';
+  }
+
   statusLabel(s: SellerGroupStatus): string {
     const m: Record<SellerGroupStatus, string> = {
       PENDING:   'Pendiente',

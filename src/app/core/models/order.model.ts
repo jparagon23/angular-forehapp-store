@@ -60,6 +60,8 @@ export interface SellerOrderGroupDetail {
   shippingCity: string;
   shippingCountry: string;
   status: SellerGroupStatus;
+  paymentMethod: PaymentMethod;
+  orderPaymentStatus: OrderApiStatus;
   subtotal: number;
   trackingNumber: string | null;
   preparedAt: string | null;
