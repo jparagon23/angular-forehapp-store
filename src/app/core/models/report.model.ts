@@ -22,8 +22,8 @@ export interface TopProduct {
 }
 
 export interface SellerSales {
-  sellerId: number;
-  sellerName: string;
+  storeId: number;
+  storeName: string;
   totalOrders: number;
   totalRevenue: number;
 }

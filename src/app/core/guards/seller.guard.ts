@@ -12,7 +12,7 @@ export const sellerGuard: CanActivateFn = (route) => {
   return store.select(selectAuthUser).pipe(
     take(1),
     map(user => {
-      if (user?.role === 'SELLER') return true;
+      if (user?.storeRoles?.includes('SELLER')) return true;
       return router.createUrlTree(['/login'], { queryParams: { redirect: `/seller/${redirect}` } });
     })
   );

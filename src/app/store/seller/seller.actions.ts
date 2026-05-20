@@ -1,6 +1,12 @@
 import { createAction, props } from '@ngrx/store';
 import { InventoryRequest, SellerProduct } from '../../core/models/seller-product.model';
 
+export const setActiveSellerStore = createAction(
+  '[Seller] Set Active Store',
+  props<{ storeId: number; storeName: string }>()
+);
+export const clearActiveSellerStore = createAction('[Seller] Clear Active Store');
+
 export const loadSellerProducts = createAction('[Seller] Load Products');
 export const loadSellerProductsSuccess = createAction(
   '[Seller] Load Products Success', props<{ products: SellerProduct[] }>()

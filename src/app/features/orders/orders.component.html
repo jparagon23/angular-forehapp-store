@@ -101,7 +101,7 @@
                       <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
                       <polyline points="9 22 9 12 15 12 15 22"/>
                     </svg>
-                    <span class="oc-seller-name">{{ g.sellerName | titlecase }}</span>
+                    <span class="oc-seller-name">{{ g.storeName | titlecase }}</span>
                   </div>
                   <span class="status-badge" [ngClass]="groupStatusClass(g.status)">
                     {{ groupStatusLabel(g.status) }}
@@ -185,7 +185,7 @@
       <div>
         <h2 class="ret-modal-title">Solicitar devolución</h2>
         <span class="ret-seller-tag" *ngIf="returnActiveGroup()">
-          {{ returnActiveGroup()!.sellerName }}
+          {{ returnActiveGroup()!.storeName }}
         </span>
       </div>
       <button class="ret-close-btn" (click)="closeReturnForm()" aria-label="Cerrar">✕</button>

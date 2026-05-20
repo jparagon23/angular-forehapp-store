@@ -36,20 +36,24 @@ export class OrderService {
     return this.http.get<OrderResponse>(`${this.base}/orders/${orderId}`);
   }
 
-  getSellerOrderGroups(): Observable<SellerOrderGroupDetail[]> {
-    return this.http.get<SellerOrderGroupDetail[]>(`${this.base}/seller/order-groups`);
+  getSellerOrderGroups(storeId: number): Observable<SellerOrderGroupDetail[]> {
+    return this.http.get<SellerOrderGroupDetail[]>(`${this.base}/stores/${storeId}/order-groups`);
   }
 
-  shipSellerGroup(groupId: number, trackingNumber: string): Observable<void> {
-    return this.http.patch<void>(`${this.base}/seller/order-groups/${groupId}/ship`, { trackingNumber });
+  prepareSellerGroup(storeId: number, groupId: number): Observable<void> {
+    return this.http.patch<void>(`${this.base}/stores/${storeId}/order-groups/${groupId}/prepare`, {});
   }
 
-  deliverSellerGroup(groupId: number): Observable<void> {
-    return this.http.patch<void>(`${this.base}/seller/order-groups/${groupId}/deliver`, {});
+  shipSellerGroup(storeId: number, groupId: number, trackingNumber: string): Observable<void> {
+    return this.http.patch<void>(`${this.base}/stores/${storeId}/order-groups/${groupId}/ship`, { trackingNumber });
   }
 
-  cancelSellerGroup(groupId: number, reason: string): Observable<void> {
-    return this.http.patch<void>(`${this.base}/seller/order-groups/${groupId}/cancel`, { reason });
+  deliverSellerGroup(storeId: number, groupId: number): Observable<void> {
+    return this.http.patch<void>(`${this.base}/stores/${storeId}/order-groups/${groupId}/deliver`, {});
+  }
+
+  cancelSellerGroup(storeId: number, groupId: number, reason: string): Observable<void> {
+    return this.http.patch<void>(`${this.base}/stores/${storeId}/order-groups/${groupId}/cancel`, { reason });
   }
 
   // Admin panel (mock)

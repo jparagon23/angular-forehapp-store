@@ -100,6 +100,16 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'stores',
+    loadComponent: () => import('./features/stores/my-stores.component').then(m => m.MyStoresComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'stores/:storeId',
+    loadComponent: () => import('./features/stores/store-detail/store-detail.component').then(m => m.StoreDetailComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: 'admin',
     loadComponent: () => import('./features/admin/admin.component').then(m => m.AdminComponent),
     canActivate: [adminGuard],
@@ -114,6 +124,7 @@ export const routes: Routes = [
       { path: 'discounts', loadComponent: () => import('./features/admin/discounts/discounts-admin.component').then(m => m.DiscountsAdminComponent) },
       { path: 'reviews',  loadComponent: () => import('./features/admin/reviews/reviews-admin.component').then(m => m.ReviewsAdminComponent) },
       { path: 'returns',  loadComponent: () => import('./features/admin/returns/returns-admin.component').then(m => m.ReturnsAdminComponent) },
+      { path: 'stores',   loadComponent: () => import('./features/admin/stores/stores-admin.component').then(m => m.StoresAdminComponent) },
     ]
   },
   { path: '**', redirectTo: '' },

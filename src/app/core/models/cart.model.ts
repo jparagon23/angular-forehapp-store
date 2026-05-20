@@ -11,8 +11,8 @@ export interface CartItemResponse {
 }
 
 export interface CartSellerGroup {
-  sellerId: number;
-  sellerName: string;
+  storeId: number;
+  storeName: string;
   subtotal: number;
   items: CartItemResponse[];
 }

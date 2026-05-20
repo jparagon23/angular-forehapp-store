@@ -28,8 +28,8 @@ export interface OrderSummaryDto {
 
 export interface OrderSellerGroup {
   groupId: number;
-  sellerId: number;
-  sellerName: string;
+  storeId: number;
+  storeName: string;
   status: SellerGroupStatus;
   subtotal: number;
   trackingNumber: string | null;

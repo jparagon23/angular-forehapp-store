@@ -33,6 +33,8 @@ export type ProductStatus = 'DRAFT' | 'ACTIVE' | 'INACTIVE' | 'OUT_OF_STOCK';
 
 export interface SellerProduct {
   id: number;
+  storeId: number;
+  storeName: string;
   title: string;
   description?: string;
   brand: string;

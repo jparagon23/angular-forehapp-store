@@ -17,7 +17,7 @@ interface BatchItem {
   priceChanged: boolean;
   originalPrice: number | null;
 }
-interface BatchGroup  { sellerId: number; sellerName: string; subtotal: number; items: BatchItem[]; }
+interface BatchGroup  { storeId: number; storeName: string; subtotal: number; items: BatchItem[]; }
 interface BatchCartResponse { id: number | null; status: string; updatedAt: string | null; total: number; sellerGroups: BatchGroup[]; }
 
 @Injectable({ providedIn: 'root' })
@@ -53,8 +53,8 @@ export class CartService {
 
   private mapBatch(raw: BatchCartResponse): CartResponse {
     const sellerGroups: CartSellerGroup[] = raw.sellerGroups.map(g => ({
-      sellerId:   g.sellerId,
-      sellerName: g.sellerName,
+      storeId:   g.storeId,
+      storeName: g.storeName,
       subtotal:   g.subtotal,
       items:      g.items.map((i): CartItemResponse => ({
         itemId:        i.id,

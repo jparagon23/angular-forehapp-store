@@ -13,7 +13,7 @@
             <path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
             <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
           </svg>
-          <span>{{ group.sellerName }}</span>
+          <span>{{ group.storeName }}</span>
           <span class="group-subtotal">Subtotal: {{ group.subtotal | currencyCop }}</span>
         </div>
 
@@ -32,29 +32,29 @@
 
         <!-- Coupon field -->
         <div class="coupon-section">
-          <ng-container *ngIf="!appliedCoupons[group.sellerId]; else couponApplied">
+          <ng-container *ngIf="!appliedCoupons[group.storeId]; else couponApplied">
             <div class="coupon-input-row">
               <input
                 class="coupon-input"
                 type="text"
-                placeholder="Cupón de {{ group.sellerName }}"
-                [(ngModel)]="couponInputs[group.sellerId]"
-                (ngModelChange)="couponErrors[group.sellerId] = ''"
-                (keydown.enter)="applyCoupon(group.sellerId, group.subtotal)"
-                [disabled]="couponLoading[group.sellerId]"
-                [class.has-error]="couponErrors[group.sellerId]"
+                placeholder="Cupón de {{ group.storeName }}"
+                [(ngModel)]="couponInputs[group.storeId]"
+                (ngModelChange)="couponErrors[group.storeId] = ''"
+                (keydown.enter)="applyCoupon(group.storeId, group.subtotal)"
+                [disabled]="couponLoading[group.storeId]"
+                [class.has-error]="couponErrors[group.storeId]"
                 maxlength="50"
               />
               <button
                 class="btn-apply-coupon"
-                (click)="applyCoupon(group.sellerId, group.subtotal)"
-                [disabled]="couponLoading[group.sellerId] || !(couponInputs[group.sellerId] || '').trim()">
-                <span *ngIf="!couponLoading[group.sellerId]">Aplicar</span>
-                <span class="mini-spin" *ngIf="couponLoading[group.sellerId]"></span>
+                (click)="applyCoupon(group.storeId, group.subtotal)"
+                [disabled]="couponLoading[group.storeId] || !(couponInputs[group.storeId] || '').trim()">
+                <span *ngIf="!couponLoading[group.storeId]">Aplicar</span>
+                <span class="mini-spin" *ngIf="couponLoading[group.storeId]"></span>
               </button>
             </div>
-            <p class="coupon-error" *ngIf="couponErrors[group.sellerId]">
-              {{ couponErrors[group.sellerId] }}
+            <p class="coupon-error" *ngIf="couponErrors[group.storeId]">
+              {{ couponErrors[group.storeId] }}
             </p>
           </ng-container>
 
@@ -64,24 +64,24 @@
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
               <span>
-                {{ appliedCoupons[group.sellerId].code }}
-                <ng-container *ngIf="appliedCoupons[group.sellerId].discountType === 'PORCENTAJE'">
-                  — {{ appliedCoupons[group.sellerId].discountValue }}% descuento
+                {{ appliedCoupons[group.storeId].code }}
+                <ng-container *ngIf="appliedCoupons[group.storeId].discountType === 'PORCENTAJE'">
+                  — {{ appliedCoupons[group.storeId].discountValue }}% descuento
                 </ng-container>
-                <ng-container *ngIf="appliedCoupons[group.sellerId].discountType === 'MONTO_FIJO'">
-                  — {{ appliedCoupons[group.sellerId].discountValue | currencyCop }} descuento
+                <ng-container *ngIf="appliedCoupons[group.storeId].discountType === 'MONTO_FIJO'">
+                  — {{ appliedCoupons[group.storeId].discountValue | currencyCop }} descuento
                 </ng-container>
               </span>
-              <span class="coupon-saving">−{{ appliedCoupons[group.sellerId].discountAmount | currencyCop }}</span>
-              <button class="btn-remove-coupon" (click)="removeCoupon(group.sellerId)" title="Quitar cupón">
+              <span class="coupon-saving">−{{ appliedCoupons[group.storeId].discountAmount | currencyCop }}</span>
+              <button class="btn-remove-coupon" (click)="removeCoupon(group.storeId)" title="Quitar cupón">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                   <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
               </button>
             </div>
             <div class="group-final-row">
-              <span>Total {{ group.sellerName }}:</span>
-              <strong>{{ getGroupTotal(group.sellerId, group.subtotal) | currencyCop }}</strong>
+              <span>Total {{ group.storeName }}:</span>
+              <strong>{{ getGroupTotal(group.storeId, group.subtotal) | currencyCop }}</strong>
             </div>
           </ng-template>
         </div>

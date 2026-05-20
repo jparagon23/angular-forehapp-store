@@ -386,8 +386,18 @@ $green-h: #4fc217;
 }
 
 .nb-admin {
-  color: #888 !important; font-size: .78rem !important;
-  &:hover { color: #bbb !important; }
+  color: #a78bfa !important; font-size: .78rem !important; font-weight: 600;
+  &:hover { color: #c4b5fd !important; }
+}
+
+.nb-seller {
+  color: #60d394 !important; font-size: .78rem !important; font-weight: 600;
+  &:hover { color: #86efac !important; }
+}
+
+.nb-stores {
+  color: #93c5fd !important; font-size: .78rem !important; font-weight: 600;
+  &:hover { color: #bfdbfe !important; }
 }
 
 // ── Account dropdown ───────────────────────────────────────

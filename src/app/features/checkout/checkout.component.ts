@@ -49,11 +49,11 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   showAddressPicker = false;
   showAddressForm   = false;
 
-  // coupon state keyed by sellerId
-  couponInputs:   Record<number, string>                 = {};
-  couponLoading:  Record<number, boolean>                = {};
-  couponErrors:   Record<number, string>                 = {};
-  appliedCoupons: Record<number, AppliedCoupon>          = {};
+  // coupon state keyed by storeId
+  couponInputs:   Record<number, string>        = {};
+  couponLoading:  Record<number, boolean>       = {};
+  couponErrors:   Record<number, string>        = {};
+  appliedCoupons: Record<number, AppliedCoupon> = {};
 
   cartTotal = 0;
 
@@ -161,36 +161,36 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     return !!(c?.invalid && c.touched);
   }
 
-  applyCoupon(sellerId: number, subtotal: number) {
-    const code = (this.couponInputs[sellerId] ?? '').trim().toUpperCase();
+  applyCoupon(storeId: number, subtotal: number) {
+    const code = (this.couponInputs[storeId] ?? '').trim().toUpperCase();
     if (!code) return;
-    this.couponLoading[sellerId] = true;
-    this.couponErrors[sellerId]  = '';
-    this.couponService.validate({ code, sellerId, orderAmount: subtotal }).subscribe({
+    this.couponLoading[storeId] = true;
+    this.couponErrors[storeId]  = '';
+    this.couponService.validate({ code, storeId, orderAmount: subtotal }).subscribe({
       next: (res: CouponValidationResponse) => {
-        this.appliedCoupons[sellerId] = {
-          sellerId,
-          code: res.code,
+        this.appliedCoupons[storeId] = {
+          storeId,
+          code:           res.code,
           discountAmount: res.discountAmount,
           finalAmount:    res.finalAmount,
           discountType:   res.discountType,
           discountValue:  res.discountValue,
         };
-        this.couponLoading[sellerId] = false;
+        this.couponLoading[storeId] = false;
       },
       error: (err) => {
         const msg = err?.error?.message ?? 'Cupón no válido';
-        this.couponErrors[sellerId]  = msg;
-        this.couponLoading[sellerId] = false;
-        delete this.appliedCoupons[sellerId];
+        this.couponErrors[storeId]  = msg;
+        this.couponLoading[storeId] = false;
+        delete this.appliedCoupons[storeId];
       },
     });
   }
 
-  removeCoupon(sellerId: number) {
-    delete this.appliedCoupons[sellerId];
-    this.couponInputs[sellerId] = '';
-    this.couponErrors[sellerId] = '';
+  removeCoupon(storeId: number) {
+    delete this.appliedCoupons[storeId];
+    this.couponInputs[storeId] = '';
+    this.couponErrors[storeId] = '';
   }
 
   get totalWithDiscounts(): number {
@@ -203,8 +203,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     return Object.values(this.appliedCoupons).reduce((sum, c) => sum + c.discountAmount, 0);
   }
 
-  getGroupTotal(sellerId: number, subtotal: number): number {
-    return this.appliedCoupons[sellerId]?.finalAmount ?? subtotal;
+  getGroupTotal(storeId: number, subtotal: number): number {
+    return this.appliedCoupons[storeId]?.finalAmount ?? subtotal;
   }
 
   private async redeemAll(orderId: number): Promise<void> {
@@ -213,7 +213,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       groups.map(c =>
         this.couponService.redeem({
           code:        c.code,
-          sellerId:    c.sellerId,
+          storeId:     c.storeId,
           orderAmount: c.finalAmount + c.discountAmount,
           orderId,
         }).toPromise().catch(() => {})

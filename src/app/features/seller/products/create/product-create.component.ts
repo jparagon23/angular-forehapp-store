@@ -3,6 +3,8 @@ import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { Router, RouterLink } from '@angular/router';
 import { DecimalPipe, NgFor, NgIf } from '@angular/common';
 import { forkJoin } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { SellerProductService } from '../../../../core/services/seller-product.service';
 import {
   Brand,
@@ -13,6 +15,7 @@ import {
   ProductVariant,
   SellerProduct,
 } from '../../../../core/models/seller-product.model';
+import { selectActiveSellerStoreId } from '../../../../store/seller/seller.selectors';
 
 type WizardStep = 1 | 2 | 3 | 4;
 
@@ -27,6 +30,9 @@ export class ProductCreateComponent implements OnInit {
   private service = inject(SellerProductService);
   private router  = inject(Router);
   private fb      = inject(FormBuilder);
+  private ngrx    = inject(Store);
+
+  private storeId = toSignal(this.ngrx.select(selectActiveSellerStoreId), { initialValue: null });
 
   // ── Wizard state ─────────────────────────────────────────────
   step = signal<WizardStep>(1);
@@ -135,10 +141,12 @@ export class ProductCreateComponent implements OnInit {
   createDraft() {
     this.basicForm.markAllAsTouched();
     if (this.basicForm.invalid) return;
+    const storeId = this.storeId();
+    if (!storeId) return;
     const { title, description, brandId, lineId, categoryId } = this.basicForm.value;
     this.creatingDraft.set(true);
     this.draftError.set(null);
-    this.service.createProduct({
+    this.service.createProduct(storeId, {
       title: title!,
       description: description || undefined,
       brandId: brandId!,
@@ -160,6 +168,8 @@ export class ProductCreateComponent implements OnInit {
   addVariant() {
     this.variantForm.markAllAsTouched();
     if (this.variantForm.invalid) return;
+    const storeId = this.storeId();
+    if (!storeId) return;
     const productId = this.draftProduct()!.id;
     const { sku, price, compareAtPrice, stock } = this.variantForm.value;
     const attributeValueIds = Object.values(this.selectedAttrValues)
@@ -167,7 +177,7 @@ export class ProductCreateComponent implements OnInit {
 
     this.addingVariant.set(true);
     this.variantError.set(null);
-    this.service.addVariant(productId, {
+    this.service.addVariant(storeId, productId, {
       sku: sku!,
       price: price!,
       compareAtPrice: compareAtPrice ?? undefined,
@@ -188,8 +198,10 @@ export class ProductCreateComponent implements OnInit {
   }
 
   removeVariant(variantId: number) {
+    const storeId = this.storeId();
+    if (!storeId) return;
     const productId = this.draftProduct()!.id;
-    this.service.deleteVariant(productId, variantId).subscribe({
+    this.service.deleteVariant(storeId, productId, variantId).subscribe({
       next: () => this.variants.update(v => v.filter(x => x.id !== variantId)),
     });
   }
@@ -197,10 +209,12 @@ export class ProductCreateComponent implements OnInit {
   onFileSelected(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
+    const storeId = this.storeId();
+    if (!storeId) return;
     const productId = this.draftProduct()!.id;
     this.uploadingImage.set(true);
     this.imageError.set(null);
-    this.service.uploadImage(productId, file).subscribe({
+    this.service.uploadImage(storeId, productId, file).subscribe({
       next: img => {
         this.images.update(i => [...i, img]);
         this.uploadingImage.set(false);
@@ -213,18 +227,22 @@ export class ProductCreateComponent implements OnInit {
   }
 
   removeImage(imageId: number) {
+    const storeId = this.storeId();
+    if (!storeId) return;
     const productId = this.draftProduct()!.id;
-    this.service.deleteImage(productId, imageId).subscribe({
+    this.service.deleteImage(storeId, productId, imageId).subscribe({
       next: () => this.images.update(i => i.filter(x => x.id !== imageId)),
     });
   }
 
   publish() {
     if (!this.canPublish) return;
+    const storeId = this.storeId();
+    if (!storeId) return;
     const productId = this.draftProduct()!.id;
     this.publishing.set(true);
     this.publishError.set(null);
-    this.service.publishProduct(productId).subscribe({
+    this.service.publishProduct(storeId, productId).subscribe({
       next: () => this.router.navigate(['/seller/products']),
       error: err => {
         this.publishError.set(err.error?.message ?? 'Error al publicar. Verifica variantes e imágenes.');

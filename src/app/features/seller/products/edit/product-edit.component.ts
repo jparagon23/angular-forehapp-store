@@ -3,12 +3,15 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DatePipe, DecimalPipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { forkJoin } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { SellerProductService } from '../../../../core/services/seller-product.service';
 import {
   Category, CategoryAttribute,
   InventoryMovement, InventoryRequest, MovementReason, MovementsPage,
   ProductImage, ProductVariant, SellerProduct,
 } from '../../../../core/models/seller-product.model';
+import { selectActiveSellerStoreId } from '../../../../store/seller/seller.selectors';
 
 @Component({
   selector: 'app-product-edit',
@@ -21,6 +24,9 @@ export class ProductEditComponent implements OnInit {
   private service = inject(SellerProductService);
   private route   = inject(ActivatedRoute);
   private fb      = inject(FormBuilder);
+  private ngrx    = inject(Store);
+
+  private storeId = toSignal(this.ngrx.select(selectActiveSellerStoreId), { initialValue: null });
 
   product   = signal<SellerProduct | null>(null);
   loading   = signal(true);
@@ -90,8 +96,10 @@ export class ProductEditComponent implements OnInit {
   }
 
   private loadAll() {
+    const storeId = this.storeId();
+    if (!storeId) { this.loadError.set('No hay tienda activa.'); this.loading.set(false); return; }
     forkJoin({
-      product:    this.service.getProduct(this.productId),
+      product:    this.service.getProduct(storeId, this.productId),
       categories: this.service.getCategories(),
     }).subscribe({
       next: ({ product, categories }) => {
@@ -115,7 +123,9 @@ export class ProductEditComponent implements OnInit {
   }
 
   private loadImages() {
-    this.service.getImages(this.productId).subscribe({
+    const storeId = this.storeId();
+    if (!storeId) return;
+    this.service.getImages(storeId, this.productId).subscribe({
       next: imgs => { this.images.set(imgs); this.loadingImages.set(false); },
       error: ()   => this.loadingImages.set(false),
     });
@@ -125,11 +135,13 @@ export class ProductEditComponent implements OnInit {
   saveInfo() {
     this.infoForm.markAllAsTouched();
     if (this.infoForm.invalid) return;
+    const storeId = this.storeId();
+    if (!storeId) return;
     const { title, description } = this.infoForm.value;
     this.saving.set(true);
     this.saveError.set(null);
     this.saveOk.set(false);
-    this.service.updateProduct(this.productId, {
+    this.service.updateProduct(storeId, this.productId, {
       title: title!,
       description: description || undefined,
     }).subscribe({
@@ -150,13 +162,15 @@ export class ProductEditComponent implements OnInit {
   addVariant() {
     this.variantForm.markAllAsTouched();
     if (this.variantForm.invalid) return;
+    const storeId = this.storeId();
+    if (!storeId) return;
     const { sku, price, compareAtPrice, stock } = this.variantForm.value;
     const attributeValueIds = Object.values(this.selectedAttrValues)
       .filter((id): id is number => id !== null && id !== 0);
 
     this.addingVariant.set(true);
     this.variantError.set(null);
-    this.service.addVariant(this.productId, {
+    this.service.addVariant(storeId, this.productId, {
       sku: sku!, price: price!,
       compareAtPrice: compareAtPrice ?? undefined,
       stock: stock!, attributeValueIds,
@@ -175,7 +189,9 @@ export class ProductEditComponent implements OnInit {
   }
 
   removeVariant(variantId: number) {
-    this.service.deleteVariant(this.productId, variantId).subscribe({
+    const storeId = this.storeId();
+    if (!storeId) return;
+    this.service.deleteVariant(storeId, this.productId, variantId).subscribe({
       next: () => this.variants.update(v => v.filter(x => x.id !== variantId)),
     });
   }
@@ -285,9 +301,11 @@ export class ProductEditComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
+    const storeId = this.storeId();
+    if (!storeId) return;
     this.uploadingImage.set(true);
     this.imageError.set(null);
-    this.service.uploadImage(this.productId, file).subscribe({
+    this.service.uploadImage(storeId, this.productId, file).subscribe({
       next: img => {
         this.images.update(i => [...i, img]);
         this.uploadingImage.set(false);
@@ -301,7 +319,9 @@ export class ProductEditComponent implements OnInit {
   }
 
   removeImage(imageId: number) {
-    this.service.deleteImage(this.productId, imageId).subscribe({
+    const storeId = this.storeId();
+    if (!storeId) return;
+    this.service.deleteImage(storeId, this.productId, imageId).subscribe({
       next: () => {
         this.images.update(i => i.filter(x => x.id !== imageId));
         this.loadedImageIds.update(s => { s.delete(imageId); return new Set(s); });

@@ -295,11 +295,14 @@
       🔥 Ofertas del día
     </button>
 
-    <a *ngIf="(userRole$ | async) === 'STORE_ADMIN'" routerLink="/admin" class="nb-cat nb-admin">
+    <a *ngIf="hasAdmin$ | async" routerLink="/admin" class="nb-cat nb-admin">
       Panel Admin →
     </a>
-    <a *ngIf="(userRole$ | async) === 'SELLER'" routerLink="/seller" class="nb-cat nb-admin">
+    <a *ngIf="hasSeller$ | async" routerLink="/seller" class="nb-cat nb-seller">
       Panel Seller →
+    </a>
+    <a *ngIf="isLoggedIn$ | async" routerLink="/stores" class="nb-cat nb-stores">
+      Mis Tiendas
     </a>
 
   </div>

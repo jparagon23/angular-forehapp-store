@@ -61,8 +61,8 @@ export class GuestCartService {
       previousPrice: null,
     }));
     const group: CartSellerGroup = {
-      sellerId:   0,
-      sellerName: 'Tu carrito',
+      storeId:   0,
+      storeName: 'Tu carrito',
       subtotal:   cartItems.reduce((s, i) => s + i.subtotal, 0),
       items:      cartItems,
     };

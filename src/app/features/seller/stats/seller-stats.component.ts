@@ -7,7 +7,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import ApexCharts from 'apexcharts';
 
 import { loadSellerProducts } from '../../../store/seller/seller.actions';
-import { selectSellerProducts, selectSellerLoading } from '../../../store/seller/seller.selectors';
+import { selectSellerProducts, selectSellerLoading, selectActiveSellerStoreId } from '../../../store/seller/seller.selectors';
 import { CurrencyCopPipe } from '../../../shared/pipes/currency-cop.pipe';
 import { ReportService } from '../../../core/services/report.service';
 import { DateRange, ReportSummary, TopProduct } from '../../../core/models/report.model';
@@ -31,6 +31,8 @@ const PRESETS: Preset[] = [
 export class SellerStatsComponent implements OnInit, OnDestroy {
   private svc   = inject(ReportService);
   private store = inject(Store);
+
+  private storeId = toSignal(this.store.select(selectActiveSellerStoreId), { initialValue: null });
 
   @ViewChild('apexChart') apexChartEl?: ElementRef;
   private chartInstance?: ApexCharts;
@@ -78,16 +80,18 @@ export class SellerStatsComponent implements OnInit, OnDestroy {
   }
 
   private loadReport(key: string) {
+    const storeId = this.storeId();
+    if (!storeId) return;
     const range = this.buildRange(key);
     this.loading = true;
     this.error   = false;
 
-    this.svc.getSellerSummary(range).subscribe({
+    this.svc.getSellerSummary(storeId, range).subscribe({
       next: s => { this.summary = s; },
       error: () => { this.error = true; },
     });
 
-    this.svc.getSellerTopProducts(range, 8).subscribe({
+    this.svc.getSellerTopProducts(storeId, range, 8).subscribe({
       next: products => {
         this.topProducts = products;
         this.buildChart(products);

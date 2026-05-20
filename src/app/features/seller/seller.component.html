@@ -9,6 +9,33 @@
       </svg>
       <span>Panel Seller</span>
     </div>
+
+    <div class="store-selector">
+      <ng-container *ngIf="(activeStoreId$ | async) as activeId; else noStore">
+        <div class="store-active-label">Tienda activa</div>
+        <div class="store-active-name">{{ activeStoreName$ | async }}</div>
+        <div *ngIf="myStores.length > 1" class="store-switch-list">
+          <button
+            *ngFor="let s of myStores"
+            class="store-switch-btn"
+            [class.selected]="s.storeId === activeId"
+            (click)="selectStore(s)"
+          >{{ s.name }}</button>
+        </div>
+      </ng-container>
+      <ng-template #noStore>
+        <div *ngIf="myStores.length > 1" class="store-pick-label">Selecciona una tienda</div>
+        <div class="store-switch-list">
+          <button
+            *ngFor="let s of myStores"
+            class="store-switch-btn"
+            (click)="selectStore(s)"
+          >{{ s.name }}</button>
+        </div>
+        <div *ngIf="myStores.length === 0 && !storesError" class="store-empty">Sin tiendas asignadas</div>
+        <div *ngIf="storesError" class="store-empty store-error">{{ storesError }}</div>
+      </ng-template>
+    </div>
     <nav class="seller-nav">
       <a routerLink="stats" routerLinkActive="active">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -42,6 +69,15 @@
         Cupones
       </a>
     </nav>
+
+    <div class="seller-panel-links">
+      <a *ngIf="hasAdmin$ | async" routerLink="/admin" class="panel-link panel-link-admin">
+        Panel Admin →
+      </a>
+      <a routerLink="/stores" class="panel-link panel-link-stores">
+        Mis Tiendas →
+      </a>
+    </div>
   </aside>
 
   <main class="seller-content">

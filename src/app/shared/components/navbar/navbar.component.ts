@@ -8,7 +8,7 @@ import { filter, map, startWith, take, debounceTime, distinctUntilChanged, switc
 import { selectCartCount } from '../../../store/cart/cart.selectors';
 import { selectWishlistCount } from '../../../store/wishlist/wishlist.selectors';
 import { openCart } from '../../../store/cart/cart.actions';
-import { selectIsLoggedIn, selectAuthUser, selectUserRole, selectCanShop } from '../../../store/auth/auth.selectors';
+import { selectIsLoggedIn, selectAuthUser, selectUserRole, selectCanShop, selectHasSeller, selectHasAdmin } from '../../../store/auth/auth.selectors';
 import { logout } from '../../../store/auth/auth.actions';
 import { loadAddresses, deleteAddress, setDefaultAddress } from '../../../store/addresses/addresses.actions';
 import { selectAllAddresses, selectDefaultAddress, selectAddressesLoading } from '../../../store/addresses/addresses.selectors';
@@ -44,6 +44,8 @@ export class NavbarComponent {
   authUser$         = this.store.select(selectAuthUser);
   userRole$         = this.store.select(selectUserRole);
   canShop$          = this.store.select(selectCanShop);
+  hasSeller$        = this.store.select(selectHasSeller);
+  hasAdmin$         = this.store.select(selectHasAdmin);
   addresses$        = this.store.select(selectAllAddresses);
   defaultAddress$   = this.store.select(selectDefaultAddress);
   addressesLoading$ = this.store.select(selectAddressesLoading);
