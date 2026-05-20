@@ -1,13 +1,13 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { AsyncPipe, DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, DatePipe, NgClass, NgFor, NgIf, TitleCasePipe } from '@angular/common';
 import { take } from 'rxjs';
 import { selectIsLoggedIn, selectAuthUser } from '../../store/auth/auth.selectors';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
 import { OrderService } from '../../core/services/order.service';
-import { OrderResponse, OrderSellerGroup, OrderSummaryDto, SellerGroupStatus } from '../../core/models/order.model';
+import { OrderResponse, OrderSellerGroup, OrderSummaryDto, PaymentMethod, SellerGroupStatus } from '../../core/models/order.model';
 import { ReturnService } from '../../core/services/return.service';
 import { CreateReturnRequest, ReturnType } from '../../core/models/return.model';
 
@@ -24,7 +24,7 @@ interface ReturnFormItem {
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [AsyncPipe, NgFor, NgIf, NgClass, DatePipe, RouterLink, NavbarComponent, CurrencyCopPipe],
+  imports: [AsyncPipe, NgFor, NgIf, NgClass, DatePipe, TitleCasePipe, RouterLink, NavbarComponent, CurrencyCopPipe],
   templateUrl: './orders.component.html',
   styleUrl: './orders.component.scss',
 })
@@ -197,11 +197,52 @@ export class OrdersComponent implements OnInit {
   // ── Order / group helpers ────────────────────────────────────────────────────
 
   orderStatusLabel(status: string): string {
-    return ({ PENDING: 'Pago pendiente', PAID: 'Pagado', CANCELLED: 'Cancelado' } as Record<string, string>)[status] ?? status;
+    const m: Record<string, string> = {
+      PENDING: 'Pago pendiente', PAYMENT_CONFIRMED: 'Pago confirmado',
+      PAID: 'Pagado', CANCELLED: 'Cancelado',
+    };
+    return m[status] ?? status;
   }
 
   orderStatusClass(status: string): string {
-    return ({ PENDING: 'orange', PAID: 'green', CANCELLED: 'red' } as Record<string, string>)[status] ?? '';
+    const m: Record<string, string> = {
+      PENDING: 'orange', PAYMENT_CONFIRMED: 'blue', PAID: 'green', CANCELLED: 'red',
+    };
+    return m[status] ?? '';
+  }
+
+  shippingStatusLabel(status: string): string {
+    const m: Record<string, string> = {
+      PENDING: 'Pendiente', PREPARING: 'Preparando', SHIPPED: 'En camino',
+      DELIVERED: 'Entregado', CANCELLED: 'Cancelado',
+    };
+    return m[status] ?? status;
+  }
+
+  shippingStatusClass(status: string): string {
+    const m: Record<string, string> = {
+      PENDING: 'gray', PREPARING: 'purple', SHIPPED: 'blue',
+      DELIVERED: 'green', CANCELLED: 'red',
+    };
+    return m[status] ?? '';
+  }
+
+  paymentMethodLabel(pm: string): string {
+    const m: Record<string, string> = {
+      MERCADO_PAGO: 'MercadoPago', CASH: 'Efectivo',
+      TRANSFER: 'Transferencia', CASH_ON_DELIVERY: 'Contra entrega',
+    };
+    return m[pm] ?? pm;
+  }
+
+  orderStatusMessage(paymentStatus: string, paymentMethod: string): string {
+    if (paymentStatus === 'CANCELLED') return '';
+    if (paymentStatus === 'PAYMENT_CONFIRMED') return 'Pago confirmado — tu pedido está siendo preparado.';
+    if (paymentStatus === 'PAID' && paymentMethod === 'CASH_ON_DELIVERY') return 'Pedido entregado y pago completado.';
+    if (paymentStatus === 'PAID') return 'Pago recibido — pedido en proceso.';
+    if (paymentMethod === 'CASH_ON_DELIVERY') return 'Pedido recibido — pagarás al recibir.';
+    if (paymentMethod === 'CASH' || paymentMethod === 'TRANSFER') return 'Pendiente de confirmación por el administrador.';
+    return 'Esperando confirmación de pago.';
   }
 
   groupStatusLabel(status: SellerGroupStatus): string {

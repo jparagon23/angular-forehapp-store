@@ -172,7 +172,7 @@
           <span class="nb-top-main">Identifícate ▾</span>
         </ng-container>
         <ng-container *ngIf="isLoggedIn$ | async">
-          <span class="nb-top-sup">Hola, {{ (authUser$ | async)?.name }}</span>
+          <span class="nb-top-sup">Hola, {{ (authUser$ | async)?.name | titlecase }}</span>
           <span class="nb-top-main">Mi cuenta ▾</span>
         </ng-container>
       </div>
@@ -209,7 +209,7 @@
           <div class="nb-drop-user">
             <div class="nb-drop-avatar">{{ (authUser$ | async)?.name?.charAt(0) | uppercase }}</div>
             <div>
-              <p class="nb-drop-uname">{{ (authUser$ | async)?.name }}</p>
+              <p class="nb-drop-uname">{{ (authUser$ | async)?.name | titlecase }}</p>
               <p class="nb-drop-uemail">{{ (authUser$ | async)?.email }}</p>
             </div>
           </div>
@@ -251,9 +251,9 @@
       <span class="nb-cart-label">Deseos</span>
     </button>
 
-    <!-- Cart: only for BUYER role (CUSTOMER in backend) and guests -->
+    <!-- Cart: visible para guests y usuarios con rol CUSTOMER -->
     <button class="nb-cart" (click)="openCart()"
-            *ngIf="(userRole$ | async) !== 'SELLER' && (userRole$ | async) !== 'STORE_ADMIN'">
+            *ngIf="!(isLoggedIn$ | async) || (canShop$ | async)">
       <div class="nb-cart-icon-wrap">
         <svg class="nb-cart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>

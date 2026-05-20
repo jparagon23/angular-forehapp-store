@@ -3,7 +3,7 @@ import { UserRole } from '../../store/auth/auth.actions';
 export function resolveRole(storeRoles: string[]): UserRole {
   if (storeRoles.includes('STORE_ADMIN')) return 'STORE_ADMIN';
   if (storeRoles.includes('SELLER'))      return 'SELLER';
-  return 'BUYER';
+  return 'CUSTOMER';
 }
 
 export function resolveRoleFromToken(token: string): UserRole {
@@ -13,5 +13,5 @@ export function resolveRoleFromToken(token: string): UserRole {
     if (roles.includes('STORE_ADMIN')) return 'STORE_ADMIN';
     if (roles.includes('SELLER'))      return 'SELLER';
   } catch {}
-  return 'BUYER';
+  return 'CUSTOMER';
 }

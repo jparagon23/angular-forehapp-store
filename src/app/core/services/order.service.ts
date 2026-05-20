@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { Order, OrderResponse, OrderStatus, OrderSummaryDto, SellerOrderGroupDetail } from '../models/order.model';
+import { Order, OrderResponse, OrderStatus, OrderSummaryDto, PaymentMethod, SellerOrderGroupDetail } from '../models/order.model';
 import { environment } from '../../../environments/environment';
 
 const MOCK_ORDERS: Order[] = [
@@ -20,8 +20,12 @@ export class OrderService {
   private http = inject(HttpClient);
   private base = environment.apiBaseUrl;
 
-  createOrder(addressId: number): Observable<OrderResponse> {
-    return this.http.post<OrderResponse>(`${this.base}/orders`, { addressId });
+  createOrder(addressId: number, paymentMethod: PaymentMethod): Observable<OrderResponse> {
+    return this.http.post<OrderResponse>(`${this.base}/orders`, { addressId, paymentMethod });
+  }
+
+  confirmCashPayment(orderId: number): Observable<void> {
+    return this.http.patch<void>(`${this.base}/admin/payments/orders/${orderId}/confirm-cash`, {});
   }
 
   getBuyerOrders(): Observable<OrderSummaryDto[]> {

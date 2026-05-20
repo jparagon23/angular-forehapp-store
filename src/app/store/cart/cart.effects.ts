@@ -29,7 +29,7 @@ export class CartEffects {
       ofType(CartActions.loadCart),
       withLatestFrom(this.store.select(selectAuthUser)),
       switchMap(([, user]) => {
-        if (user?.role === 'BUYER') {
+        if (user?.storeRoles?.includes('CUSTOMER')) {
           return this.cartSvc.getCart().pipe(
             map(cart => CartActions.loadCartSuccess({ cart })),
             catchError(err => of(CartActions.loadCartFailure({ error: err.error?.message ?? 'Error al cargar el carrito' })))
@@ -44,7 +44,7 @@ export class CartEffects {
   loadCartOnLogin$ = createEffect(() =>
     this.actions$.pipe(
       ofType(loginSuccess),
-      filter(({ user }) => user.role === 'BUYER'),
+      filter(({ user }) => user.storeRoles?.includes('CUSTOMER') ?? false),
       switchMap(() => {
         const guestItems = this.guestSvc.getItems();
         this.guestSvc.clear();
@@ -69,7 +69,7 @@ export class CartEffects {
       ofType(CartActions.addCartItem),
       withLatestFrom(this.store.select(selectAuthUser)),
       switchMap(([action, user]) => {
-        if (user?.role === 'BUYER') {
+        if (user?.storeRoles?.includes('CUSTOMER')) {
           return this.cartSvc.addItem(action.variantId, action.quantity).pipe(
             map(cart => CartActions.addCartItemSuccess({ cart })),
             catchError(err => {
@@ -99,7 +99,7 @@ export class CartEffects {
       ofType(CartActions.updateCartItem),
       withLatestFrom(this.store.select(selectAuthUser)),
       switchMap(([action, user]) => {
-        if (user?.role === 'BUYER') {
+        if (user?.storeRoles?.includes('CUSTOMER')) {
           return this.cartSvc.updateItem(action.itemId, action.quantity).pipe(
             map(cart => CartActions.updateCartItemSuccess({ cart })),
             catchError(err => of(CartActions.updateCartItemFailure({ error: err.error?.message ?? 'Error al actualizar cantidad' })))
@@ -118,7 +118,7 @@ export class CartEffects {
       ofType(CartActions.removeCartItem),
       withLatestFrom(this.store.select(selectAuthUser)),
       switchMap(([action, user]) => {
-        if (user?.role === 'BUYER') {
+        if (user?.storeRoles?.includes('CUSTOMER')) {
           return this.cartSvc.removeItem(action.itemId).pipe(
             switchMap(() => this.cartSvc.getCart()),
             map(cart => CartActions.removeCartItemSuccess({ cart })),
@@ -137,7 +137,7 @@ export class CartEffects {
       ofType(CartActions.clearCartItems),
       withLatestFrom(this.store.select(selectAuthUser)),
       switchMap(([, user]) => {
-        if (user?.role === 'BUYER') {
+        if (user?.storeRoles?.includes('CUSTOMER')) {
           return this.cartSvc.clearCart().pipe(
             switchMap(() => this.cartSvc.getCart()),
             map(cart => CartActions.clearCartItemsSuccess({ cart })),

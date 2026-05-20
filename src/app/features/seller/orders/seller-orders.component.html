@@ -68,7 +68,7 @@
              stroke-linecap="round" stroke-linejoin="round">
           <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
         </svg>
-        {{ g.buyerName }}
+        {{ g.buyerName | titlecase }}
       </div>
 
       <div class="so-date" *ngIf="relevantDate(g)">{{ relevantDate(g) | date:'dd MMM yyyy' }}</div>
@@ -79,29 +79,12 @@
       <!-- Action area -->
       <div class="so-card-actions" (click)="$event.stopPropagation()">
 
-        <!-- PREPARING: mostrar botón o formulario inline de guía -->
-        <ng-container *ngIf="g.status === 'PREPARING' && !cancelMode().has(g.groupId)">
-          <button *ngIf="!shippingMode().has(g.groupId)"
-                  class="so-btn so-btn-ship"
-                  (click)="startShip(g.groupId)">
-            Marcar enviado
-          </button>
-          <ng-container *ngIf="shippingMode().has(g.groupId)">
-            <input class="so-tracking-input"
-                   type="text"
-                   placeholder="Número de guía"
-                   [value]="trackingDraft()[g.groupId] ?? ''"
-                   (input)="setTracking(g.groupId, $any($event.target).value)" />
-            <button class="so-btn so-btn-ship"
-                    [disabled]="!trackingDraft()[g.groupId]?.trim() || actionLoading().has(g.groupId)"
-                    (click)="confirmShip(g.groupId)">
-              {{ actionLoading().has(g.groupId) ? 'Enviando...' : 'Confirmar' }}
-            </button>
-            <button class="so-btn so-btn-cancel" (click)="cancelShip(g.groupId)">
-              Cancelar
-            </button>
-          </ng-container>
-        </ng-container>
+        <!-- PREPARING: abrir modal de envío -->
+        <button *ngIf="g.status === 'PREPARING' && !cancelMode().has(g.groupId)"
+                class="so-btn so-btn-ship"
+                (click)="startShip(g.groupId)">
+          Marcar enviado
+        </button>
 
         <!-- SHIPPED: confirmar entrega -->
         <button *ngIf="g.status === 'SHIPPED'"
@@ -112,7 +95,7 @@
         </button>
 
         <!-- PENDING / PREPARING: botón cancelar pedido -->
-        <button *ngIf="(g.status === 'PENDING' || g.status === 'PREPARING') && !cancelMode().has(g.groupId) && !shippingMode().has(g.groupId)"
+        <button *ngIf="(g.status === 'PENDING' || g.status === 'PREPARING') && !cancelMode().has(g.groupId)"
                 class="so-btn so-btn-cancel-order"
                 (click)="startCancel(g.groupId)">
           Cancelar pedido
@@ -195,5 +178,38 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- Ship modal -->
+<div class="so-modal-overlay" *ngIf="shipModal() !== null" (click)="closeShipModal()">
+  <div class="so-modal" (click)="$event.stopPropagation()">
+    <div class="so-modal-header">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+        <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+      </svg>
+      <h3 class="so-modal-title">Marcar como enviado</h3>
+    </div>
+    <p class="so-modal-desc">
+      Ingresa el número de guía para el pedido
+      <strong>#{{ modalOrder()?.orderId }}</strong>.
+    </p>
+    <label class="so-modal-label">Número de guía</label>
+    <input class="so-modal-input"
+           type="text"
+           placeholder="Ej. 9400111899223453234567"
+           [value]="shipModalTracking()"
+           (input)="shipModalTracking.set($any($event.target).value)"
+           (keydown.enter)="confirmShip()" />
+    <div class="so-modal-actions">
+      <button class="so-btn so-btn-cancel" (click)="closeShipModal()">Cancelar</button>
+      <button class="so-btn so-btn-ship"
+              [disabled]="!shipModalTracking().trim() || shipModalBusy()"
+              (click)="confirmShip()">
+        {{ shipModalBusy() ? 'Enviando...' : 'Confirmar envío' }}
+      </button>
+    </div>
   </div>
 </div>

@@ -42,7 +42,7 @@ export class VerifyCodeComponent implements OnInit {
     this.authService.verifyCode({ userId: this.userId, code: this.code }).subscribe({
       next: res => {
         const role = resolveRole(res.storeRoles);
-        const user = { userId: res.userId, name: res.name, email: res.email, role };
+        const user = { userId: res.userId, name: res.name, email: res.email, role, storeRoles: res.storeRoles };
         this.tokenStore.setTokens(res.access_token, res.refresh_token, user);
         this.store.dispatch(loginSuccess({ user }));
         this.router.navigate(['/']);

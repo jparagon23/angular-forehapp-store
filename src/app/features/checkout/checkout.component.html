@@ -110,7 +110,37 @@
       </div>
     </div>
 
-    <!-- Right: payment panel -->
+    <!-- Right: confirmation screen OR payment panel -->
+    <ng-container *ngIf="createdOrder$ | async as confirmedOrder; else payCardTpl">
+      <div class="pay-card">
+
+        <!-- MP: redirecting -->
+        <div class="redirect-msg" *ngIf="confirmedOrder.checkoutUrl">
+          <span class="btn-spinner"></span>
+          <p>Redirigiendo a MercadoPago...</p>
+        </div>
+
+        <!-- CASH / TRANSFER / COD: confirmation screen -->
+        <div class="order-confirmed" *ngIf="!confirmedOrder.checkoutUrl">
+          <div class="oc-check">✅</div>
+          <h2 class="oc-title">Pedido #{{ confirmedOrder.orderId }} creado</h2>
+          <p class="oc-total">Total: <strong>{{ confirmedOrder.total | currencyCop }}</strong></p>
+          <p class="oc-msg" *ngIf="confirmedOrder.paymentMethod === 'CASH'">
+            Un administrador verificará tu pago en efectivo y te notificará por email cuando sea aprobado.
+          </p>
+          <p class="oc-msg" *ngIf="confirmedOrder.paymentMethod === 'TRANSFER'">
+            Un administrador verificará tu transferencia bancaria y te notificará por email cuando sea aprobado.
+          </p>
+          <p class="oc-msg" *ngIf="confirmedOrder.paymentMethod === 'CASH_ON_DELIVERY'">
+            Tu pedido ya está siendo preparado. Pagarás <strong>{{ confirmedOrder.total | currencyCop }}</strong> al momento de la entrega.
+          </p>
+          <a routerLink="/orders" class="btn-view-orders">Ver mis pedidos →</a>
+        </div>
+
+      </div>
+    </ng-container>
+
+    <ng-template #payCardTpl>
     <div class="pay-card">
 
       <h2 class="card-title">Pago</h2>
@@ -191,17 +221,33 @@
       </div>
       <!-- ── /Shipping address ──────────────────────────── -->
 
-      <!-- MercadoPago notice -->
-      <div class="mp-notice">
-        <div class="mp-logo">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-            <line x1="1" y1="10" x2="23" y2="10"/>
-          </svg>
-        </div>
-        <div class="mp-text">
-          <p class="mp-title">Pago procesado por MercadoPago</p>
-          <p class="mp-sub">Al confirmar serás redirigido a la plataforma de pago segura.</p>
+      <!-- Payment method selector -->
+      <div class="pm-section" *ngIf="addresses$ | async as addrs">
+        <p class="pm-section-label">Método de pago</p>
+        <div class="pm-options">
+
+          <button class="pm-opt" [class.active]="selectedPaymentMethod === 'MERCADO_PAGO'"
+                  (click)="selectedPaymentMethod = 'MERCADO_PAGO'">
+            <span class="pm-opt-icon">💳</span>
+            <div class="pm-opt-body">
+              <span class="pm-opt-name">MercadoPago</span>
+              <span class="pm-opt-desc">Tarjeta, PSE, efectivo online</span>
+            </div>
+          </button>
+
+
+          <button class="pm-opt"
+                  [class.active]="selectedPaymentMethod === 'CASH_ON_DELIVERY'"
+                  [class.pm-disabled]="!isSelectedAddressCali(addrs)"
+                  [disabled]="!isSelectedAddressCali(addrs)"
+                  (click)="selectedPaymentMethod = 'CASH_ON_DELIVERY'">
+            <span class="pm-opt-icon">🚚</span>
+            <div class="pm-opt-body">
+              <span class="pm-opt-name">Contra entrega <span class="pm-opt-tag">Solo Cali</span></span>
+              <span class="pm-opt-desc">Pago al momento de la entrega</span>
+            </div>
+          </button>
+
         </div>
       </div>
 
@@ -226,7 +272,8 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
-          Confirmar y pagar · {{ totalWithDiscounts | currencyCop }}
+          {{ selectedPaymentMethod === 'MERCADO_PAGO' ? 'Confirmar y pagar' : 'Confirmar pedido' }}
+          · {{ totalWithDiscounts | currencyCop }}
         </ng-container>
         <ng-template #loadingTpl>
           <span class="btn-spinner"></span>
@@ -236,6 +283,7 @@
 
       <a routerLink="/" class="back-link">← Seguir comprando</a>
     </div>
+    </ng-template>
 
   </div>
 </div>

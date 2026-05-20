@@ -1,5 +1,5 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { DatePipe, NgClass, NgFor, NgIf, TitleCasePipe } from '@angular/common';
 import { CurrencyCopPipe } from '../../../shared/pipes/currency-cop.pipe';
 import { OrderService } from '../../../core/services/order.service';
 import { SellerGroupStatus, SellerOrderGroupDetail } from '../../../core/models/order.model';
@@ -7,7 +7,7 @@ import { SellerGroupStatus, SellerOrderGroupDetail } from '../../../core/models/
 @Component({
   selector: 'app-seller-orders',
   standalone: true,
-  imports: [NgFor, NgIf, NgClass, DatePipe, CurrencyCopPipe],
+  imports: [NgFor, NgIf, NgClass, DatePipe, TitleCasePipe, CurrencyCopPipe],
   templateUrl: './seller-orders.component.html',
   styleUrl: './seller-orders.component.scss',
 })
@@ -20,11 +20,14 @@ export class SellerOrdersComponent implements OnInit {
   activeFilter = signal<SellerGroupStatus | null>(null);
   expandedId   = signal<number | null>(null);
 
-  shippingMode  = signal<Set<number>>(new Set());
-  trackingDraft = signal<Record<number, string>>({});
-  cancelMode    = signal<Set<number>>(new Set());
-  cancelReason  = signal<Record<number, string>>({});
-  actionLoading = signal<Set<number>>(new Set());
+  shipModal         = signal<number | null>(null);
+  shipModalTracking = signal<string>('');
+  cancelMode        = signal<Set<number>>(new Set());
+  cancelReason      = signal<Record<number, string>>({});
+  actionLoading     = signal<Set<number>>(new Set());
+
+  modalOrder    = computed(() => this.groups().find(g => g.groupId === this.shipModal()) ?? null);
+  shipModalBusy = computed(() => { const id = this.shipModal(); return id !== null && this.actionLoading().has(id); });
 
   filtered = computed(() => {
     const f = this.activeFilter();
@@ -55,26 +58,25 @@ export class SellerOrdersComponent implements OnInit {
   }
 
   startShip(groupId: number) {
-    this.shippingMode.update(s => { const n = new Set(s); n.add(groupId); return n; });
-    this.trackingDraft.update(d => ({ ...d, [groupId]: '' }));
+    this.shipModal.set(groupId);
+    this.shipModalTracking.set('');
   }
 
-  cancelShip(groupId: number) {
-    this.shippingMode.update(s => { const n = new Set(s); n.delete(groupId); return n; });
+  closeShipModal() {
+    this.shipModal.set(null);
+    this.shipModalTracking.set('');
   }
 
-  setTracking(groupId: number, value: string) {
-    this.trackingDraft.update(d => ({ ...d, [groupId]: value }));
-  }
-
-  confirmShip(groupId: number) {
-    const tracking = (this.trackingDraft()[groupId] ?? '').trim();
+  confirmShip() {
+    const groupId = this.shipModal();
+    if (groupId === null) return;
+    const tracking = this.shipModalTracking().trim();
     if (!tracking) return;
     this.setLoading(groupId, true);
     this.orderService.shipSellerGroup(groupId, tracking).subscribe({
       next: () => {
         this.patchGroup(groupId, 'SHIPPED', { trackingNumber: tracking, shippedAt: new Date().toISOString() });
-        this.cancelShip(groupId);
+        this.closeShipModal();
         this.setLoading(groupId, false);
       },
       error: () => this.setLoading(groupId, false),

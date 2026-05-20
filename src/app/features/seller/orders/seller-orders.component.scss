@@ -76,11 +76,6 @@
   &.so-btn-cancel-confirm{ background: #c62828; color: #fff; }
 }
 
-.so-tracking-input {
-  padding: 5px 10px; border-radius: 6px; border: 1px solid #c5cae9;
-  font-size: .82rem; outline: none; width: 170px;
-  &:focus { border-color: #1565c0; box-shadow: 0 0 0 2px rgba(21,101,192,.12); }
-}
 
 .so-chevron {
   flex-shrink: 0; color: #aaa; transition: transform .18s;
@@ -153,6 +148,63 @@
   strong { color: #333; }
 }
 .so-cancel-date { color: #999; white-space: nowrap; }
+
+// Ship modal
+.so-modal-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  animation: so-fade-in .15s ease;
+}
+
+.so-modal {
+  background: #fff; border-radius: 14px;
+  padding: 28px 28px 24px;
+  width: 100%; max-width: 440px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.2);
+  animation: so-slide-up .18s ease;
+}
+
+.so-modal-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+  svg { color: #1565c0; flex-shrink: 0; }
+}
+
+.so-modal-title {
+  font-size: 1.05rem; font-weight: 800; color: #1a1a2e; margin: 0;
+}
+
+.so-modal-desc {
+  font-size: .88rem; color: #666; margin: 0 0 18px;
+}
+
+.so-modal-label {
+  display: block; font-size: .75rem; font-weight: 700; color: #444;
+  text-transform: uppercase; letter-spacing: .4px; margin-bottom: 6px;
+}
+
+.so-modal-input {
+  width: 100%; padding: 10px 12px; border-radius: 8px;
+  border: 1.5px solid #c5cae9; font-size: .9rem; font-family: monospace;
+  outline: none; box-sizing: border-box; margin-bottom: 20px;
+  &:focus { border-color: #1565c0; box-shadow: 0 0 0 3px rgba(21,101,192,.12); }
+}
+
+.so-modal-actions {
+  display: flex; gap: 8px; justify-content: flex-end;
+  .so-btn { padding: 8px 18px; font-size: .85rem; }
+}
+
+@keyframes so-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes so-slide-up {
+  from { transform: translateY(14px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
 
 // Empty
 .so-empty {

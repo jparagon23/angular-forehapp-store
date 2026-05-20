@@ -1,6 +1,8 @@
 // ── Shared ──────────────────────────────────────────────────────────────────
 
-export type OrderApiStatus = 'PENDING' | 'PAID' | 'CANCELLED';
+export type PaymentMethod = 'MERCADO_PAGO' | 'CASH' | 'TRANSFER' | 'CASH_ON_DELIVERY';
+export type PaymentStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'REFUNDED';
+export type OrderApiStatus = 'PENDING' | 'PAYMENT_CONFIRMED' | 'PAID' | 'CANCELLED';
 export type SellerGroupStatus = 'PENDING' | 'PREPARING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
 
 export interface OrderItemResponse {
@@ -17,7 +19,9 @@ export interface OrderItemResponse {
 
 export interface OrderSummaryDto {
   orderId: number;
-  status: OrderApiStatus;
+  paymentStatus: OrderApiStatus;
+  shippingStatus: SellerGroupStatus;
+  paymentMethod: PaymentMethod;
   total: number;
   createdAt: string;
 }
@@ -35,7 +39,8 @@ export interface OrderSellerGroup {
 
 export interface OrderResponse {
   orderId: number;
-  status: OrderApiStatus;
+  paymentStatus: OrderApiStatus;
+  paymentMethod: PaymentMethod;
   total: number;
   shippingAddress: string;
   shippingCity: string;

@@ -12,6 +12,7 @@ import { selectAllAddresses, selectAddressesLoading, selectAddressesSaving } fro
 import { createOrder, resetCreateOrder } from '../../store/orders/orders.actions';
 import { selectCreatingOrder, selectCreatedOrder, selectCreateOrderError } from '../../store/orders/orders.selectors';
 import { Address, CreateAddressRequest } from '../../core/models/address.model';
+import { PaymentMethod } from '../../core/models/order.model';
 import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
 import { CouponService } from '../../core/services/coupon.service';
 import { AppliedCoupon, CouponValidationResponse } from '../../core/models/coupon.model';
@@ -41,8 +42,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   creatingOrder$    = this.store.select(selectCreatingOrder);
   createOrderError$ = this.store.select(selectCreateOrderError);
+  createdOrder$     = this.store.select(selectCreatedOrder);
 
   selectedAddressId: number | null = null;
+  selectedPaymentMethod: PaymentMethod = 'MERCADO_PAGO';
   showAddressPicker = false;
   showAddressForm   = false;
 
@@ -92,11 +95,13 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.totalSub = this.total$.subscribe(t => (this.cartTotal = t));
 
     this.orderSub = this.store.select(selectCreatedOrder).pipe(
-      filter(order => order !== null && order.checkoutUrl !== null),
+      filter(order => order !== null),
       take(1),
     ).subscribe(order => {
       this.redeemAll(order!.orderId).then(() => {
-        window.location.href = order!.checkoutUrl!;
+        if (order!.checkoutUrl) {
+          window.location.href = order!.checkoutUrl;
+        }
       });
     });
   }
@@ -216,8 +221,13 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     );
   }
 
+  isSelectedAddressCali(addresses: Address[]): boolean {
+    const addr = this.getSelected(addresses);
+    return addr?.city?.toLowerCase() === 'cali';
+  }
+
   confirm() {
     if (!this.selectedAddressId) return;
-    this.store.dispatch(createOrder({ addressId: this.selectedAddressId }));
+    this.store.dispatch(createOrder({ addressId: this.selectedAddressId, paymentMethod: this.selectedPaymentMethod }));
   }
 }
