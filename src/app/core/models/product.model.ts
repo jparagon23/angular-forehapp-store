@@ -14,10 +14,13 @@ export interface DetailVariant {
   attributes: DetailVariantAttribute[];
 }
 
+export interface ProductImage { id: number; url: string; displayOrder: number; }
+
 export interface Product {
   id: number;
   emoji: string;
   image: string;
+  images?: ProductImage[];
   brand: string;
   name: string;
   desc: string;

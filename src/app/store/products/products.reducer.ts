@@ -27,6 +27,7 @@ export const productsReducer = createReducer(
       ...p,
       variants: state.entities[p.id]?.variants ?? p.variants,
       image:    state.entities[p.id]?.image    || p.image,
+      images:   state.entities[p.id]?.images   ?? p.images,
     }));
     return adapter.setAll(enriched, { ...state, loading: false });
   }),

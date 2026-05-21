@@ -12,33 +12,34 @@
     <!-- CAROUSEL -->
     <div class="carousel-wrap">
       <div class="carousel-main">
-        <button class="carousel-btn prev" (click)="prevSlide()">&#8249;</button>
-        <div class="carousel-slide" [style.background]="slideBackgrounds[currentSlide()]">
-          <div class="slide-skeleton sk" *ngIf="currentSlide() === 0 && product.image && !slideImgLoaded()"></div>
-          <img *ngIf="currentSlide() === 0 && product.image"
-               class="slide-real-img" [class.loaded]="slideImgLoaded()"
-               [src]="product.image" [alt]="product.name"
-               (load)="onSlideImgLoad()" (error)="onImgError($event)">
-          <span class="carousel-emoji" *ngIf="currentSlide() !== 0 || !product.image">{{ product.emoji }}</span>
+        <button class="carousel-btn prev" (click)="prevSlide()" *ngIf="slideCount() > 1">&#8249;</button>
+        <div class="carousel-slide" [style.background]="fallbackBackgrounds[currentSlide() % fallbackBackgrounds.length]">
+          <ng-container *ngIf="productImages().length; else emojiSlide">
+            <div class="slide-skeleton sk" *ngIf="!slideImgLoaded()"></div>
+            <img class="slide-real-img" [class.loaded]="slideImgLoaded()"
+                 [src]="productImages()[currentSlide()].url" [alt]="product.name"
+                 (load)="onSlideImgLoad()" (error)="onImgError($event)">
+          </ng-container>
+          <ng-template #emojiSlide>
+            <span class="carousel-emoji">{{ product.emoji }}</span>
+          </ng-template>
         </div>
-        <button class="carousel-btn next" (click)="nextSlide()">&#8250;</button>
+        <button class="carousel-btn next" (click)="nextSlide()" *ngIf="slideCount() > 1">&#8250;</button>
       </div>
-      <div class="carousel-thumbs">
+      <div class="carousel-thumbs" *ngIf="productImages().length > 1">
         <button
-          *ngFor="let bg of slideBackgrounds; let i = index"
+          *ngFor="let img of productImages(); let i = index"
           class="carousel-thumb"
           [class.active]="currentSlide() === i"
-          [style.background]="bg"
+          [style.background]="fallbackBackgrounds[i % fallbackBackgrounds.length]"
           (click)="setSlide(i)">
-          <img *ngIf="i === 0 && product.image" class="thumb-real-img"
-               [src]="product.image" [alt]="product.name"
+          <img class="thumb-real-img" [src]="img.url" [alt]="product.name"
                (load)="onImgLoad($event)" (error)="onImgError($event)">
-          <span *ngIf="i !== 0 || !product.image">{{ product.emoji }}</span>
         </button>
       </div>
-      <div class="carousel-dots">
+      <div class="carousel-dots" *ngIf="productImages().length > 1">
         <button
-          *ngFor="let bg of slideBackgrounds; let i = index"
+          *ngFor="let img of productImages(); let i = index"
           class="dot"
           [class.active]="currentSlide() === i"
           (click)="setSlide(i)">

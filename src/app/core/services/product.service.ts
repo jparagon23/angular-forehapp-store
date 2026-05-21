@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { Product, ProductVariations } from '../models/product.model';
+import { Product, ProductImage, ProductVariations } from '../models/product.model';
 import { Category } from '../models/seller-product.model';
 
 // Formato del listado público (sin variantes detalladas)
@@ -80,10 +80,14 @@ export class ProductService {
           sizes.size || colors.size
             ? { sizes: sizes.size ? [...sizes] : undefined, colors: colors.size ? [...colors] : undefined }
             : (raw.variantCount > 0 ? { sizes: [''] } : undefined);
+        const images: ProductImage[] = (raw.images ?? []).map((img: any) => ({
+          id: img.id, url: img.url, displayOrder: img.displayOrder ?? 0,
+        }));
         return {
           id:         raw.id,
           emoji:      EMOJI_MAP[raw.category] ?? '📦',
-          image:      raw.images?.[0]?.url ?? '',
+          image:      images[0]?.url ?? '',
+          images,
           brand:      raw.brand,
           name:       raw.title,
           desc:       raw.description ?? raw.line ?? '',

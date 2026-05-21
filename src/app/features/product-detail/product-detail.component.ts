@@ -64,13 +64,20 @@ export class ProductDetailComponent implements OnInit {
   private currentProductId = 0;
 
   readonly colorHex = COLOR_HEX;
-  readonly slideBackgrounds = [
+  readonly fallbackBackgrounds = [
     'linear-gradient(135deg, #e8f7e2, #f5faf5)',
     'linear-gradient(135deg, #ddeaf7, #eef4fc)',
     'linear-gradient(135deg, #fdf5e2, #faf8f0)',
     'linear-gradient(135deg, #fde8f2, #faf0f6)',
   ];
   readonly starNums = [1, 2, 3, 4, 5];
+
+  productImages = computed(() => {
+    const p = this.productSignal();
+    return p?.images?.length ? p.images : [];
+  });
+
+  slideCount = computed(() => Math.max(this.productImages().length, 1));
 
   private productSignal = toSignal(this.store.select(selectSelectedProduct));
 
@@ -178,8 +185,8 @@ export class ProductDetailComponent implements OnInit {
   }
 
   setSlide(i: number) { this.slideImgLoaded.set(false); this.currentSlide.set(i); }
-  prevSlide() { this.slideImgLoaded.set(false); this.currentSlide.update(i => (i - 1 + this.slideBackgrounds.length) % this.slideBackgrounds.length); }
-  nextSlide() { this.slideImgLoaded.set(false); this.currentSlide.update(i => (i + 1) % this.slideBackgrounds.length); }
+  prevSlide() { this.slideImgLoaded.set(false); this.currentSlide.update(i => (i - 1 + this.slideCount()) % this.slideCount()); }
+  nextSlide() { this.slideImgLoaded.set(false); this.currentSlide.update(i => (i + 1) % this.slideCount()); }
   onSlideImgLoad() { this.slideImgLoaded.set(true); }
   onImgLoad(event: Event) {
     const img = event.target as HTMLImageElement;
