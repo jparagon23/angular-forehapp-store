@@ -2,13 +2,14 @@ import { Component, inject, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AsyncPipe, NgFor, NgIf } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { loadMyStores } from '../../store/stores/stores.actions';
 import { selectMyStores, selectStoresError, selectStoresLoading } from '../../store/stores/stores.selectors';
 
 @Component({
   selector: 'app-my-stores',
   standalone: true,
-  imports: [AsyncPipe, NgFor, NgIf, RouterLink],
+  imports: [AsyncPipe, NgFor, NgIf, RouterLink, NavbarComponent],
   templateUrl: './my-stores.component.html',
   styleUrl: './my-stores.component.scss',
 })

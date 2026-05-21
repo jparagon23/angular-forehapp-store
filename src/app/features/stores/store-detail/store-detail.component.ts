@@ -3,6 +3,7 @@ import { Store } from '@ngrx/store';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AsyncPipe, DatePipe, NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { NavbarComponent } from '../../../shared/components/navbar/navbar.component';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { StoreRole } from '../../../core/models/store.model';
@@ -22,7 +23,7 @@ import { AuthUser } from '../../../store/auth/auth.actions';
 @Component({
   selector: 'app-store-detail',
   standalone: true,
-  imports: [AsyncPipe, NgIf, NgFor, DatePipe, FormsModule, RouterLink],
+  imports: [AsyncPipe, NgIf, NgFor, DatePipe, FormsModule, RouterLink, NavbarComponent],
   templateUrl: './store-detail.component.html',
   styleUrl: './store-detail.component.scss',
 })
