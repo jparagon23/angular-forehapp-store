@@ -4,6 +4,7 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { StoreService } from '../../core/services/store.service';
+import { apiMessage } from '../../core/models/api-error.model';
 import {
   changeMemberRole, changeMemberRoleSuccess,
   createStore, createStoreSuccess,
@@ -17,7 +18,7 @@ import {
 } from './stores.actions';
 
 function extractApiError(err: HttpErrorResponse, fallback: string): string {
-  return err.error?.error ?? err.error?.message ?? err.message ?? fallback;
+  return apiMessage(err, fallback);
 }
 
 @Injectable()

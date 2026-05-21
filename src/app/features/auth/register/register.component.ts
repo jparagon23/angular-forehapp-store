@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { NgIf } from '@angular/common';
 import { AuthApiService } from '../../../core/services/auth-api.service';
 import Swal from 'sweetalert2';
+import { apiCode } from '../../../core/models/api-error.model';
 
 function passwordsMatch(ctrl: AbstractControl): ValidationErrors | null {
   const pass    = ctrl.get('password')?.value;
@@ -58,8 +59,7 @@ export class RegisterComponent {
       next: res => this.router.navigate(['/verify-code'], { queryParams: { userId: res.userId } }),
       error: err => {
         this.loading = false;
-        const apiMsg: string = err.error?.error ?? err.error?.message ?? '';
-        if (apiMsg.toLowerCase().includes('email') || err.status === 409) {
+        if (apiCode(err) === 'AUTH_EMAIL_ALREADY_REGISTERED') {
           Swal.fire({
             icon: 'info',
             title: 'Correo ya registrado',
@@ -73,7 +73,7 @@ export class RegisterComponent {
             if (result.isConfirmed) this.router.navigate(['/login']);
           });
         } else {
-          this.serverError = apiMsg || 'Error al registrarse. Inténtalo de nuevo.';
+          this.serverError = 'Error al registrarse. Inténtalo de nuevo.';
         }
       },
     });

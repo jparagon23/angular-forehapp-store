@@ -5,6 +5,7 @@ import { Store } from '@ngrx/store';
 import { catchError, filter, map, switchMap, withLatestFrom } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { SellerProductService } from '../../core/services/seller-product.service';
+import { apiMessage } from '../../core/models/api-error.model';
 import {
   adjustSellerInventory,
   adjustSellerInventorySuccess,
@@ -21,7 +22,7 @@ import {
 import { selectActiveSellerStoreId } from './seller.selectors';
 
 function extractApiError(err: HttpErrorResponse, fallback: string): string {
-  return err.error?.error ?? err.error?.message ?? err.message ?? fallback;
+  return apiMessage(err, fallback);
 }
 
 @Injectable()

@@ -9,6 +9,7 @@ import { selectSelectedProduct, selectProductsLoading, selectAllProducts } from 
 import { addCartItem, openCart } from '../../store/cart/cart.actions';
 import { selectIsLoggedIn } from '../../store/auth/auth.selectors';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
+import { apiCode } from '../../core/models/api-error.model';
 import { CartDrawerComponent } from '../cart/cart-drawer.component';
 import { ToastComponent } from '../../shared/components/toast/toast.component';
 import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
@@ -164,8 +165,7 @@ export class ProductDetailComponent implements OnInit {
       },
       error: err => {
         this.rvSubmitting.set(false);
-        const status = err?.status;
-        if (status === 409) this.rvError.set('Ya tienes una reseña para este producto.');
+        if (apiCode(err) === 'REVIEW_DUPLICATE') this.rvError.set('Ya tienes una reseña para este producto.');
         else this.rvError.set('No se pudo enviar la reseña. Intenta de nuevo.');
       },
     });

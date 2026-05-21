@@ -8,6 +8,7 @@ import { NavbarComponent } from '../../shared/components/navbar/navbar.component
 import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
 import { OrderService } from '../../core/services/order.service';
 import { OrderResponse, OrderSellerGroup, OrderSummaryDto, PaymentMethod, SellerGroupStatus } from '../../core/models/order.model';
+import { apiCode } from '../../core/models/api-error.model';
 import { ReturnService } from '../../core/services/return.service';
 import { CreateReturnRequest, ReturnType } from '../../core/models/return.model';
 
@@ -181,13 +182,13 @@ export class OrdersComponent implements OnInit {
         this.closeReturnForm();
       },
       error: err => {
-        const msg: string = err?.error?.message ?? '';
+        const code = apiCode(err);
         this.returnError.set(
-          msg.includes('already exists')
+          code === 'RETURN_DUPLICATE'
             ? 'Ya existe una solicitud para este grupo de orden.'
-            : msg.includes('DELIVERED')
+            : code === 'RETURN_ORDER_NOT_DELIVERED'
             ? 'Solo puedes solicitar devoluciones de órdenes entregadas.'
-            : msg || 'Error al enviar la solicitud. Inténtalo de nuevo.'
+            : 'Error al enviar la solicitud. Inténtalo de nuevo.'
         );
         this.returnSubmitting.set(false);
       },
