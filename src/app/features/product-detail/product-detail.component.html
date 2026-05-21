@@ -258,7 +258,7 @@
       <h2 class="section-title">Productos relacionados</h2>
       <div class="related-grid">
         <a class="related-card" *ngFor="let rp of related" [routerLink]="['/product', rp.id]">
-          <div class="related-img" [style.background]="slideBackgrounds[0]">
+          <div class="related-img" [style.background]="fallbackBackgrounds[0]">
             <span *ngIf="!rp.image">{{ rp.emoji }}</span>
             <div class="img-skeleton sk" *ngIf="rp.image"></div>
             <img *ngIf="rp.image" [src]="rp.image" [alt]="rp.name" class="related-real-img"
