@@ -188,6 +188,16 @@ export class ProductDetailComponent implements OnInit {
     if (skeleton) skeleton.style.display = 'none';
   }
 
+  isValueOutOfStock(groupName: string, value: string, product: Product): boolean {
+    if (!product.variants?.length) return false;
+    const sel = this.selectedAttributes();
+    const matching = product.variants.filter(v =>
+      v.attributes.some(a => a.attribute === groupName && a.value === value) &&
+      v.attributes.every(a => a.attribute === groupName || !sel[a.attribute] || sel[a.attribute] === a.value)
+    );
+    return matching.length === 0 || matching.every(v => v.stock === 0);
+  }
+
   selectAttribute(name: string, value: string) {
     this.selectedAttributes.update(attrs => ({ ...attrs, [name]: value }));
   }

@@ -30,9 +30,10 @@ export class RegisterComponent {
     confirm:  ['', Validators.required],
   }, { validators: passwordsMatch });
 
-  submitted   = false;
-  showPass    = false;
-  loading     = false;
+  submitted        = false;
+  showPass         = false;
+  showConfirmPass  = false;
+  loading          = false;
   serverError = '';
 
   get name()     { return this.form.controls['name']; }

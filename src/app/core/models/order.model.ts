@@ -5,11 +5,17 @@ export type PaymentStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'REFUNDED';
 export type OrderApiStatus = 'PENDING' | 'PAYMENT_CONFIRMED' | 'PAID' | 'CANCELLED';
 export type SellerGroupStatus = 'PENDING' | 'PREPARING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
 
+export interface VariantAttributeDto {
+  attribute: string;
+  value: string;
+}
+
 export interface OrderItemResponse {
   itemId: number;
   variantId: number;
   sku: string;
   productTitle: string;
+  attributes: VariantAttributeDto[];
   quantity: number;
   unitPrice: number;
   subtotal: number;

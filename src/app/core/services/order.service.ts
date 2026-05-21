@@ -40,6 +40,10 @@ export class OrderService {
     return this.http.get<SellerOrderGroupDetail[]>(`${this.base}/stores/${storeId}/order-groups`);
   }
 
+  getSellerOrderGroupById(storeId: number, groupId: number): Observable<SellerOrderGroupDetail> {
+    return this.http.get<SellerOrderGroupDetail>(`${this.base}/stores/${storeId}/order-groups/${groupId}`);
+  }
+
   prepareSellerGroup(storeId: number, groupId: number): Observable<void> {
     return this.http.patch<void>(`${this.base}/stores/${storeId}/order-groups/${groupId}/prepare`, {});
   }

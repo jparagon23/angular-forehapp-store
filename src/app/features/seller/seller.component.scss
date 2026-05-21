@@ -141,3 +141,67 @@
   padding: 32px;
   overflow-y: auto;
 }
+
+// ── Mobile ────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .seller-layout {
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .seller-sidebar {
+    width: 100%;
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .seller-brand {
+    padding: 10px 16px;
+    font-size: .85rem;
+    border-bottom: 1px solid rgba(255,255,255,.1);
+  }
+
+  .store-selector {
+    padding: 6px 16px 8px;
+  }
+
+  .store-active-name { margin-bottom: 0; }
+
+  .store-switch-list { display: none; }
+
+  .seller-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 6px 10px 8px;
+    gap: 4px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    &::-webkit-scrollbar { display: none; }
+
+    a {
+      flex-shrink: 0;
+      padding: 7px 14px;
+      font-size: .8rem;
+      white-space: nowrap;
+      border-radius: 20px;
+
+      svg { display: none; }
+    }
+  }
+
+  .seller-panel-links {
+    flex-direction: row;
+    justify-content: flex-end;
+    margin-top: 0;
+    padding: 6px 12px 8px;
+    border-top: 1px solid rgba(255,255,255,.1);
+    gap: 8px;
+  }
+
+  .seller-content {
+    padding: 16px;
+    overflow-y: visible;
+  }
+}

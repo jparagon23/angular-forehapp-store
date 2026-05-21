@@ -301,7 +301,7 @@
     <a *ngIf="hasSeller$ | async" routerLink="/seller" class="nb-cat nb-seller">
       Panel Seller →
     </a>
-    <a *ngIf="isLoggedIn$ | async" routerLink="/stores" class="nb-cat nb-stores">
+    <a *ngIf="hasSeller$ | async" routerLink="/stores" class="nb-cat nb-stores">
       Mis Tiendas
     </a>
 

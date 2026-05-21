@@ -91,6 +91,14 @@
       <!-- Action area -->
       <div class="so-card-actions" (click)="$event.stopPropagation()">
 
+        <!-- PENDING: marcar en preparación -->
+        <button *ngIf="g.status === 'PENDING' && !cancelMode().has(g.groupId)"
+                class="so-btn so-btn-prepare"
+                [disabled]="actionLoading().has(g.groupId)"
+                (click)="confirmPrepare(g.groupId)">
+          {{ actionLoading().has(g.groupId) ? 'Procesando...' : 'Preparar pedido' }}
+        </button>
+
         <!-- PREPARING: abrir modal de envío -->
         <button *ngIf="g.status === 'PREPARING' && !cancelMode().has(g.groupId)"
                 class="so-btn so-btn-ship"
@@ -177,7 +185,14 @@
         <tbody>
           <tr *ngFor="let item of g.items">
             <td class="so-sku">{{ item.sku }}</td>
-            <td>{{ item.productTitle }}</td>
+            <td>
+              {{ item.productTitle }}
+              <div class="so-attr-tags" *ngIf="item.attributes?.length">
+                <span class="so-attr-tag" *ngFor="let attr of item.attributes">
+                  {{ attr.attribute }}: {{ attr.value }}
+                </span>
+              </div>
+            </td>
             <td>{{ item.quantity }}</td>
             <td>{{ item.unitPrice | currencyCop }}</td>
             <td><strong>{{ item.subtotal | currencyCop }}</strong></td>

@@ -82,6 +82,8 @@
             <button *ngFor="let val of group.values"
               class="size-opt"
               [class.active]="selectedAttributes()[group.name] === val"
+              [class.out-of-stock]="isValueOutOfStock(group.name, val, product)"
+              [disabled]="isValueOutOfStock(group.name, val, product)"
               (click)="selectAttribute(group.name, val)">
               {{ val }}
             </button>

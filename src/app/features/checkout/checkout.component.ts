@@ -16,11 +16,12 @@ import { PaymentMethod } from '../../core/models/order.model';
 import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
 import { CouponService } from '../../core/services/coupon.service';
 import { AppliedCoupon, CouponValidationResponse } from '../../core/models/coupon.model';
+import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [AsyncPipe, NgFor, NgIf, RouterLink, CurrencyCopPipe, UpperCasePipe, ReactiveFormsModule, FormsModule],
+  imports: [AsyncPipe, NgFor, NgIf, RouterLink, CurrencyCopPipe, UpperCasePipe, ReactiveFormsModule, FormsModule, NavbarComponent],
   templateUrl: './checkout.component.html',
   styleUrl: './checkout.component.scss',
 })
