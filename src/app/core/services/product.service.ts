@@ -14,6 +14,7 @@ interface ApiProductSummary {
   line: string | null;
   category: string;
   minPrice: number;
+  compareAtPrice: number | null;
   variantCount: number;
   createdAt: string;
   thumbnailUrl: string | null;
@@ -124,16 +125,17 @@ export class ProductService {
       raw.variantCount > 0 ? { sizes: [''] } : undefined;
 
     return {
-      id:         raw.id,
-      emoji:      EMOJI_MAP[raw.category] ?? '📦',
-      image:      raw.thumbnailUrl ?? '',
-      brand:      raw.brand,
-      name:       raw.title,
-      desc:       raw.line ?? '',
-      cat:        raw.category,
-      price:      raw.minPrice,
-      stock:      raw.variantCount,
-      status:     'Activo',
+      id:             raw.id,
+      emoji:          EMOJI_MAP[raw.category] ?? '📦',
+      image:          raw.thumbnailUrl ?? '',
+      brand:          raw.brand,
+      name:           raw.title,
+      desc:           raw.line ?? '',
+      cat:            raw.category,
+      price:          raw.minPrice,
+      compareAtPrice: raw.compareAtPrice ?? null,
+      stock:          raw.variantCount,
+      status:         'Activo',
       variations,
     };
   }
