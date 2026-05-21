@@ -27,7 +27,6 @@
           <div class="img-skeleton" *ngIf="product.image"></div>
           <img class="prod-img" [src]="product.image" [alt]="product.name"
                (load)="onImgLoad($event)" (error)="onImgError($event)">
-          <div class="card-img-overlay">Ver producto →</div>
           <button *ngIf="isLoggedIn()" class="wish-btn" [class.active]="isWishlisted(product.id)"
                   (click)="toggleWishlist(product, $event)" aria-label="Lista de deseos">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"

@@ -47,7 +47,6 @@
   &:hover {
     transform: translateY(-7px);
     box-shadow: 0 14px 34px rgba(66,170,20,.15);
-    .card-img-overlay { opacity: 1; }
   }
 }
 .card-img {
@@ -81,13 +80,6 @@
   &:hover { transform: scale(1.15); }
   &.active svg { stroke: #e53e3e; fill: #e53e3e; }
   &:not(.active):hover svg { stroke: #e53e3e; }
-}
-.card-img-overlay {
-  position: absolute; inset: 0;
-  background: rgba(21,31,33,.75); color: #fff;
-  font-weight: 700; font-size: .95rem; letter-spacing: .5px;
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0; transition: opacity .2s;
 }
 .card-body { padding: 18px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
 .card-brand { font-size: .72rem; text-transform: uppercase; letter-spacing: 1.8px; color: var(--green); font-weight: 700; }
