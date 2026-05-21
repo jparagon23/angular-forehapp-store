@@ -197,6 +197,50 @@ export class ProductCreateComponent implements OnInit {
     });
   }
 
+  goToImages() {
+    // Si el formulario tiene datos ingresados, guardar la variante antes de continuar
+    if (this.variantForm.dirty) {
+      this.variantForm.markAllAsTouched();
+      if (this.variantForm.invalid) return;
+      const storeId = this.storeId();
+      if (!storeId) return;
+      const productId = this.draftProduct()!.id;
+      const { sku, price, compareAtPrice, stock } = this.variantForm.value;
+      const attributeValueIds = Object.values(this.selectedAttrValues)
+        .filter((id): id is number => id !== null && id !== 0);
+
+      this.addingVariant.set(true);
+      this.variantError.set(null);
+      this.service.addVariant(storeId, productId, {
+        sku: sku!,
+        price: price!,
+        compareAtPrice: compareAtPrice ?? undefined,
+        stock: stock!,
+        attributeValueIds,
+      }).subscribe({
+        next: variant => {
+          this.variants.update(v => [...v, variant]);
+          this.variantForm.reset();
+          this.selectedAttrValues = {};
+          this.addingVariant.set(false);
+          this.step.set(3);
+        },
+        error: err => {
+          this.variantError.set(err.error?.message ?? 'SKU duplicado u otro error');
+          this.addingVariant.set(false);
+        },
+      });
+      return;
+    }
+
+    // Formulario vacío: si ya hay variantes continuar, si no mostrar errores de validación
+    if (this.variants().length > 0) {
+      this.step.set(3);
+    } else {
+      this.variantForm.markAllAsTouched();
+    }
+  }
+
   removeVariant(variantId: number) {
     const storeId = this.storeId();
     if (!storeId) return;

@@ -178,7 +178,7 @@
       <button type="submit" class="btn-secondary" [disabled]="addingVariant()">
         {{ addingVariant() ? 'Agregando…' : '+ Agregar variante' }}
       </button>
-      <button type="button" class="btn-primary" (click)="step.set(3)" [disabled]="!variants().length">
+      <button type="button" class="btn-primary" (click)="goToImages()" [disabled]="addingVariant()">
         Continuar → Imágenes
       </button>
     </div>
