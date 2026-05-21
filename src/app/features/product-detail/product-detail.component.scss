@@ -98,7 +98,18 @@
 }
 .product-name { font-size: 2rem; font-weight: 900; color: var(--dark); margin-bottom: 14px; line-height: 1.15; }
 .product-desc { color: #666; font-size: .97rem; line-height: 1.65; margin-bottom: 20px; }
-.product-price { font-size: 2.2rem; font-weight: 900; color: var(--dark); margin-bottom: 28px; }
+.product-price-block {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 28px;
+}
+.product-compare-price {
+  font-size: 1.25rem; color: #999; text-decoration: line-through; font-weight: 500;
+}
+.product-price { font-size: 2.2rem; font-weight: 900; color: var(--dark); }
+.product-discount-badge {
+  background: #e53e3e; color: #fff;
+  font-size: .82rem; font-weight: 800; letter-spacing: .5px;
+  padding: 4px 12px; border-radius: 20px;
+}
 .divider { height: 1px; background: #dff0da; margin: 22px 0; }
 
 .var-group { margin-bottom: 22px; }

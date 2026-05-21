@@ -104,6 +104,10 @@ export class CatalogComponent implements OnInit, OnDestroy {
     return !!(p.variations?.sizes?.length || p.variations?.colors?.length);
   }
 
+  discountPct(compareAt: number, price: number): number {
+    return Math.round((1 - price / compareAt) * 100);
+  }
+
   onImgLoad(event: Event) {
     const img = event.target as HTMLImageElement;
     img.classList.add('loaded');

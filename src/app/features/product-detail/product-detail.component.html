@@ -51,8 +51,21 @@
       <div class="product-brand-badge">{{ product.brand }}</div>
       <h1 class="product-name">{{ product.name }}</h1>
       <p class="product-desc">{{ product.desc }}</p>
-      <div class="product-price">
-        {{ (selectedVariant(product)?.price ?? product.price) | currencyCop }}
+      <div class="product-price-block">
+        <ng-container *ngIf="selectedVariant(product) as v">
+          <span class="product-compare-price"
+            *ngIf="v.compareAtPrice && v.compareAtPrice > v.price">
+            {{ v.compareAtPrice | currencyCop }}
+          </span>
+          <span class="product-price">{{ v.price | currencyCop }}</span>
+          <span class="product-discount-badge"
+            *ngIf="v.compareAtPrice && v.compareAtPrice > v.price">
+            -{{ variantDiscountPct(v.compareAtPrice, v.price) }}%
+          </span>
+        </ng-container>
+        <ng-container *ngIf="!selectedVariant(product)">
+          <span class="product-price">{{ product.price | currencyCop }}</span>
+        </ng-container>
       </div>
 
       <ng-container *ngIf="attributeGroups().length">

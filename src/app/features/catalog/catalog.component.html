@@ -40,7 +40,17 @@
           <div class="card-brand">{{ product.brand }}</div>
           <div class="card-name">{{ product.name }}</div>
           <div class="card-desc">{{ product.desc }}</div>
-          <div class="card-price">{{ product.price | currencyCop }}</div>
+          <div class="card-price-row">
+            <span class="card-compare"
+              *ngIf="product.compareAtPrice && product.compareAtPrice > product.price">
+              {{ product.compareAtPrice | currencyCop }}
+            </span>
+            <span class="card-price">{{ product.price | currencyCop }}</span>
+            <span class="card-discount-badge"
+              *ngIf="product.compareAtPrice && product.compareAtPrice > product.price">
+              -{{ discountPct(product.compareAtPrice, product.price) }}%
+            </span>
+          </div>
           <button *ngIf="!hasVariations(product)" class="add-btn"
             (click)="addToCart(product, $event)">
             + Agregar al carrito

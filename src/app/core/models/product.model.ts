@@ -22,6 +22,7 @@ export interface Product {
   name: string;
   desc: string;
   price: number;
+  compareAtPrice?: number | null;
   cat: string;
   stock: number;
   status: 'Activo' | 'Borrador' | 'Agotado';

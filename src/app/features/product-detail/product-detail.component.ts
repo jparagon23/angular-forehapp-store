@@ -200,6 +200,10 @@ export class ProductDetailComponent implements OnInit {
     ) ?? null;
   }
 
+  variantDiscountPct(compareAt: number, price: number): number {
+    return Math.round((1 - price / compareAt) * 100);
+  }
+
   availableStock(product: Product): number | null {
     const groups = this.attributeGroups();
     const sel = this.selectedAttributes();

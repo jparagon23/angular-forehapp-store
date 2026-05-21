@@ -94,7 +94,18 @@
 .card-brand { font-size: .72rem; text-transform: uppercase; letter-spacing: 1.8px; color: var(--green); font-weight: 700; }
 .card-name { font-size: 1.05rem; font-weight: 700; color: var(--dark); }
 .card-desc { font-size: .87rem; color: #666; line-height: 1.45; flex: 1; }
-.card-price { font-size: 1.3rem; font-weight: 800; color: var(--dark); margin-top: 4px; }
+.card-price-row {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px;
+}
+.card-compare {
+  font-size: .92rem; color: #999; text-decoration: line-through; font-weight: 500;
+}
+.card-price { font-size: 1.3rem; font-weight: 800; color: var(--dark); }
+.card-discount-badge {
+  background: #e53e3e; color: #fff;
+  font-size: .72rem; font-weight: 800; letter-spacing: .5px;
+  padding: 2px 7px; border-radius: 20px;
+}
 
 .add-btn {
   margin-top: 10px; background: var(--green); color: #fff;
