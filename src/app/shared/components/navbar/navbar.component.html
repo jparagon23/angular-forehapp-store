@@ -133,8 +133,15 @@
 
       <!-- Autocomplete dropdown -->
       <div class="nb-drop" [class.nb-drop-open]="dropOpen()">
-        <div class="nb-drop-loading" *ngIf="searching()">
-          Buscando<span class="nb-dots">...</span>
+        <div class="nb-drop-searching" *ngIf="searching()">
+          <div class="nb-skel-item" *ngFor="let i of [1,2,3]">
+            <div class="nb-skel-emoji"></div>
+            <div class="nb-skel-info">
+              <div class="nb-skel-line nb-skel-name"></div>
+              <div class="nb-skel-line nb-skel-brand"></div>
+            </div>
+            <div class="nb-skel-price"></div>
+          </div>
         </div>
         <ng-container *ngIf="!searching()">
           <div

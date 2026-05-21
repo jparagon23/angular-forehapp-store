@@ -19,6 +19,7 @@ const initialState: ProductsState = adapter.getInitialState({
 
 export const productsReducer = createReducer(
   initialState,
+  on(ProductsActions.resetProductList, state => adapter.removeAll({ ...state, loading: true, error: null })),
   on(ProductsActions.loadProducts, state => ({ ...state, loading: true, error: null })),
   on(ProductsActions.loadProductsSuccess, (state, { products }) => {
     // Preserva variants/image de un loadProduct detallado previo que setAll sobrescribiría

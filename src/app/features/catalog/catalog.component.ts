@@ -5,7 +5,7 @@ import { AsyncPipe, NgFor, NgIf } from '@angular/common';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { combineLatest, map, take, catchError, of, Subscription } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { loadProducts } from '../../store/products/products.actions';
+import { loadProducts, resetProductList } from '../../store/products/products.actions';
 import { selectAllProducts, selectProductsLoading } from '../../store/products/products.selectors';
 import { addToWishlist, addToWishlistFailure, removeFromWishlist } from '../../store/wishlist/wishlist.actions';
 import { selectWishlistProductIdToItemId } from '../../store/wishlist/wishlist.selectors';
@@ -73,6 +73,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
       const categoryId = catName
         ? categories.find((c: Category) => c.name === catName)?.id
         : undefined;
+      this.store.dispatch(resetProductList());
       this.store.dispatch(loadProducts({ search, categoryId }));
     });
   }

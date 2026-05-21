@@ -3,6 +3,7 @@ import { AbstractControl, FormBuilder, ValidationErrors, Validators, ReactiveFor
 import { Router, RouterLink } from '@angular/router';
 import { NgIf } from '@angular/common';
 import { AuthApiService } from '../../../core/services/auth-api.service';
+import Swal from 'sweetalert2';
 
 function passwordsMatch(ctrl: AbstractControl): ValidationErrors | null {
   const pass    = ctrl.get('password')?.value;
@@ -56,8 +57,24 @@ export class RegisterComponent {
     }).subscribe({
       next: res => this.router.navigate(['/verify-code'], { queryParams: { userId: res.userId } }),
       error: err => {
-        this.loading     = false;
-        this.serverError = err.error?.message ?? 'Error al registrarse. Inténtalo de nuevo.';
+        this.loading = false;
+        const apiMsg: string = err.error?.error ?? err.error?.message ?? '';
+        if (apiMsg.toLowerCase().includes('email') || err.status === 409) {
+          Swal.fire({
+            icon: 'info',
+            title: 'Correo ya registrado',
+            html: 'Este correo ya tiene una cuenta en <strong>Forehapp Store</strong>.<br>Puedes iniciar sesión con el mismo correo y contraseña.',
+            confirmButtonText: 'Ir al inicio de sesión',
+            confirmButtonColor: '#2e7d32',
+            showCancelButton: true,
+            cancelButtonText: 'Cancelar',
+            cancelButtonColor: '#aaa',
+          }).then(result => {
+            if (result.isConfirmed) this.router.navigate(['/login']);
+          });
+        } else {
+          this.serverError = apiMsg || 'Error al registrarse. Inténtalo de nuevo.';
+        }
       },
     });
   }

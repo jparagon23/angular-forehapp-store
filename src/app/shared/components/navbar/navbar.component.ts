@@ -92,6 +92,7 @@ export class NavbarComponent {
     this.searchQuery.set(val);
     if (val.trim().length >= 2) {
       this.searching.set(true);
+      this.dropOpen.set(true);
       this.searchSubject.next(val.trim());
     } else {
       this.searching.set(false);

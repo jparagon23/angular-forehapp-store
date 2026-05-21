@@ -300,11 +300,56 @@
 }
 
 // ── Mobile ────────────────────────────────────────────────
-@media (max-width: 480px) {
-  .orders-page { padding: 24px 14px 50px; }
-  .oc-header { padding: 14px 16px; gap: 10px; }
-  .oc-body { padding: 14px 16px 16px; }
+@media (max-width: 640px) {
+  .orders-page  { padding: 20px 12px 50px; }
+  .orders-wrap  { max-width: 100%; }
+
+  // Card header: fila 1 → ID + total+chevron | fila 2 → badges
+  .oc-header {
+    flex-wrap: wrap;
+    padding: 12px 14px;
+    gap: 6px 10px;
+  }
+  .oc-left  { flex: 1; min-width: 0; }
   .oc-right { gap: 8px; }
-  .ret-modal { padding: 20px 16px; }
-  .ret-modal-actions { flex-wrap: wrap; }
+  .oc-center {
+    flex: 1 1 100%;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+
+  // Expanded body
+  .oc-body { padding: 12px 14px 14px; }
+
+  // Items: ocultar SKU, es metadata secundaria
+  .oci-sku { display: none; }
+
+  // Group header: permitir wrap del tracking
+  .oc-group-head { padding: 8px 12px; }
+  .oc-tracking-tag { width: 100%; justify-content: flex-start; }
+
+  // Return modal
+  .ret-overlay { padding: 12px; align-items: flex-end; }
+  .ret-modal {
+    padding: 20px 14px 18px;
+    max-height: 96vh;
+    border-radius: 16px 16px 0 0;
+    gap: 16px;
+  }
+
+  // Acciones del modal: botones apilados a ancho completo
+  .ret-modal-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  .ret-cancel-btn,
+  .ret-submit-btn { width: 100%; text-align: center; justify-content: center; }
+
+  // Ítems del modal de devolución: segunda fila para cant. y precio
+  .ret-item { flex-wrap: wrap; row-gap: 6px; }
+  .ret-item-check { align-self: flex-start; margin-top: 2px; }
+  .ret-item-info { flex: 1; }
+  .ret-item-qty-wrap { margin-left: auto; }
+  .ret-item-price { flex: 1 1 100%; text-align: right; font-size: .82rem; }
 }

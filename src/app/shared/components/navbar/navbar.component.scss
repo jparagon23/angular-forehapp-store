@@ -226,25 +226,44 @@ $green-h: #4fc217;
   &.nb-drop-open { display: block; }
 }
 
-.nb-drop-loading {
-  padding: 14px 16px;
-  font-size: .88rem;
-  color: #888;
+@keyframes nbShimmer {
+  0%   { background-position: -300px 0; }
+  100% { background-position:  300px 0; }
 }
 
-.nb-dots {
-  display: inline-block;
-  animation: nbDots 1.2s steps(4, end) infinite;
-  width: 1.2em;
-  overflow: hidden;
-  vertical-align: bottom;
+%nb-skel-base {
+  border-radius: 4px;
+  background: linear-gradient(90deg, #ececec 25%, #f5f5f5 50%, #ececec 75%);
+  background-size: 600px 100%;
+  animation: nbShimmer 1.2s infinite linear;
 }
-@keyframes nbDots {
-  0%   { width: 0; }
-  25%  { width: .4em; }
-  50%  { width: .8em; }
-  75%  { width: 1.2em; }
-  100% { width: 0; }
+
+.nb-drop-searching { padding: 6px 0; }
+
+.nb-skel-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 14px;
+}
+
+.nb-skel-emoji {
+  @extend %nb-skel-base;
+  width: 32px; height: 32px; border-radius: 6px; flex-shrink: 0;
+}
+
+.nb-skel-info {
+  flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0;
+}
+
+.nb-skel-line {
+  @extend %nb-skel-base;
+  height: 10px;
+  &.nb-skel-name  { width: 65%; }
+  &.nb-skel-brand { width: 35%; }
+}
+
+.nb-skel-price {
+  @extend %nb-skel-base;
+  width: 52px; height: 14px; flex-shrink: 0;
 }
 
 .nb-drop-item {
