@@ -8,11 +8,43 @@
       <input type="text" [ngModel]="formName()" (ngModelChange)="formName.set($event)" placeholder="Ej: Zona Centro" maxlength="100" />
     </div>
 
+    <!-- City picker -->
     <div class="sz-field">
-      <label>Ciudades (separadas por coma)</label>
-      <input type="text" [ngModel]="formCities()" (ngModelChange)="formCities.set($event)"
-             placeholder="Bogotá, Medellín, Cali" />
+      <label>Ciudades incluidas</label>
       <small>Deja vacío para que sea la zona por defecto (aplica a cualquier ciudad).</small>
+
+      <!-- Cascade selects -->
+      <div class="sz-picker-row">
+        <select (change)="onLocCountryChange($event)">
+          <option value="">País</option>
+          <option *ngFor="let c of locCountries()" [value]="c.id"
+                  [selected]="c.id === pickerCountry()">{{ c.name }}</option>
+        </select>
+        <select [disabled]="!pickerCountry()" (change)="onLocStateChange($event)">
+          <option value="">Departamento</option>
+          <option *ngFor="let s of locStates()" [value]="s.id"
+                  [selected]="s.id === pickerState()">{{ s.name }}</option>
+        </select>
+        <select [disabled]="!pickerState()" (change)="onLocCityChange($event)">
+          <option value="">Ciudad</option>
+          <option *ngFor="let c of locCities()" [value]="c.id"
+                  [selected]="c.id === pickerCity()">{{ c.name }}</option>
+        </select>
+        <button type="button" class="sz-picker-add" [disabled]="!pickerCity()" (click)="addCity()">
+          + Agregar
+        </button>
+      </div>
+
+      <!-- Selected cities pills -->
+      <div class="sz-picked-cities" *ngIf="formCityIds().length">
+        <span class="sz-picked-pill" *ngFor="let c of formCityIds()">
+          {{ c.name }}
+          <button type="button" class="sz-pill-remove" (click)="removeCity(c.id)">×</button>
+        </span>
+      </div>
+      <p class="sz-no-cities" *ngIf="!formCityIds().length">
+        Sin ciudades — se aplicará como zona por defecto.
+      </p>
     </div>
 
     <div class="sz-field">
@@ -95,7 +127,7 @@
         <td class="sz-name">{{ z.name }}</td>
         <td class="sz-cities">
           <ng-container *ngIf="z.cities.length; else anyCity">
-            <span class="sz-city-pill" *ngFor="let c of z.cities">{{ c }}</span>
+            <span class="sz-city-pill" *ngFor="let c of z.cities">{{ c.name }}</span>
           </ng-container>
           <ng-template #anyCity><em class="sz-any">Cualquier ciudad</em></ng-template>
         </td>

@@ -191,8 +191,8 @@
             <div class="sel-info">
               <p class="sel-alias">{{ sel.alias || 'Dirección' }}</p>
               <p class="sel-street">{{ sel.street }}</p>
-              <p class="sel-city">{{ sel.city }}<span *ngIf="sel.state">, {{ sel.state }}</span><span *ngIf="sel.zipCode"> {{ sel.zipCode }}</span></p>
-              <p class="sel-country">{{ sel.country }}</p>
+              <p class="sel-city">{{ sel.city.name }}, {{ sel.state.name }}<span *ngIf="sel.zipCode"> {{ sel.zipCode }}</span></p>
+              <p class="sel-country">{{ sel.country.name }}</p>
             </div>
           </div>
 
@@ -207,7 +207,7 @@
                 <p class="pick-alias">{{ addr.alias || 'Dirección' }}
                   <span class="pick-default" *ngIf="addr.isDefault">Predeterminada</span>
                 </p>
-                <p class="pick-detail">{{ addr.street }}, {{ addr.city }}</p>
+                <p class="pick-detail">{{ addr.street }}, {{ addr.city.name }}</p>
               </div>
             </div>
             <button class="pick-add-new" (click)="openAddressForm()">
@@ -317,30 +317,39 @@
         <span class="err" *ngIf="hasFormError('street')">La dirección es obligatoria</span>
       </div>
 
-      <div class="field-row">
-        <div class="field">
-          <label>Ciudad <span class="req">*</span></label>
-          <input type="text" formControlName="city" placeholder="Bogotá" maxlength="100"
-                 [class.invalid]="hasFormError('city')">
-          <span class="err" *ngIf="hasFormError('city')">La ciudad es obligatoria</span>
-        </div>
-        <div class="field">
-          <label>Estado / Depto</label>
-          <input type="text" formControlName="state" placeholder="Cundinamarca" maxlength="100">
-        </div>
+      <div class="field">
+        <label>País <span class="req">*</span></label>
+        <select (change)="onAddrCountryChange($event)">
+          <option value="">-- Seleccionar país --</option>
+          <option *ngFor="let c of addrCountries()" [value]="c.id"
+                  [selected]="c.id === addrCountryId()">{{ c.name }}</option>
+        </select>
       </div>
 
       <div class="field-row">
         <div class="field">
-          <label>País <span class="req">*</span></label>
-          <input type="text" formControlName="country" placeholder="Colombia" maxlength="100"
-                 [class.invalid]="hasFormError('country')">
-          <span class="err" *ngIf="hasFormError('country')">El país es obligatorio</span>
+          <label>Departamento <span class="req">*</span></label>
+          <select [disabled]="!addrCountryId()" (change)="onAddrStateChange($event)">
+            <option value="">-- Seleccionar departamento --</option>
+            <option *ngFor="let s of addrStates()" [value]="s.id"
+                    [selected]="s.id === addrStateId()">{{ s.name }}</option>
+          </select>
         </div>
         <div class="field">
-          <label>Código postal</label>
-          <input type="text" formControlName="zipCode" placeholder="110111" maxlength="20">
+          <label>Ciudad <span class="req">*</span></label>
+          <select [disabled]="!addrStateId()" (change)="onAddrCityChange($event)"
+                  [class.invalid]="hasFormError('cityId')">
+            <option value="">-- Seleccionar ciudad --</option>
+            <option *ngFor="let c of addrCities()" [value]="c.id"
+                    [selected]="c.id === addressForm.get('cityId')?.value">{{ c.name }}</option>
+          </select>
+          <span class="err" *ngIf="hasFormError('cityId')">La ciudad es obligatoria</span>
         </div>
+      </div>
+
+      <div class="field">
+        <label>Código postal</label>
+        <input type="text" formControlName="zipCode" placeholder="110111" maxlength="20">
       </div>
 
       <div class="modal-footer">

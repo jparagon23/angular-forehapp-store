@@ -1,7 +1,9 @@
+import { City } from './location.model';
+
 export interface ShippingZone {
   id: number;
   name: string;
-  cities: string[];
+  cities: City[];
   cost: number;
   isDefault: boolean;
   active: boolean;
@@ -9,14 +11,14 @@ export interface ShippingZone {
 
 export interface CreateShippingZoneRequest {
   name: string;
-  cities: string[];
+  cityIds: number[];
   cost: number;
   isDefault: boolean;
 }
 
 export interface UpdateShippingZoneRequest {
   name?: string;
-  cities?: string[];
+  cityIds?: number[];
   cost?: number;
   isDefault?: boolean;
   active?: boolean;

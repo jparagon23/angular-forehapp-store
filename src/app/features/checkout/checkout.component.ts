@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { AsyncPipe, NgFor, NgIf, UpperCasePipe } from '@angular/common';
@@ -12,6 +12,8 @@ import { selectAllAddresses, selectAddressesLoading, selectAddressesSaving } fro
 import { createOrder, resetCreateOrder } from '../../store/orders/orders.actions';
 import { selectCreatingOrder, selectCreatedOrder, selectCreateOrderError } from '../../store/orders/orders.selectors';
 import { Address, CreateAddressRequest } from '../../core/models/address.model';
+import { City, Country, State } from '../../core/models/location.model';
+import { LocationService } from '../../core/services/location.service';
 import { PaymentMethod } from '../../core/models/order.model';
 import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
 import { CouponService } from '../../core/services/coupon.service';
@@ -26,10 +28,11 @@ import { NavbarComponent } from '../../shared/components/navbar/navbar.component
   styleUrl: './checkout.component.scss',
 })
 export class CheckoutComponent implements OnInit, OnDestroy {
-  private store         = inject(Store);
-  private router        = inject(Router);
-  private fb            = inject(FormBuilder);
-  private couponService = inject(CouponService);
+  private store           = inject(Store);
+  private router          = inject(Router);
+  private fb              = inject(FormBuilder);
+  private couponService   = inject(CouponService);
+  private locationService = inject(LocationService);
 
   sellerGroups$ = this.store.select(selectSellerGroups);
   total$        = this.store.select(selectCartTotal);
@@ -50,6 +53,13 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   showAddressPicker = false;
   showAddressForm   = false;
 
+  // Location cascade for address form
+  addrCountries = signal<Country[]>([]);
+  addrStates    = signal<State[]>([]);
+  addrCities    = signal<City[]>([]);
+  addrCountryId = signal<number | null>(null);
+  addrStateId   = signal<number | null>(null);
+
   // coupon state keyed by storeId
   couponInputs:   Record<number, string>        = {};
   couponLoading:  Record<number, boolean>       = {};
@@ -61,9 +71,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   addressForm = this.fb.group({
     alias:   [''],
     street:  ['', [Validators.required, Validators.maxLength(255)]],
-    city:    ['', [Validators.required, Validators.maxLength(100)]],
-    state:   [''],
-    country: ['', [Validators.required, Validators.maxLength(100)]],
+    cityId:  [null as number | null, Validators.required],
     zipCode: [''],
   });
 
@@ -80,6 +88,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         return;
       }
       this.store.dispatch(loadAddresses());
+      this.locationService.getCountries().subscribe(cs => this.addrCountries.set(cs));
       this.addrSub = this.addresses$.pipe(
         filter(addrs => addrs.length > 0),
         take(1),
@@ -123,6 +132,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   openAddressForm() {
+    this.addrCountryId.set(null);
+    this.addrStateId.set(null);
+    this.addrStates.set([]);
+    this.addrCities.set([]);
     this.addressForm.reset();
     this.showAddressForm = true;
   }
@@ -132,15 +145,36 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.addressForm.reset();
   }
 
+  onAddrCountryChange(event: Event) {
+    const id = Number((event.target as HTMLSelectElement).value) || null;
+    this.addrCountryId.set(id);
+    this.addrStateId.set(null);
+    this.addrStates.set([]);
+    this.addrCities.set([]);
+    this.addressForm.patchValue({ cityId: null });
+    if (id) this.locationService.getStates(id).subscribe(ss => this.addrStates.set(ss));
+  }
+
+  onAddrStateChange(event: Event) {
+    const id = Number((event.target as HTMLSelectElement).value) || null;
+    this.addrStateId.set(id);
+    this.addrCities.set([]);
+    this.addressForm.patchValue({ cityId: null });
+    if (id) this.locationService.getCities(id).subscribe(cs => this.addrCities.set(cs));
+  }
+
+  onAddrCityChange(event: Event) {
+    const id = Number((event.target as HTMLSelectElement).value) || null;
+    this.addressForm.patchValue({ cityId: id });
+  }
+
   submitAddress() {
     if (this.addressForm.invalid) { this.addressForm.markAllAsTouched(); return; }
     const v = this.addressForm.getRawValue();
     const req: CreateAddressRequest = {
       alias:     v.alias   || undefined,
       street:    v.street!,
-      city:      v.city!,
-      state:     v.state   || undefined,
-      country:   v.country!,
+      cityId:    v.cityId!,
       zipCode:   v.zipCode || undefined,
       isDefault: true,
     };
@@ -224,7 +258,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   isSelectedAddressCali(addresses: Address[]): boolean {
     const addr = this.getSelected(addresses);
-    return addr?.city?.toLowerCase() === 'cali';
+    return addr?.city?.name?.toLowerCase() === 'cali';
   }
 
   confirm() {

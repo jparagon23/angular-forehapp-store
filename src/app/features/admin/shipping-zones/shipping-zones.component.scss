@@ -31,6 +31,40 @@
   small { display: block; font-size: .77rem; color: #999; margin-top: 4px; }
 }
 
+// ── City picker ───────────────────────────────────────────────
+.sz-picker-row {
+  display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; align-items: center;
+  select {
+    flex: 1; min-width: 130px;
+    border: 1.5px solid #ddd; border-radius: 8px;
+    padding: 7px 10px; font-size: .85rem; outline: none; font-family: inherit;
+    background: #fff; cursor: pointer;
+    &:focus { border-color: #4caf50; }
+    &:disabled { background: #f5f5f5; cursor: not-allowed; color: #bbb; }
+  }
+}
+.sz-picker-add {
+  padding: 7px 14px; border-radius: 8px; border: none;
+  background: #4caf50; color: #fff;
+  font-size: .82rem; font-weight: 700; cursor: pointer; white-space: nowrap;
+  transition: background .15s;
+  &:hover { background: #388e3c; }
+  &:disabled { background: #ccc; cursor: not-allowed; }
+}
+.sz-picked-cities { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.sz-picked-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #e3f2fd; color: #1565c0;
+  font-size: .78rem; font-weight: 600; padding: 3px 8px;
+  border-radius: 12px;
+}
+.sz-pill-remove {
+  background: none; border: none; color: #1565c0; font-size: .9rem;
+  cursor: pointer; padding: 0 1px; line-height: 1;
+  &:hover { color: #c62828; }
+}
+.sz-no-cities { font-size: .78rem; color: #bbb; margin-top: 8px; }
+
 .sz-check-label {
   display: flex; align-items: center; gap: 8px;
   font-size: .88rem; color: #444; cursor: pointer; margin-bottom: 16px;

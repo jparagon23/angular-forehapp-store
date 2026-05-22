@@ -1,10 +1,12 @@
+import { City, Country, State } from './location.model';
+
 export interface Address {
   id: number;
   alias?: string;
   street: string;
-  city: string;
-  state?: string;
-  country: string;
+  city: City;
+  state: State;
+  country: Country;
   zipCode?: string;
   isDefault: boolean;
 }
@@ -12,11 +14,14 @@ export interface Address {
 export interface CreateAddressRequest {
   alias?: string;
   street: string;
-  city: string;
-  state?: string;
-  country: string;
+  cityId: number;
   zipCode?: string;
   isDefault?: boolean;
 }
 
-export type UpdateAddressRequest = Partial<Omit<CreateAddressRequest, 'isDefault'>>;
+export interface UpdateAddressRequest {
+  alias?: string;
+  street?: string;
+  cityId?: number;
+  zipCode?: string;
+}

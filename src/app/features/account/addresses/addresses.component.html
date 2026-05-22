@@ -46,10 +46,10 @@
         <div class="card-body">
           <p class="street">{{ addr.street }}</p>
           <p class="location">
-            {{ addr.city }}<span *ngIf="addr.state">, {{ addr.state }}</span>
+            {{ addr.city.name }}, {{ addr.state.name }}
             <span *ngIf="addr.zipCode"> {{ addr.zipCode }}</span>
           </p>
-          <p class="country">{{ addr.country }}</p>
+          <p class="country">{{ addr.country.name }}</p>
         </div>
 
         <div class="card-actions">
@@ -121,30 +121,37 @@
         <span class="error-msg" *ngIf="hasError('street')">La dirección es obligatoria</span>
       </div>
 
-      <div class="field-row">
-        <div class="field">
-          <label>Ciudad <span class="required">*</span></label>
-          <input type="text" formControlName="city" placeholder="Ciudad" maxlength="100"
-                 [class.invalid]="hasError('city')">
-          <span class="error-msg" *ngIf="hasError('city')">La ciudad es obligatoria</span>
-        </div>
-        <div class="field">
-          <label>Estado / Depto <span class="optional">(opcional)</span></label>
-          <input type="text" formControlName="state" placeholder="Bogotá D.C." maxlength="100">
-        </div>
+      <div class="field">
+        <label>País <span class="required">*</span></label>
+        <select (change)="onCountryChange($event)">
+          <option value="">-- Seleccionar país --</option>
+          <option *ngFor="let c of countries()" [value]="c.id" [selected]="c.id === countryId()">{{ c.name }}</option>
+        </select>
       </div>
 
       <div class="field-row">
         <div class="field">
-          <label>País <span class="required">*</span></label>
-          <input type="text" formControlName="country" placeholder="Colombia" maxlength="100"
-                 [class.invalid]="hasError('country')">
-          <span class="error-msg" *ngIf="hasError('country')">El país es obligatorio</span>
+          <label>Departamento <span class="required">*</span></label>
+          <select [disabled]="!countryId()" (change)="onStateChange($event)">
+            <option value="">-- Seleccionar departamento --</option>
+            <option *ngFor="let s of states()" [value]="s.id" [selected]="s.id === stateId()">{{ s.name }}</option>
+          </select>
         </div>
         <div class="field">
-          <label>Código postal <span class="optional">(opcional)</span></label>
-          <input type="text" formControlName="zipCode" placeholder="110111" maxlength="20">
+          <label>Ciudad <span class="required">*</span></label>
+          <select [disabled]="!stateId()" (change)="onCityChange($event)"
+                  [class.invalid]="hasError('cityId')">
+            <option value="">-- Seleccionar ciudad --</option>
+            <option *ngFor="let c of cities()" [value]="c.id"
+                    [selected]="c.id === form.get('cityId')?.value">{{ c.name }}</option>
+          </select>
+          <span class="error-msg" *ngIf="hasError('cityId')">La ciudad es obligatoria</span>
         </div>
+      </div>
+
+      <div class="field">
+        <label>Código postal <span class="optional">(opcional)</span></label>
+        <input type="text" formControlName="zipCode" placeholder="110111" maxlength="20">
       </div>
 
       <label class="check-row" *ngIf="modalMode === 'create'">
