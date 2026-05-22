@@ -17,6 +17,13 @@
           </svg>
           <span>{{ group.storeName }}</span>
           <span class="group-subtotal">Subtotal: {{ group.subtotal | currencyCop }}</span>
+          <ng-container *ngIf="getGroupShipping(group.storeId) as ship">
+            <span class="group-shipping">
+              Envío:
+              <span *ngIf="ship.freeShipping" class="free">Gratis</span>
+              <span *ngIf="!ship.freeShipping">{{ ship.shippingCost | currencyCop }}</span>
+            </span>
+          </ng-container>
         </div>
 
         <!-- Items -->
@@ -100,10 +107,38 @@
           <span>Descuentos aplicados</span>
           <span class="discount-val">−{{ totalDiscount | currencyCop }}</span>
         </div>
-        <div class="sum-row">
+
+        <!-- Envío: sin dirección -->
+        <div class="sum-row ship-pending" *ngIf="!selectedAddressId && !shippingLoading()">
           <span>Envío</span>
-          <span class="free">Gratis</span>
+          <span class="ship-msg">Selecciona una dirección</span>
         </div>
+
+        <!-- Envío: calculando -->
+        <div class="sum-row" *ngIf="shippingLoading()">
+          <span>Envío</span>
+          <span class="ship-calc"><span class="mini-spin"></span> Calculando...</span>
+        </div>
+
+        <!-- Envío: error -->
+        <div class="sum-row" *ngIf="!shippingLoading() && shippingError()">
+          <span>Envío</span>
+          <span class="ship-err">{{ shippingError() }}</span>
+        </div>
+
+        <!-- Envío: desglose por tienda -->
+        <ng-container *ngIf="!shippingLoading() && shippingEstimate() as estimate">
+          <div class="sum-row" *ngFor="let sg of estimate.sellerGroups">
+            <span class="ship-store-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
+                <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+              </svg>
+              {{ sg.storeName }}
+            </span>
+            <span *ngIf="sg.freeShipping" class="free">Gratis</span>
+            <span *ngIf="!sg.freeShipping">{{ sg.shippingCost | currencyCop }}</span>
+          </div>
+        </ng-container>
       </div>
 
       <div class="total-row">

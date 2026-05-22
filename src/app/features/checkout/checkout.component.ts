@@ -5,6 +5,8 @@ import { AsyncPipe, NgFor, NgIf, UpperCasePipe } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { filter, take } from 'rxjs/operators';
+import { CartService } from '../../core/services/cart.service';
+import { ShippingEstimateGroup, ShippingEstimateResponse } from '../../core/models/cart.model';
 import { selectSellerGroups, selectCartTotal, selectCartCount } from '../../store/cart/cart.selectors';
 import { selectIsLoggedIn, selectAuthUser } from '../../store/auth/auth.selectors';
 import { loadAddresses, createAddress } from '../../store/addresses/addresses.actions';
@@ -33,6 +35,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private fb              = inject(FormBuilder);
   private couponService   = inject(CouponService);
   private locationService = inject(LocationService);
+  private cartService     = inject(CartService);
 
   sellerGroups$ = this.store.select(selectSellerGroups);
   total$        = this.store.select(selectCartTotal);
@@ -59,6 +62,11 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   addrCities    = signal<City[]>([]);
   addrCountryId = signal<number | null>(null);
   addrStateId   = signal<number | null>(null);
+
+  // Shipping estimate
+  shippingEstimate  = signal<ShippingEstimateResponse | null>(null);
+  shippingLoading   = signal(false);
+  shippingError     = signal<string | null>(null);
 
   // coupon state keyed by storeId
   couponInputs:   Record<number, string>        = {};
@@ -94,7 +102,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         take(1),
       ).subscribe(addrs => {
         const def = addrs.find(a => a.isDefault) ?? addrs[0];
-        if (!this.selectedAddressId) this.selectedAddressId = def.id;
+        if (!this.selectedAddressId) {
+          this.selectedAddressId = def.id;
+          this.loadShippingEstimate(def.id);
+        }
       });
     });
 
@@ -129,6 +140,27 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   selectAddress(id: number) {
     this.selectedAddressId = id;
     this.showAddressPicker = false;
+    this.loadShippingEstimate(id);
+  }
+
+  private loadShippingEstimate(addressId: number) {
+    this.shippingLoading.set(true);
+    this.shippingError.set(null);
+    this.cartService.getShippingEstimate(addressId).subscribe({
+      next: est => {
+        this.shippingEstimate.set(est);
+        this.shippingLoading.set(false);
+      },
+      error: () => {
+        this.shippingEstimate.set(null);
+        this.shippingError.set('No se pudo calcular el costo de envío');
+        this.shippingLoading.set(false);
+      },
+    });
+  }
+
+  getGroupShipping(storeId: number): ShippingEstimateGroup | null {
+    return this.shippingEstimate()?.sellerGroups.find(g => g.storeId === storeId) ?? null;
   }
 
   openAddressForm() {
@@ -183,7 +215,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       this.addressesSaving$.pipe(filter(s => !s), take(1)).subscribe(() => {
         this.addresses$.pipe(take(1)).subscribe(addresses => {
           const newAddr = addresses.find(a => a.isDefault) ?? addresses[addresses.length - 1];
-          if (newAddr) this.selectedAddressId = newAddr.id;
+          if (newAddr) {
+            this.selectedAddressId = newAddr.id;
+            this.loadShippingEstimate(newAddr.id);
+          }
           this.showAddressForm = false;
           this.showAddressPicker = false;
         });
@@ -229,9 +264,9 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   get totalWithDiscounts(): number {
-    const totalDiscount = Object.values(this.appliedCoupons)
-      .reduce((sum, c) => sum + c.discountAmount, 0);
-    return this.cartTotal - totalDiscount;
+    const shipping  = this.shippingEstimate()?.shippingTotal ?? 0;
+    const discount  = Object.values(this.appliedCoupons).reduce((sum, c) => sum + c.discountAmount, 0);
+    return this.cartTotal + shipping - discount;
   }
 
   get totalDiscount(): number {

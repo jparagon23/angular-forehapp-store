@@ -25,3 +25,18 @@ export interface CartResponse {
   total: number;
   sellerGroups: CartSellerGroup[];
 }
+
+export interface ShippingEstimateGroup {
+  storeId: number;
+  storeName: string;
+  subtotal: number;
+  shippingCost: number;
+  freeShipping: boolean;
+}
+
+export interface ShippingEstimateResponse {
+  sellerGroups: ShippingEstimateGroup[];
+  itemsTotal: number;
+  shippingTotal: number;
+  grandTotal: number;
+}

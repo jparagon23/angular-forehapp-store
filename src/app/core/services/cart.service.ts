@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { CartItemResponse, CartResponse, CartSellerGroup } from '../models/cart.model';
+import { CartItemResponse, CartResponse, CartSellerGroup, ShippingEstimateResponse } from '../models/cart.model';
 
 /* Shape que devuelve POST /cart/items/batch (campos distintos al modelo interno) */
 interface BatchItem {
@@ -50,6 +50,12 @@ export class CartService {
 
   clearCart(): Observable<void> {
     return this.http.delete<void>(`${this.BASE}/cart`);
+  }
+
+  getShippingEstimate(addressId: number): Observable<ShippingEstimateResponse> {
+    return this.http.get<ShippingEstimateResponse>(`${this.BASE}/cart/shipping-estimate`, {
+      params: { addressId: String(addressId) },
+    });
   }
 
   private mapBatch(raw: BatchCartResponse): CartResponse {
