@@ -6,6 +6,7 @@ const selectProductsState = createFeatureSelector<ProductsState>('products');
 export const selectAllProducts = createSelector(selectProductsState, selectAll);
 export const selectProductEntities = createSelector(selectProductsState, selectEntities);
 export const selectProductsLoading = createSelector(selectProductsState, s => s.loading);
+export const selectSelectedProductLoading = createSelector(selectProductsState, s => s.selectedLoading);
 export const selectProductsError = createSelector(selectProductsState, s => s.error);
 export const selectSelectedProductId = createSelector(selectProductsState, s => s.selectedId);
 export const selectSelectedProduct = createSelector(

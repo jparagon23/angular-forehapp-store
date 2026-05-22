@@ -51,8 +51,9 @@
             </span>
           </div>
           <button *ngIf="!hasVariations(product)" class="add-btn"
+            [disabled]="addingProductId() === product.id"
             (click)="addToCart(product, $event)">
-            + Agregar al carrito
+            {{ addingProductId() === product.id ? 'Agregando...' : '+ Agregar al carrito' }}
           </button>
           <button *ngIf="hasVariations(product)" class="add-btn add-btn--var"
             (click)="goToProduct(product.id); $event.stopPropagation()">

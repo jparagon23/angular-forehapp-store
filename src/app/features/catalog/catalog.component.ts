@@ -7,6 +7,7 @@ import { combineLatest, map, take, catchError, of, Subscription } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { loadProducts, resetProductList } from '../../store/products/products.actions';
 import { selectAllProducts, selectProductsLoading } from '../../store/products/products.selectors';
+import { addCartItem, openCart } from '../../store/cart/cart.actions';
 import { addToWishlist, addToWishlistFailure, removeFromWishlist } from '../../store/wishlist/wishlist.actions';
 import { selectWishlistProductIdToItemId } from '../../store/wishlist/wishlist.selectors';
 import { selectIsLoggedIn, selectUserRole } from '../../store/auth/auth.selectors';
@@ -35,8 +36,9 @@ export class CatalogComponent implements OnInit, OnDestroy {
 
   loading$     = this.store.select(selectProductsLoading);
   userRole$    = this.store.select(selectUserRole);
-  toastMessage = signal('');
-  toastTrigger = signal(0);
+  toastMessage   = signal('');
+  toastTrigger   = signal(0);
+  addingProductId = signal<number | null>(null);
 
   wishlistItemMap = toSignal(this.store.select(selectWishlistProductIdToItemId), { initialValue: new Map<number, number>() });
   isLoggedIn          = toSignal(this.store.select(selectIsLoggedIn),                 { initialValue: false });
@@ -86,7 +88,25 @@ export class CatalogComponent implements OnInit, OnDestroy {
 
   addToCart(product: Product, event: Event) {
     event.stopPropagation();
-    this.router.navigate(['/product', product.id]);
+    this.addingProductId.set(product.id);
+    this.productService.getProduct(product.id).pipe(take(1)).subscribe({
+      next: detail => {
+        this.addingProductId.set(null);
+        const variant = detail?.variants?.[0];
+        if (!variant) return;
+        this.store.dispatch(addCartItem({
+          variantId:    variant.id,
+          quantity:     1,
+          productTitle: product.name,
+          sku:          variant.sku,
+          unitPrice:    variant.price ?? product.price,
+        }));
+        this.store.dispatch(openCart());
+        this.toastMessage.set(`${product.name} agregado al carrito`);
+        this.toastTrigger.update(n => n + 1);
+      },
+      error: () => this.addingProductId.set(null),
+    });
   }
 
   toggleWishlist(product: Product, event: Event) {

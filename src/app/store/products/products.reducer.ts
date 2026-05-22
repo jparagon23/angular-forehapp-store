@@ -6,6 +6,7 @@ import * as ProductsActions from './products.actions';
 export interface ProductsState extends EntityState<Product> {
   selectedId: number | null;
   loading: boolean;
+  selectedLoading: boolean;
   error: string | null;
 }
 
@@ -14,6 +15,7 @@ const adapter = createEntityAdapter<Product>();
 const initialState: ProductsState = adapter.getInitialState({
   selectedId: null,
   loading: true,
+  selectedLoading: false,
   error: null,
 });
 
@@ -34,12 +36,12 @@ export const productsReducer = createReducer(
   on(ProductsActions.loadProductsFailure, (state, { error }) =>
     ({ ...state, loading: false, error })),
 
-  on(ProductsActions.clearSelectedProduct, state => ({ ...state, selectedId: null, loading: true })),
-  on(ProductsActions.loadProduct, state => ({ ...state, loading: true })),
+  on(ProductsActions.clearSelectedProduct, state => ({ ...state, selectedId: null, loading: true, selectedLoading: true })),
+  on(ProductsActions.loadProduct, state => ({ ...state, loading: true, selectedLoading: true })),
   on(ProductsActions.loadProductSuccess, (state, { product }) =>
-    adapter.upsertOne(product, { ...state, selectedId: product.id, loading: false })),
+    adapter.upsertOne(product, { ...state, selectedId: product.id, loading: false, selectedLoading: false })),
   on(ProductsActions.loadProductFailure, (state, { error }) =>
-    ({ ...state, loading: false, error })),
+    ({ ...state, loading: false, selectedLoading: false, error })),
 
   on(ProductsActions.createProductSuccess, (state, { product }) =>
     adapter.addOne(product, state)),

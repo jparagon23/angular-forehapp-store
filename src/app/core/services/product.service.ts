@@ -126,7 +126,7 @@ export class ProductService {
   private mapProduct(raw: ApiProductSummary): Product {
     // Si tiene variantes, el usuario debe ir al detalle a elegir opciones
     const variations: ProductVariations | undefined =
-      raw.variantCount > 0 ? { sizes: [''] } : undefined;
+      raw.variantCount > 1 ? { sizes: [''] } : undefined;
 
     return {
       id:             raw.id,

@@ -278,7 +278,7 @@
 
 <ng-template #loadingOrNotFound>
   <!-- Skeleton mientras carga -->
-  <ng-container *ngIf="loading$ | async; else notFound">
+  <ng-container *ngIf="selectedLoading$ | async; else notFound">
     <div class="product-layout">
 
       <!-- Carousel skeleton -->

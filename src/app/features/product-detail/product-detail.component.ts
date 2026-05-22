@@ -5,7 +5,7 @@ import { AsyncPipe, DatePipe, NgFor, NgIf, TitleCasePipe } from '@angular/common
 import { Observable, combineLatest, map, take } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { clearSelectedProduct, loadProduct, loadProducts } from '../../store/products/products.actions';
-import { selectSelectedProduct, selectProductsLoading, selectAllProducts } from '../../store/products/products.selectors';
+import { selectSelectedProduct, selectSelectedProductLoading, selectAllProducts } from '../../store/products/products.selectors';
 import { addCartItem, openCart } from '../../store/cart/cart.actions';
 import { selectIsLoggedIn } from '../../store/auth/auth.selectors';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
@@ -36,7 +36,7 @@ export class ProductDetailComponent implements OnInit {
   private reviewService = inject(ReviewService);
 
   product$          = this.store.select(selectSelectedProduct);
-  loading$          = this.store.select(selectProductsLoading);
+  selectedLoading$  = this.store.select(selectSelectedProductLoading);
   relatedProducts$!: Observable<Product[]>;
 
   isLoggedIn        = toSignal(this.store.select(selectIsLoggedIn), { initialValue: false });
