@@ -43,7 +43,8 @@ export interface SellerProduct {
   status: ProductStatus;
   createdAt: string;
   variants: ProductVariant[];
-  images: ProductImage[];
+  thumbnailUrl?: string | null;
+  images?: ProductImage[];
 }
 
 export interface CreateProductRequest {

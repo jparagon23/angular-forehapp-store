@@ -221,8 +221,8 @@
         <tr [class.sp-row-expanded]="expandedId() === p.id" (click)="toggleExpand(p.id)" class="sp-row-clickable">
           <td>
             <div class="sp-product-cell">
-              <img *ngIf="p.images?.length" [src]="p.images[0].url" alt="" class="sp-thumb" />
-              <div *ngIf="!p.images?.length" class="sp-thumb-placeholder">📦</div>
+              <img *ngIf="p.thumbnailUrl" [src]="p.thumbnailUrl" [alt]="p.title" class="sp-thumb" />
+              <div *ngIf="!p.thumbnailUrl" class="sp-thumb-placeholder">📦</div>
               <div>
                 <strong class="sp-product-name">{{ p.title }}</strong>
                 <span class="sp-product-brand">{{ p.brand }}<span *ngIf="p.line"> · {{ p.line }}</span></span>
