@@ -47,11 +47,12 @@ export class ProductCreateComponent implements OnInit {
   loadingAttrs     = signal(false);
 
   basicForm = this.fb.group({
-    title:       ['', [Validators.required, Validators.maxLength(255)]],
-    description: [''],
-    brandId:     [null as number | null, Validators.required],
-    lineId:      [null as number | null],
-    categoryId:  [null as number | null, Validators.required],
+    title:        ['', [Validators.required, Validators.maxLength(255)]],
+    description:  [''],
+    brandId:      [null as number | null, Validators.required],
+    lineId:       [null as number | null],
+    categoryId:   [null as number | null, Validators.required],
+    freeShipping: [false],
   });
 
   creatingDraft = signal(false);
@@ -143,7 +144,7 @@ export class ProductCreateComponent implements OnInit {
     if (this.basicForm.invalid) return;
     const storeId = this.storeId();
     if (!storeId) return;
-    const { title, description, brandId, lineId, categoryId } = this.basicForm.value;
+    const { title, description, brandId, lineId, categoryId, freeShipping } = this.basicForm.value;
     this.creatingDraft.set(true);
     this.draftError.set(null);
     this.service.createProduct(storeId, {
@@ -152,6 +153,7 @@ export class ProductCreateComponent implements OnInit {
       brandId: brandId!,
       lineId: lineId ?? undefined,
       categoryId: categoryId!,
+      freeShipping: freeShipping ?? false,
     }).subscribe({
       next: product => {
         this.draftProduct.set(product);

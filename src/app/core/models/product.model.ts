@@ -36,6 +36,7 @@ export interface Product {
   cat: string;
   stock: number;
   status: 'Activo' | 'Borrador' | 'Agotado';
+  freeShipping?: boolean;
   variations?: ProductVariations;
   variants?: DetailVariant[];
   store?: ProductStore;

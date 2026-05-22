@@ -98,6 +98,15 @@
   padding: 2px 7px; border-radius: 20px;
 }
 
+.card-free-ship {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #e8f5e9; color: #2e7d32;
+  font-size: .75rem; font-weight: 700;
+  padding: 3px 10px; border-radius: 20px;
+  border: 1px solid #a5d6a7;
+  svg { flex-shrink: 0; }
+}
+
 .add-btn {
   margin-top: 10px; background: var(--green); color: #fff;
   border: none; padding: 12px; border-radius: 10px;

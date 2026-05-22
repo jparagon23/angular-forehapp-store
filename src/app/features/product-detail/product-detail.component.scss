@@ -130,6 +130,15 @@
   font-size: .82rem; font-weight: 800; letter-spacing: .5px;
   padding: 4px 12px; border-radius: 20px;
 }
+.free-ship-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #e8f5e9; color: #2e7d32;
+  font-size: .82rem; font-weight: 700;
+  padding: 5px 12px; border-radius: 20px;
+  border: 1px solid #a5d6a7; margin-bottom: 20px;
+  svg { flex-shrink: 0; }
+}
+
 .divider { height: 1px; background: #dff0da; margin: 22px 0; }
 
 .var-group { margin-bottom: 22px; }

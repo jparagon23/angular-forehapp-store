@@ -18,6 +18,7 @@ interface ApiProductSummary {
   variantCount: number;
   createdAt: string;
   thumbnailUrl: string | null;
+  freeShipping?: boolean;
 }
 
 interface PageResponse<T> {
@@ -95,6 +96,7 @@ export class ProductService {
           price:      minPrice,
           stock:      raw.variants?.reduce((s: number, v: any) => s + v.stock, 0) ?? 0,
           status:     raw.status === 'ACTIVE' ? 'Activo' : raw.status === 'DRAFT' ? 'Borrador' : 'Agotado',
+          freeShipping: raw.freeShipping ?? false,
           variations,
           variants:   raw.variants ?? [],
           store:      raw.store ? (raw.store as ProductStore) : undefined,
@@ -141,6 +143,7 @@ export class ProductService {
       compareAtPrice: raw.compareAtPrice ?? null,
       stock:          raw.variantCount,
       status:         'Activo',
+      freeShipping:   raw.freeShipping ?? false,
       variations,
     };
   }
