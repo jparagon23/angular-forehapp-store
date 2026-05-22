@@ -34,8 +34,9 @@ export class ProductEditComponent implements OnInit {
 
   // ── Información básica ───────────────────────────────────────
   infoForm = this.fb.group({
-    title:       ['', [Validators.required, Validators.maxLength(255)]],
-    description: [''],
+    title:        ['', [Validators.required, Validators.maxLength(255)]],
+    description:  [''],
+    freeShipping: [false],
   });
   saving    = signal(false);
   saveError = signal<string | null>(null);
@@ -105,7 +106,7 @@ export class ProductEditComponent implements OnInit {
       next: ({ product, categories }) => {
         this.product.set(product);
         this.variants.set(product.variants);
-        this.infoForm.patchValue({ title: product.title, description: product.description ?? '' });
+        this.infoForm.patchValue({ title: product.title, description: product.description ?? '', freeShipping: product.freeShipping });
 
         const match = categories.find((c: Category) => c.name === product.category);
         if (match) {
@@ -137,13 +138,14 @@ export class ProductEditComponent implements OnInit {
     if (this.infoForm.invalid) return;
     const storeId = this.storeId();
     if (!storeId) return;
-    const { title, description } = this.infoForm.value;
+    const { title, description, freeShipping } = this.infoForm.value;
     this.saving.set(true);
     this.saveError.set(null);
     this.saveOk.set(false);
     this.service.updateProduct(storeId, this.productId, {
       title: title!,
       description: description || undefined,
+      freeShipping: freeShipping ?? false,
     }).subscribe({
       next: p => {
         this.product.set(p);

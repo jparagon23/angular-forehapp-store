@@ -203,6 +203,11 @@
       <div class="so-card-total">
         Subtotal del grupo: <strong>{{ g.subtotal | currencyCop }}</strong>
       </div>
+      <div class="so-shipping-row">
+        <span>Envío:</span>
+        <span *ngIf="g.shippingCost === 0" class="so-free-badge">Gratis</span>
+        <strong *ngIf="g.shippingCost > 0">{{ g.shippingCost | currencyCop }}</strong>
+      </div>
     </div>
 
   </div>

@@ -38,6 +38,7 @@ export interface OrderSellerGroup {
   storeName: string;
   status: SellerGroupStatus;
   subtotal: number;
+  shippingCost: number;
   trackingNumber: string | null;
   shippedAt: string | null;
   items: OrderItemResponse[];
@@ -69,6 +70,7 @@ export interface SellerOrderGroupDetail {
   paymentMethod: PaymentMethod;
   orderPaymentStatus: OrderApiStatus;
   subtotal: number;
+  shippingCost: number;
   trackingNumber: string | null;
   preparedAt: string | null;
   shippedAt: string | null;

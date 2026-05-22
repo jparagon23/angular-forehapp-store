@@ -242,7 +242,10 @@
               {{ p.variants.length }} variante{{ p.variants.length !== 1 ? 's' : '' }}
             </button>
           </td>
-          <td>{{ minPrice(p.variants) | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td>
+            {{ minPrice(p.variants) | currency:'USD':'symbol':'1.2-2' }}
+            <span class="free-ship-badge" *ngIf="p.freeShipping" title="Envío gratis">🚚 Gratis</span>
+          </td>
           <td>{{ p.createdAt | date:'dd/MM/yy' }}</td>
           <td>
             <div class="sp-actions" (click)="$event.stopPropagation()">

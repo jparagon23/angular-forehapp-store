@@ -1,0 +1,59 @@
+<div class="ss-header">
+  <h1 class="ss-title">Configuración de tienda</h1>
+  <p class="ss-sub">Ajusta las opciones de envío para tu tienda</p>
+</div>
+
+<div class="ss-loading" *ngIf="loading()">
+  <svg class="ss-spin" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round">
+    <path d="M21 12a9 9 0 11-6.219-8.56"/>
+  </svg>
+</div>
+
+<div class="ss-card" *ngIf="!loading()">
+  <div class="ss-card-icon">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+      <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+    </svg>
+  </div>
+  <div class="ss-card-body">
+    <h2 class="ss-card-title">Envío gratis por monto mínimo</h2>
+    <p class="ss-card-desc">
+      Los pedidos cuyo subtotal supere este monto recibirán envío gratis automáticamente.
+      Deja el campo vacío para desactivar esta regla.
+    </p>
+
+    <div class="ss-current" *ngIf="freeShippingMinAmount() !== null">
+      Monto actual: <strong>{{ freeShippingMinAmount()! | currencyCop }}</strong>
+      <button class="ss-clear-btn" (click)="clear()" [disabled]="saving()">Quitar</button>
+    </div>
+    <div class="ss-current ss-current--off" *ngIf="freeShippingMinAmount() === null">
+      Sin monto mínimo configurado
+    </div>
+
+    <div class="ss-field">
+      <label class="ss-label">Nuevo monto mínimo (COP)</label>
+      <div class="ss-input-row">
+        <span class="ss-prefix">$</span>
+        <input
+          class="ss-input"
+          type="number"
+          min="0"
+          step="1000"
+          placeholder="Ej: 200000"
+          [(ngModel)]="inputValue"
+          [disabled]="saving()"
+        />
+      </div>
+    </div>
+
+    <div class="ss-error" *ngIf="error()">{{ error() }}</div>
+    <div class="ss-ok" *ngIf="saved()">Configuración guardada correctamente.</div>
+
+    <div class="ss-actions">
+      <button class="ss-btn-save" (click)="save()" [disabled]="saving()">
+        {{ saving() ? 'Guardando…' : 'Guardar cambios' }}
+      </button>
+    </div>
+  </div>
+</div>

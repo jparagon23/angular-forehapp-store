@@ -134,10 +134,20 @@
 .oci-price { font-weight: 700; color: var(--dark); flex-shrink: 0; }
 
 .oc-group-subtotal {
-  padding: 8px 14px; font-size: .82rem; color: #888; text-align: right;
+  padding: 8px 14px 4px; font-size: .82rem; color: #888; text-align: right;
   background: #fafafa;
   strong { color: #333; }
 }
+.oc-group-shipping {
+  padding: 4px 14px 8px; font-size: .82rem; color: #888; text-align: right;
+  background: #fafafa;
+  display: flex; justify-content: flex-end; gap: 8px; align-items: center;
+}
+.oc-free-badge {
+  display: inline-block; background: #e8f5e9; color: #2e7d32;
+  font-size: .74rem; font-weight: 700; padding: 1px 7px; border-radius: 8px;
+}
+.oc-summary-note { font-size: .75rem; font-weight: 400; color: #bbb; }
 
 // ── Loading / error states ─────────────────────────────────
 .oc-state {

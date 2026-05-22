@@ -231,6 +231,13 @@
   border: 1px solid #eee;
 }
 .sp-product-name  { display: block; font-weight: 700; color: #222; }
+.free-ship-badge {
+  display: inline-block; margin-left: 6px;
+  font-size: .68rem; font-weight: 700;
+  color: #2e7d32; background: #e8f5e9;
+  border: 1px solid #a5d6a7; border-radius: 4px;
+  padding: 1px 5px; vertical-align: middle;
+}
 .sp-row-clickable { cursor: pointer; }
 .sp-expand-icon   { font-size: .65rem; color: #aaa; }
 .sp-product-brand { display: block; font-size: .78rem; color: #999; margin-top: 2px; }

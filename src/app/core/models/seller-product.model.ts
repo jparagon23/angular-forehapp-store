@@ -44,6 +44,7 @@ export interface SellerProduct {
   createdAt: string;
   variants: ProductVariant[];
   thumbnailUrl?: string | null;
+  freeShipping: boolean;
   images?: ProductImage[];
 }
 
@@ -53,6 +54,7 @@ export interface CreateProductRequest {
   brandId: number;
   lineId?: number;
   categoryId: number;
+  freeShipping?: boolean;
 }
 
 export interface CreateVariantRequest {

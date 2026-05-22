@@ -8,6 +8,7 @@ export interface Store {
   description: string;
   status: StoreStatus;
   createdAt: string;
+  freeShippingMinAmount?: number | null;
 }
 
 export interface MyStore {
@@ -39,6 +40,7 @@ export interface CreateStoreRequest {
 export interface UpdateStoreRequest {
   name?: string;
   description?: string;
+  freeShippingMinAmount?: number | null;
 }
 
 export interface InviteMemberRequest {

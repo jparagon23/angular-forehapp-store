@@ -130,6 +130,11 @@
                 <div class="oc-group-subtotal">
                   Subtotal: <strong>{{ g.subtotal | currencyCop }}</strong>
                 </div>
+                <div class="oc-group-shipping">
+                  <span>Envío</span>
+                  <span *ngIf="g.shippingCost === 0" class="oc-free-badge">Gratis</span>
+                  <span *ngIf="g.shippingCost > 0">{{ g.shippingCost | currencyCop }}</span>
+                </div>
 
                 <!-- Return action row (only for DELIVERED groups) -->
                 <div class="oc-return-row" *ngIf="g.status === 'DELIVERED'">
@@ -160,7 +165,7 @@
 
             <!-- Order total -->
             <div class="oc-summary">
-              <span>Total del pedido</span>
+              <span>Total del pedido <span class="oc-summary-note">(incl. envío)</span></span>
               <strong>{{ detail.total | currencyCop }}</strong>
             </div>
 

@@ -97,6 +97,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/seller/coupons/seller-coupons.component').then(m => m.SellerCouponsComponent),
         canActivate: [sellerGuard],
       },
+      {
+        path: 'settings',
+        loadComponent: () => import('./features/seller/settings/seller-settings.component').then(m => m.SellerSettingsComponent),
+        canActivate: [sellerGuard],
+      },
     ],
   },
   {
@@ -125,6 +130,7 @@ export const routes: Routes = [
       { path: 'reviews',  loadComponent: () => import('./features/admin/reviews/reviews-admin.component').then(m => m.ReviewsAdminComponent) },
       { path: 'returns',  loadComponent: () => import('./features/admin/returns/returns-admin.component').then(m => m.ReturnsAdminComponent) },
       { path: 'stores',   loadComponent: () => import('./features/admin/stores/stores-admin.component').then(m => m.StoresAdminComponent) },
+      { path: 'shipping-zones', loadComponent: () => import('./features/admin/shipping-zones/shipping-zones.component').then(m => m.ShippingZonesComponent) },
     ]
   },
   { path: '**', redirectTo: '' },
