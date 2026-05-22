@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { Product, ProductImage, ProductVariations } from '../models/product.model';
+import { Product, ProductImage, ProductStore, ProductVariations } from '../models/product.model';
 import { Category } from '../models/seller-product.model';
 
 // Formato del listado público (sin variantes detalladas)
@@ -97,6 +97,7 @@ export class ProductService {
           status:     raw.status === 'ACTIVE' ? 'Activo' : raw.status === 'DRAFT' ? 'Borrador' : 'Agotado',
           variations,
           variants:   raw.variants ?? [],
+          store:      raw.store ? (raw.store as ProductStore) : undefined,
         } as Product;
       })
     );

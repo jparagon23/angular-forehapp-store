@@ -52,6 +52,14 @@
       <div class="product-brand-badge">{{ product.brand }}</div>
       <h1 class="product-name">{{ product.name }}</h1>
       <p class="product-desc">{{ product.desc }}</p>
+
+      <div class="store-badge" *ngIf="product.store">
+        <img *ngIf="product.store.logoUrl" class="store-logo" [src]="product.store.logoUrl" [alt]="product.store.name">
+        <div *ngIf="!product.store.logoUrl" class="store-logo-fallback">
+          {{ product.store.name[0].toUpperCase() }}
+        </div>
+        <span class="store-name">{{ product.store.name }}</span>
+      </div>
       <div class="product-price-block">
         <ng-container *ngIf="selectedVariant(product) as v">
           <span class="product-compare-price"

@@ -16,6 +16,13 @@ export interface DetailVariant {
 
 export interface ProductImage { id: number; url: string; displayOrder: number; }
 
+export interface ProductStore {
+  id: number;
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+}
+
 export interface Product {
   id: number;
   emoji: string;
@@ -31,4 +38,5 @@ export interface Product {
   status: 'Activo' | 'Borrador' | 'Agotado';
   variations?: ProductVariations;
   variants?: DetailVariant[];
+  store?: ProductStore;
 }
