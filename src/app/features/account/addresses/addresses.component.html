@@ -24,17 +24,38 @@
       <p>Cargando direcciones...</p>
     </div>
 
-    <!-- Empty state -->
-    <div class="empty-state" *ngIf="!(loading$ | async) && (addresses$ | async)?.length === 0">
-      <div class="empty-icon">📍</div>
-      <h2>No tienes direcciones guardadas</h2>
-      <p>Agrega una dirección para agilizar tus compras y envíos.</p>
-      <button class="btn-add-empty" (click)="openCreate()">Agregar dirección</button>
-    </div>
+    <ng-container *ngIf="!(loading$ | async)">
 
-    <!-- Address list -->
-    <div class="addr-grid" *ngIf="!(loading$ | async) && (addresses$ | async) as addresses">
-      <div class="addr-card" *ngFor="let addr of addresses" [class.is-default]="addr.isDefault">
+      <!-- Search bar (solo si hay direcciones) -->
+      <div class="search-bar" *ngIf="allAddresses().length > 0">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input
+          type="text"
+          placeholder="Buscar por calle, ciudad, departamento, país..."
+          [value]="searchTerm()"
+          (input)="searchTerm.set($any($event.target).value)"
+        >
+      </div>
+
+      <!-- Empty state: sin direcciones -->
+      <div class="empty-state" *ngIf="allAddresses().length === 0">
+        <div class="empty-icon">📍</div>
+        <h2>No tienes direcciones guardadas</h2>
+        <p>Agrega una dirección para agilizar tus compras y envíos.</p>
+        <button class="btn-add-empty" (click)="openCreate()">Agregar dirección</button>
+      </div>
+
+      <!-- Empty state: sin resultados de búsqueda -->
+      <div class="no-results" *ngIf="allAddresses().length > 0 && filteredAddresses().length === 0">
+        <p>No se encontraron direcciones para <strong>"{{ searchTerm() }}"</strong></p>
+        <button (click)="searchTerm.set('')">Limpiar búsqueda</button>
+      </div>
+
+      <!-- Address list -->
+      <div class="addr-grid" *ngIf="filteredAddresses().length > 0">
+        <div class="addr-card" *ngFor="let addr of filteredAddresses()" [class.is-default]="addr.isDefault">
 
         <div class="card-header">
           <div class="alias-row">
@@ -80,6 +101,8 @@
       </div>
     </div>
 
+    </ng-container>
+
   </div>
 </div>
 
@@ -123,28 +146,79 @@
 
       <div class="field">
         <label>País <span class="required">*</span></label>
-        <select (change)="onCountryChange($event)">
-          <option value="">-- Seleccionar país --</option>
-          <option *ngFor="let c of countries()" [value]="c.id" [selected]="c.id === countryId()">{{ c.name }}</option>
-        </select>
+        <div class="search-select" [class.open]="showCountryDrop()">
+          <input
+            type="text"
+            [placeholder]="selectedCountryName() || 'Buscar país...'"
+            [value]="showCountryDrop() ? countrySearch() : selectedCountryName()"
+            (focus)="onCountryFocus()"
+            (input)="countrySearch.set($any($event.target).value)"
+            (blur)="showCountryDrop.set(false)"
+          >
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+          <div class="select-dropdown" *ngIf="showCountryDrop()">
+            <div class="option"
+                 *ngFor="let c of filteredCountries()"
+                 [class.selected]="c.id === countryId()"
+                 (mousedown)="$event.preventDefault()"
+                 (click)="selectCountry(c)">{{ c.name }}</div>
+            <div class="no-opts" *ngIf="filteredCountries().length === 0">Sin resultados</div>
+          </div>
+        </div>
       </div>
 
       <div class="field-row">
         <div class="field">
           <label>Departamento <span class="required">*</span></label>
-          <select [disabled]="!countryId()" (change)="onStateChange($event)">
-            <option value="">-- Seleccionar departamento --</option>
-            <option *ngFor="let s of states()" [value]="s.id" [selected]="s.id === stateId()">{{ s.name }}</option>
-          </select>
+          <div class="search-select" [class.open]="showStateDrop()" [class.disabled]="!countryId()">
+            <input
+              type="text"
+              [placeholder]="selectedStateName() || 'Buscar departamento...'"
+              [value]="showStateDrop() ? stateSearch() : selectedStateName()"
+              [disabled]="!countryId()"
+              (focus)="onStateFocus()"
+              (input)="stateSearch.set($any($event.target).value)"
+              (blur)="showStateDrop.set(false)"
+            >
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+            <div class="select-dropdown" *ngIf="showStateDrop()">
+              <div class="option"
+                   *ngFor="let s of filteredStates()"
+                   [class.selected]="s.id === stateId()"
+                   (mousedown)="$event.preventDefault()"
+                   (click)="selectState(s)">{{ s.name }}</div>
+              <div class="no-opts" *ngIf="filteredStates().length === 0">Sin resultados</div>
+            </div>
+          </div>
         </div>
         <div class="field">
           <label>Ciudad <span class="required">*</span></label>
-          <select [disabled]="!stateId()" (change)="onCityChange($event)"
-                  [class.invalid]="hasError('cityId')">
-            <option value="">-- Seleccionar ciudad --</option>
-            <option *ngFor="let c of cities()" [value]="c.id"
-                    [selected]="c.id === form.get('cityId')?.value">{{ c.name }}</option>
-          </select>
+          <div class="search-select" [class.open]="showCityDrop()" [class.disabled]="!stateId()" [class.invalid]="hasError('cityId')">
+            <input
+              type="text"
+              [placeholder]="selectedCityName() || 'Buscar ciudad...'"
+              [value]="showCityDrop() ? citySearch() : selectedCityName()"
+              [disabled]="!stateId()"
+              (focus)="onCityFocus()"
+              (input)="citySearch.set($any($event.target).value)"
+              (blur)="showCityDrop.set(false)"
+            >
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+            <div class="select-dropdown" *ngIf="showCityDrop()">
+              <div class="option"
+                   *ngFor="let c of filteredCities()"
+                   [class.selected]="c.id === form.get('cityId')?.value"
+                   (mousedown)="$event.preventDefault()"
+                   (click)="selectCity(c)">{{ c.name }}</div>
+              <div class="no-opts" *ngIf="filteredCities().length === 0">Sin resultados</div>
+            </div>
+          </div>
           <span class="error-msg" *ngIf="hasError('cityId')">La ciudad es obligatoria</span>
         </div>
       </div>
