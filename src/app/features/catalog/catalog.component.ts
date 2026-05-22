@@ -100,6 +100,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
           productTitle: product.name,
           sku:          variant.sku,
           unitPrice:    variant.price ?? product.price,
+          imageUrl:     product.image || detail?.image,
         }));
         this.store.dispatch(openCart());
         this.toastMessage.set(`${product.name} agregado al carrito`);

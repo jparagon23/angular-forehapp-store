@@ -8,6 +8,7 @@ export interface CartItemResponse {
   subtotal: number;
   priceChanged: boolean;
   previousPrice: number | null;
+  thumbnailUrl?: string;
 }
 
 export interface CartSellerGroup {

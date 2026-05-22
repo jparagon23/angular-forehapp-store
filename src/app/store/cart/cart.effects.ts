@@ -88,11 +88,13 @@ export class CartEffects {
           productTitle: action.productTitle ?? 'Producto',
           sku:          action.sku ?? '',
           unitPrice:    action.unitPrice ?? 0,
+          thumbnailUrl: action.imageUrl,
         });
         return of(CartActions.addCartItemSuccess({ cart: this.guestSvc.buildCartResponse() }));
       })
     )
   );
+
 
   /* ── Actualizar cantidad ─────────────────────────────────────── */
   updateCartItem$ = createEffect(() =>

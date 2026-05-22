@@ -16,6 +16,7 @@ interface BatchItem {
   subtotal: number;
   priceChanged: boolean;
   originalPrice: number | null;
+  thumbnailUrl: string | null;
 }
 interface BatchGroup  { storeId: number; storeName: string; subtotal: number; items: BatchItem[]; }
 interface BatchCartResponse { id: number | null; status: string; updatedAt: string | null; total: number; sellerGroups: BatchGroup[]; }
@@ -66,6 +67,7 @@ export class CartService {
         subtotal:      i.subtotal,
         priceChanged:  i.priceChanged,
         previousPrice: i.originalPrice,
+        thumbnailUrl:  i.thumbnailUrl ?? undefined,
       })),
     }));
     return { cartId: raw.id, status: raw.status, updatedAt: raw.updatedAt, total: raw.total, sellerGroups };

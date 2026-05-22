@@ -261,6 +261,7 @@ export class ProductDetailComponent implements OnInit {
       productTitle: product.name,
       sku:          target.sku,
       unitPrice:    target.price ?? product.price,
+      imageUrl:     product.images?.[0]?.url || product.image,
     }));
     this.store.dispatch(openCart());
     this.toastMessage.set(`${product.name} agregado al carrito 🎾 — ${Date.now()}`);

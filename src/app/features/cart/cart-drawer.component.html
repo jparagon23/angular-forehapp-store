@@ -57,7 +57,11 @@
 
           <div class="cart-item" *ngFor="let item of group.items">
 
-            <div class="ci-thumb">📦</div>
+            <div class="ci-thumb">
+              <img *ngIf="item.thumbnailUrl" class="ci-thumb-img"
+                   [src]="item.thumbnailUrl" [alt]="item.productTitle">
+              <span *ngIf="!item.thumbnailUrl">📦</span>
+            </div>
 
             <div class="ci-info">
               <p class="ci-name">{{ item.productTitle }}</p>
