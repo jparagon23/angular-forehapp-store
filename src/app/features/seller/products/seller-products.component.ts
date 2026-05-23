@@ -14,6 +14,7 @@ import {
   sellerActionFailure,
 } from '../../../store/seller/seller.actions';
 import {
+  selectActiveSellerStoreId,
   selectSellerInventoryLoading,
   selectSellerLoading,
   selectSellerProducts,
@@ -41,7 +42,12 @@ export class SellerProductsComponent implements OnInit {
   loading$    = this.store.select(selectSellerLoading);
   invLoading$ = this.store.select(selectSellerInventoryLoading);
 
+  private storeId = toSignal(this.store.select(selectActiveSellerStoreId), { initialValue: null });
+
   allProducts = toSignal(this.store.select(selectSellerProducts), { initialValue: [] as SellerProduct[] });
+
+  togglingVariantId  = signal<number | null>(null);
+  variantToggleError = signal<string | null>(null);
 
   searchQuery  = signal('');
   statusFilter = signal<ProductStatus | null>(null);
@@ -209,6 +215,32 @@ export class SellerProductsComponent implements OnInit {
       reason: this.invReason(),
     }));
     this.invOpen.set(false);
+  }
+
+  toggleVariant(p: SellerProduct, v: ProductVariant, e: Event) {
+    e.stopPropagation();
+    const storeId = this.storeId();
+    if (!storeId || this.togglingVariantId() !== null) return;
+    this.togglingVariantId.set(v.id);
+    this.variantToggleError.set(null);
+    const call = v.active
+      ? this.sellerService.deactivateVariant(storeId, p.id, v.id)
+      : this.sellerService.activateVariant(storeId, p.id, v.id);
+    call.subscribe({
+      next: () => {
+        this.togglingVariantId.set(null);
+        this.store.dispatch(loadSellerProducts());
+      },
+      error: err => {
+        const code: string = err.error?.errorCode ?? '';
+        const msg = code === 'PRODUCT_VARIANT_LAST_ACTIVE'
+          ? 'No puedes desactivar la última variante activa. Desactiva el producto completo.'
+          : (err.error?.message ?? 'No se pudo cambiar el estado de la variante.');
+        this.toastType.set('error');
+        this.toastMsg.set(msg);
+        this.togglingVariantId.set(null);
+      },
+    });
   }
 
   statusLabel(s: ProductStatus): string {

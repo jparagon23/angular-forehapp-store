@@ -299,6 +299,14 @@
                       <div class="sp-actions">
                         <button class="btn-action btn-inv"  [disabled]="!v.active" (click)="openInvModal(p, v, $event)">Ajustar</button>
                         <button class="btn-action btn-hist" (click)="openMovements(p, v, $event)">Historial</button>
+                        <button class="btn-action"
+                                [class.btn-deactivate]="v.active"
+                                [class.btn-activate]="!v.active"
+                                [disabled]="togglingVariantId() !== null"
+                                (click)="toggleVariant(p, v, $event)"
+                                [title]="v.active ? 'Ocultar a compradores' : 'Volver a mostrar'">
+                          {{ togglingVariantId() === v.id ? '…' : (v.active ? 'Desactivar' : 'Activar') }}
+                        </button>
                       </div>
                     </td>
                   </tr>
