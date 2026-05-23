@@ -38,9 +38,12 @@ export class ProductEditComponent implements OnInit {
     description:  [''],
     freeShipping: [false],
   });
-  saving    = signal(false);
-  saveError = signal<string | null>(null);
-  saveOk    = signal(false);
+  saving       = signal(false);
+  saveError    = signal<string | null>(null);
+  saveOk       = signal(false);
+  publishing   = signal(false);
+  publishOk    = signal(false);
+  publishError = signal<string | null>(null);
 
   // ── Variantes ────────────────────────────────────────────────
   variants      = signal<ProductVariant[]>([]);
@@ -152,6 +155,46 @@ export class ProductEditComponent implements OnInit {
         this.saving.set(false);
         this.saveOk.set(true);
         setTimeout(() => this.saveOk.set(false), 3000);
+      },
+      error: err => {
+        this.saveError.set(err.error?.message ?? 'Error al guardar los cambios');
+        this.saving.set(false);
+      },
+    });
+  }
+
+  saveAndPublish() {
+    this.infoForm.markAllAsTouched();
+    if (this.infoForm.invalid) return;
+    const storeId = this.storeId();
+    if (!storeId) return;
+    const { title, description, freeShipping } = this.infoForm.value;
+    this.saving.set(true);
+    this.saveError.set(null);
+    this.saveOk.set(false);
+    this.publishError.set(null);
+    this.publishOk.set(false);
+    this.service.updateProduct(storeId, this.productId, {
+      title: title!,
+      description: description || undefined,
+      freeShipping: freeShipping ?? false,
+    }).subscribe({
+      next: p => {
+        this.product.set(p);
+        this.saving.set(false);
+        this.publishing.set(true);
+        this.service.publishProduct(storeId, this.productId).subscribe({
+          next: published => {
+            this.product.set(published);
+            this.publishing.set(false);
+            this.publishOk.set(true);
+            setTimeout(() => this.publishOk.set(false), 4000);
+          },
+          error: err => {
+            this.publishError.set(err.error?.message ?? 'Error al publicar el producto');
+            this.publishing.set(false);
+          },
+        });
       },
       error: err => {
         this.saveError.set(err.error?.message ?? 'Error al guardar los cambios');

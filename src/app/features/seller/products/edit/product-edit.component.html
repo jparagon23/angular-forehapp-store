@@ -133,13 +133,6 @@
       </label>
       <p class="toggle-hint">Si está activo, este producto no generará costo de envío independientemente de la zona.</p>
     </div>
-    <div class="form-error form-error--global" *ngIf="saveError()">{{ saveError() }}</div>
-    <div class="save-ok" *ngIf="saveOk()">Cambios guardados correctamente.</div>
-    <div class="edit-actions">
-      <button type="submit" class="btn-primary" [disabled]="saving()">
-        {{ saving() ? 'Guardando…' : 'Guardar cambios' }}
-      </button>
-    </div>
   </form>
 </div>
 
@@ -255,4 +248,22 @@
   </div>
 
   <div class="form-error form-error--global" *ngIf="imageError()">{{ imageError() }}</div>
+</div>
+
+<!-- ══ Acciones finales ════════════════════════════════════════ -->
+<div class="edit-card" *ngIf="!loading() && !loadError()">
+  <div class="form-error form-error--global" *ngIf="saveError()">{{ saveError() }}</div>
+  <div class="form-error form-error--global" *ngIf="publishError()">{{ publishError() }}</div>
+  <div class="save-ok" *ngIf="saveOk()">Cambios guardados correctamente.</div>
+  <div class="save-ok" *ngIf="publishOk()">Producto guardado y publicado.</div>
+  <div class="edit-actions edit-actions--final">
+    <button type="button" class="btn-primary" (click)="saveInfo()" [disabled]="saving() || publishing()">
+      {{ saving() ? 'Guardando…' : 'Guardar cambios' }}
+    </button>
+    <button type="button" class="btn-publish" (click)="saveAndPublish()"
+            *ngIf="product()?.status === 'DRAFT'"
+            [disabled]="saving() || publishing()">
+      {{ publishing() ? 'Publicando…' : 'Guardar y publicar' }}
+    </button>
+  </div>
 </div>

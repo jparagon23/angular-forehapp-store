@@ -49,12 +49,10 @@ export class SellerStatsComponent implements OnInit, OnDestroy {
   summary: ReportSummary | null = null;
   topProducts: TopProduct[]     = [];
 
-  private products  = toSignal(this.store.select(selectSellerProducts), { initialValue: [] });
-  catalogLoading$   = this.store.select(selectSellerLoading);
-  activeProducts    = computed(() => this.products().filter(p => p.status === 'ACTIVE').length);
-  totalProducts     = computed(() => this.products().length);
-  outOfStock        = computed(() => this.products().filter(p => p.status === 'OUT_OF_STOCK').length);
-  lowStock          = computed(() => this.products().flatMap(p => p.variants).filter(v => v.stock > 0 && v.stock <= 5).length);
+  private products = toSignal(this.store.select(selectSellerProducts), { initialValue: [] });
+  catalogLoading$  = this.store.select(selectSellerLoading);
+  activeProducts   = computed(() => this.products().filter(p => p.status === 'ACTIVE').length);
+  totalProducts    = computed(() => this.products().length);
 
   ngOnInit() {
     this.store.dispatch(loadSellerProducts());

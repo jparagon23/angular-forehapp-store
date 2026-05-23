@@ -1,10 +1,23 @@
+export interface LowStockItem {
+  variantId: number;
+  productId: number;
+  productTitle: string;
+  sku: string;
+  stock: number;
+}
+
 export interface ReportSummary {
   totalOrders: number;
   totalRevenue: number;
   averageTicket: number;
+  pendingToShip: number;
+  inTransit: number;
+  deliveredOrders: number;
   cancelledOrders: number;
   totalReturns: number;
   totalRefunded: number;
+  lowStockCount: number;
+  lowStockItems: LowStockItem[];
 }
 
 export interface RevenuePoint {
