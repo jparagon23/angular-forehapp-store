@@ -25,7 +25,7 @@
         <span class="nb-top-sup">Enviar a</span>
         <!-- Logged in: show default address city or fallback -->
         <ng-container *ngIf="isLoggedIn$ | async; else guestLocation">
-          <span class="nb-top-main" *ngIf="defaultAddress$ | async as def">{{ def.alias || def.city }}</span>
+          <span class="nb-top-main" *ngIf="defaultAddress$ | async as def">{{ def.alias || def.city.name }}</span>
           <span class="nb-top-main" *ngIf="!(defaultAddress$ | async)">Colombia 🇨🇴</span>
         </ng-container>
         <ng-template #guestLocation>
@@ -73,11 +73,11 @@
                   </div>
                   <div class="loc-item-info">
                     <p class="loc-item-alias">
-                      {{ addr.alias || addr.city }}
+                      {{ addr.alias || addr.city.name }}
                       <span class="loc-default-tag" *ngIf="addr.isDefault">Predeterminada</span>
                     </p>
                     <p class="loc-item-detail">{{ addr.street }}</p>
-                    <p class="loc-item-city">{{ addr.city }}<span *ngIf="addr.state">, {{ addr.state }}</span></p>
+                    <p class="loc-item-city">{{ addr.city.name }}<span *ngIf="addr.state">, {{ addr.state.name }}</span></p>
                   </div>
                   <button class="loc-del"
                           [class.loc-del-disabled]="addr.isDefault"
