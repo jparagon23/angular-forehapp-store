@@ -141,9 +141,12 @@
   <h2 class="edit-card-title">Variantes</h2>
 
   <div class="variant-list" *ngIf="variants().length">
-    <div class="variant-row" *ngFor="let v of variants()">
+    <div class="variant-row" [class.variant-row--inactive]="!v.active" *ngFor="let v of variants()">
       <div class="variant-info">
         <strong>{{ v.sku }}</strong>
+        <span class="variant-status-badge" [class.variant-status-badge--active]="v.active" [class.variant-status-badge--inactive]="!v.active">
+          {{ v.active ? 'Activa' : 'Inactiva' }}
+        </span>
         <span>$ {{ v.price | number:'1.2-2' }}</span>
         <span *ngIf="v.compareAtPrice" class="variant-compare">Antes: $ {{ v.compareAtPrice | number:'1.2-2' }}</span>
         <span [class.stock-warn]="v.stock === 0">Stock: {{ v.stock }}</span>
@@ -154,12 +157,22 @@
         </span>
       </div>
       <div class="variant-row-actions">
-        <button class="btn-action btn-inv"  (click)="openInvModal(v)">Ajustar</button>
+        <button class="btn-action btn-inv"  (click)="openInvModal(v)"    [disabled]="!v.active">Ajustar</button>
         <button class="btn-action btn-hist" (click)="openMovements(v)">Historial</button>
-        <button class="btn-remove"          (click)="removeVariant(v.id)" title="Eliminar variante">✕</button>
+        <button class="btn-action"
+                [class.btn-deactivate]="v.active"
+                [class.btn-activate]="!v.active"
+                (click)="toggleVariant(v)"
+                [disabled]="togglingVariantId() !== null"
+                [title]="v.active ? 'Ocultar esta variante a los compradores' : 'Volver a mostrar esta variante'">
+          {{ togglingVariantId() === v.id ? '…' : (v.active ? 'Desactivar' : 'Activar') }}
+        </button>
+        <button class="btn-remove" (click)="removeVariant(v.id)" title="Eliminar variante">✕</button>
       </div>
     </div>
   </div>
+
+  <div class="form-error form-error--global" *ngIf="variantToggleError()">{{ variantToggleError() }}</div>
 
   <div class="variant-empty" *ngIf="!variants().length">
     Sin variantes. Agrega al menos una para poder publicar el producto.

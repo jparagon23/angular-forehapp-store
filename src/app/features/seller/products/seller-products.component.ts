@@ -226,9 +226,14 @@ export class SellerProductsComponent implements OnInit {
     return map[s];
   }
 
-  minPrice(variants: { price: number }[]): number {
-    if (!variants.length) return 0;
-    return Math.min(...variants.map(v => v.price));
+  activeVariantCount(variants: ProductVariant[]): number {
+    return variants.filter(v => v.active).length;
+  }
+
+  minPrice(variants: ProductVariant[]): number {
+    const active = variants.filter(v => v.active);
+    if (!active.length) return 0;
+    return Math.min(...active.map(v => v.price));
   }
 
   delete(id: number) {

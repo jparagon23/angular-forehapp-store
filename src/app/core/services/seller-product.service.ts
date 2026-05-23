@@ -73,6 +73,14 @@ export class SellerProductService {
     return this.http.post<ProductVariant>(`${this.BASE}/stores/${storeId}/products/${productId}/variants`, req);
   }
 
+  deactivateVariant(storeId: number, productId: number, variantId: number): Observable<ProductVariant> {
+    return this.http.patch<ProductVariant>(`${this.BASE}/stores/${storeId}/products/${productId}/variants/${variantId}/deactivate`, {});
+  }
+
+  activateVariant(storeId: number, productId: number, variantId: number): Observable<ProductVariant> {
+    return this.http.patch<ProductVariant>(`${this.BASE}/stores/${storeId}/products/${productId}/variants/${variantId}/activate`, {});
+  }
+
   deleteVariant(storeId: number, productId: number, variantId: number): Observable<void> {
     return this.http.delete<void>(`${this.BASE}/stores/${storeId}/products/${productId}/variants/${variantId}`);
   }

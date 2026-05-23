@@ -239,7 +239,11 @@
                    style="transition: transform .18s">
                 <polyline points="6 9 12 15 18 9"/>
               </svg>
-              {{ p.variants.length }} variante{{ p.variants.length !== 1 ? 's' : '' }}
+              {{ activeVariantCount(p.variants) }} variante{{ activeVariantCount(p.variants) !== 1 ? 's' : '' }}
+              <span class="sp-inactive-hint"
+                    *ngIf="p.variants.length > activeVariantCount(p.variants)">
+                · {{ p.variants.length - activeVariantCount(p.variants) }} inactiva{{ (p.variants.length - activeVariantCount(p.variants)) !== 1 ? 's' : '' }}
+              </span>
             </button>
           </td>
           <td>
@@ -267,6 +271,7 @@
                 <thead>
                   <tr>
                     <th>SKU</th>
+                    <th>Estado</th>
                     <th>Atributos</th>
                     <th>Precio</th>
                     <th>Precio tachado</th>
@@ -275,8 +280,13 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let v of p.variants">
+                  <tr *ngFor="let v of p.variants" [class.sp-variant-inactive]="!v.active">
                     <td class="sp-sku">{{ v.sku }}</td>
+                    <td>
+                      <span class="sp-variant-badge" [class.sp-variant-badge--active]="v.active" [class.sp-variant-badge--inactive]="!v.active">
+                        {{ v.active ? 'Activa' : 'Inactiva' }}
+                      </span>
+                    </td>
                     <td>
                       <span class="sp-attr-pill" *ngFor="let a of v.attributes">
                         {{ a.attribute }}: <strong>{{ a.value }}</strong>
@@ -287,8 +297,8 @@
                     <td [class.sp-stock-warn]="v.stock === 0">{{ v.stock }}</td>
                     <td>
                       <div class="sp-actions">
-                        <button class="btn-action btn-inv"   (click)="openInvModal(p, v, $event)">Ajustar</button>
-                        <button class="btn-action btn-hist"  (click)="openMovements(p, v, $event)">Historial</button>
+                        <button class="btn-action btn-inv"  [disabled]="!v.active" (click)="openInvModal(p, v, $event)">Ajustar</button>
+                        <button class="btn-action btn-hist" (click)="openMovements(p, v, $event)">Historial</button>
                       </div>
                     </td>
                   </tr>

@@ -56,8 +56,10 @@ export class ProductEditComponent implements OnInit {
     compareAtPrice: [null as number | null],
     stock:          [null as number | null, [Validators.required, Validators.min(0)]],
   });
-  addingVariant = signal(false);
-  variantError  = signal<string | null>(null);
+  addingVariant      = signal(false);
+  variantError       = signal<string | null>(null);
+  togglingVariantId  = signal<number | null>(null);
+  variantToggleError = signal<string | null>(null);
 
   // ── Inventario modal ─────────────────────────────────────────
   invOpen      = signal(false);
@@ -229,6 +231,31 @@ export class ProductEditComponent implements OnInit {
       error: err => {
         this.variantError.set(err.error?.message ?? 'SKU duplicado u otro error');
         this.addingVariant.set(false);
+      },
+    });
+  }
+
+  toggleVariant(v: ProductVariant) {
+    const storeId = this.storeId();
+    if (!storeId || this.togglingVariantId() !== null) return;
+    this.togglingVariantId.set(v.id);
+    this.variantToggleError.set(null);
+    const call = v.active
+      ? this.service.deactivateVariant(storeId, this.productId, v.id)
+      : this.service.activateVariant(storeId, this.productId, v.id);
+    call.subscribe({
+      next: updated => {
+        this.variants.update(vs => vs.map(x => x.id === updated.id ? updated : x));
+        this.togglingVariantId.set(null);
+      },
+      error: err => {
+        const code: string = err.error?.errorCode ?? '';
+        if (code === 'PRODUCT_VARIANT_LAST_ACTIVE') {
+          this.variantToggleError.set('No puedes desactivar la última variante activa. Para ocultar el producto completo, usa "Desactivar producto" desde Mis Productos.');
+        } else {
+          this.variantToggleError.set(err.error?.message ?? 'No se pudo cambiar el estado de la variante.');
+        }
+        this.togglingVariantId.set(null);
       },
     });
   }

@@ -311,6 +311,35 @@
 .variant-attrs   { font-size: .78rem; color: #4caf50; font-weight: 600; }
 .stock-warn      { color: #e53935 !important; font-weight: 700; }
 
+.variant-row--inactive {
+  opacity: .65;
+  background: #fafafa;
+  border-color: #e8e8e8;
+}
+
+.variant-status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .3px;
+  &.variant-status-badge--active   { background: #e8f5e9; color: #2e7d32; }
+  &.variant-status-badge--inactive { background: #f5f5f5; color: #999; }
+}
+
+.btn-deactivate {
+  background: #fff3e0;
+  color: #e65100;
+  &:hover:not(:disabled) { background: #ffe0b2; }
+}
+
+.btn-activate {
+  background: #e8f5e9;
+  color: #2e7d32;
+  &:hover:not(:disabled) { background: #c8e6c9; }
+}
+
 .variant-row-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 
 .variant-empty {

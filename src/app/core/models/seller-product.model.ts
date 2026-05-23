@@ -18,6 +18,7 @@ export interface ProductVariant {
   price: number;
   compareAtPrice?: number;
   stock: number;
+  active: boolean;
   attributes: VariantAttribute[];
 }
 
