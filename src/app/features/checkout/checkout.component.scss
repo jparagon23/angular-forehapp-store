@@ -144,6 +144,22 @@
 .oi-unit { font-size: .77rem; color: #aaa; margin-top: 1px; }
 .oi-total { font-weight: 800; font-size: .97rem; color: var(--dark); white-space: nowrap; }
 
+.btn-remove-item {
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: 1.5px solid #e0e0e0; border-radius: 6px;
+  cursor: pointer; padding: 0; transition: border-color .15s, background .15s;
+  svg { stroke: #bbb; transition: stroke .15s; }
+  &:hover:not(:disabled) {
+    border-color: #f44336; background: #fff5f5;
+    svg { stroke: #f44336; }
+  }
+  &:disabled { cursor: not-allowed; opacity: .5; }
+  &.removing { border-color: #ccc; }
+  .mini-spin { border-color: rgba(0,0,0,.15); border-top-color: #888; }
+}
+
 // ── Summary rows ──────────────────────────────────────────
 .summary-rows {
   border-top: 1px solid #eaf2ea;

@@ -4,6 +4,7 @@ import { AsyncPipe, NgFor, NgIf } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { take } from 'rxjs/operators';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
+import { CartDrawerComponent } from '../cart/cart-drawer.component';
 import { selectHasAdmin } from '../../store/auth/auth.selectors';
 import { selectActiveSellerStoreId, selectActiveSellerStoreName } from '../../store/seller/seller.selectors';
 import { setActiveSellerStore } from '../../store/seller/seller.actions';
@@ -13,7 +14,7 @@ import { MyStore } from '../../core/models/store.model';
 @Component({
   selector: 'app-seller',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, NavbarComponent, AsyncPipe, NgIf, NgFor],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, NavbarComponent, CartDrawerComponent, AsyncPipe, NgIf, NgFor],
   templateUrl: './seller.component.html',
   styleUrl: './seller.component.scss',
 })

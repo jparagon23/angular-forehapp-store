@@ -4,10 +4,11 @@ import { Store } from '@ngrx/store';
 import { AsyncPipe, NgFor, NgIf, UpperCasePipe } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { filter, take } from 'rxjs/operators';
+import { filter, skip, take } from 'rxjs/operators';
 import { CartService } from '../../core/services/cart.service';
 import { ShippingEstimateGroup, ShippingEstimateResponse } from '../../core/models/cart.model';
 import { selectSellerGroups, selectCartTotal, selectCartCount } from '../../store/cart/cart.selectors';
+import { removeCartItem } from '../../store/cart/cart.actions';
 import { selectIsLoggedIn, selectAuthUser } from '../../store/auth/auth.selectors';
 import { loadAddresses, createAddress } from '../../store/addresses/addresses.actions';
 import { selectAllAddresses, selectAddressesLoading, selectAddressesSaving } from '../../store/addresses/addresses.selectors';
@@ -67,6 +68,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   shippingEstimate  = signal<ShippingEstimateResponse | null>(null);
   shippingLoading   = signal(false);
   shippingError     = signal<string | null>(null);
+
+  removingItem = signal<number | null>(null);
 
   // coupon state keyed by storeId
   couponInputs:   Record<number, string>        = {};
@@ -261,6 +264,27 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     delete this.appliedCoupons[storeId];
     this.couponInputs[storeId] = '';
     this.couponErrors[storeId] = '';
+  }
+
+  removeItem(itemId: number) {
+    this.removingItem.set(itemId);
+    this.store.dispatch(removeCartItem({ itemId }));
+    this.sellerGroups$.pipe(skip(1), take(1)).subscribe(groups => {
+      this.removingItem.set(null);
+      const activeStoreIds = new Set(groups.map(g => g.storeId));
+      Object.keys(this.appliedCoupons).forEach(key => {
+        if (!activeStoreIds.has(Number(key))) {
+          delete this.appliedCoupons[Number(key)];
+        }
+      });
+      if (groups.length === 0) {
+        this.router.navigate(['/']);
+        return;
+      }
+      if (this.selectedAddressId) {
+        this.loadShippingEstimate(this.selectedAddressId);
+      }
+    });
   }
 
   get totalWithDiscounts(): number {

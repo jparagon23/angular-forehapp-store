@@ -452,21 +452,8 @@
   &.btn-hist       { background: #f3e5f5; color: #7b1fa2; }
 }
 
-// ── Mobile ────────────────────────────────────────────────
-@media (max-width: 640px) {
-  .sp-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-
-  .btn-create {
-    justify-content: center;
-    text-align: center;
-    width: 100%;
-  }
-
+// ── Tablet + Mobile (iPad Air ~820px) ─────────────────────
+@media (max-width: 860px) {
   .sp-table-wrap,
   .sp-skeleton-wrap {
     overflow-x: auto;
@@ -482,6 +469,22 @@
   // Variants sub-table also scrolls
   .sp-variants-detail { overflow-x: auto; padding: 12px; }
   .sp-variants-table  { min-width: 520px; }
+}
+
+// ── Mobile ────────────────────────────────────────────────
+@media (max-width: 640px) {
+  .sp-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .btn-create {
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+  }
 
   .sp-status-guide {
     font-size: .74rem;
