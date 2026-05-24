@@ -41,15 +41,44 @@
       </div>
 
       <div class="form-group">
-        <label>ID del owner <span class="req">*</span></label>
-        <input type="number" [(ngModel)]="ownerId" placeholder="userId del futuro dueño" min="1" />
-        <span class="hint">Usa el userId que devuelven los endpoints de usuarios</span>
+        <label>Owner <span class="req">*</span></label>
+
+        <!-- Buscar por email -->
+        <div class="owner-search-row" *ngIf="!foundOwner">
+          <input
+            type="email"
+            [(ngModel)]="searchEmail"
+            placeholder="correo@ejemplo.com"
+            (keyup.enter)="searchOwner()"
+            [disabled]="searching"
+          />
+          <button
+            type="button"
+            class="btn btn-outline btn-sm"
+            [disabled]="!searchEmail.trim() || searching"
+            (click)="searchOwner()"
+          >
+            {{ searching ? 'Buscando…' : 'Buscar' }}
+          </button>
+        </div>
+        <span class="hint" *ngIf="!foundOwner">Busca al futuro dueño por su correo electrónico</span>
+        <p class="owner-search-error" *ngIf="searchError">{{ searchError }}</p>
+
+        <!-- Usuario encontrado -->
+        <div class="owner-found" *ngIf="foundOwner">
+          <div class="owner-avatar">{{ foundOwner.name.charAt(0) | uppercase }}</div>
+          <div class="owner-info">
+            <span class="owner-name">{{ foundOwner.name }} {{ foundOwner.lastname }}</span>
+            <span class="owner-email">{{ foundOwner.email }}</span>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" (click)="clearOwner()">Cambiar</button>
+        </div>
       </div>
 
       <div class="form-actions">
         <button
           class="btn btn-green"
-          [disabled]="!name.trim() || !ownerId || (loading$ | async)"
+          [disabled]="!name.trim() || !foundOwner || (loading$ | async)"
           (click)="submit()"
         >
           {{ (loading$ | async) ? 'Creando…' : 'Crear tienda' }}

@@ -43,3 +43,29 @@
 .req { color: #c53030; }
 .hint { font-size: .76rem; color: var(--muted); }
 .form-actions { display: flex; justify-content: flex-end; margin-top: 4px; }
+
+.owner-search-row {
+  display: flex; gap: 8px; align-items: center;
+  input { flex: 1; }
+}
+
+.owner-search-error {
+  font-size: .78rem; color: var(--red, #e53e3e); font-weight: 500; margin: 4px 0 0;
+}
+
+.owner-found {
+  display: flex; align-items: center; gap: 12px;
+  background: #f0f8f0; border: 1px solid #b8d8b8; border-radius: 10px;
+  padding: 10px 14px;
+}
+.owner-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--green); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .95rem; font-weight: 800; flex-shrink: 0;
+}
+.owner-info {
+  display: flex; flex-direction: column; gap: 2px; flex: 1;
+}
+.owner-name  { font-size: .9rem; font-weight: 700; color: var(--dark); }
+.owner-email { font-size: .8rem; color: var(--muted); }
