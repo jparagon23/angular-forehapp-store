@@ -1,6 +1,48 @@
-<app-admin-topbar title="Brands & Lines"></app-admin-topbar>
+<app-admin-topbar title="Catálogo"></app-admin-topbar>
 
 <div class="content">
+
+  <!-- ── Categorías ─────────────────────────────────────────── -->
+  <div class="row-two">
+
+    <!-- Lista de categorías -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2>Categorías existentes</h2>
+        <span class="count-chip">{{ categories.length }}</span>
+      </div>
+      <div class="panel-body">
+        <p class="empty-hint" *ngIf="!loading && categories.length === 0">Sin categorías registradas aún.</p>
+        <div class="brand-chips" *ngIf="categories.length > 0">
+          <span class="brand-chip" *ngFor="let c of categories">
+            <span class="chip-id">#{{ c.id }}</span> {{ c.name }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Crear categoría -->
+    <div class="panel">
+      <div class="panel-header"><h2>Nueva categoría</h2></div>
+      <div class="panel-body">
+        <div class="success-bar" *ngIf="catCreated">
+          ✅ Categoría <strong>{{ catCreated.name }}</strong> creada (ID {{ catCreated.id }})
+        </div>
+        <div class="form-group">
+          <label>Nombre <span class="req">*</span></label>
+          <input [(ngModel)]="catName" placeholder="Ej. Raquetas" maxlength="100"
+                 (keyup.enter)="createCategory()" />
+        </div>
+        <p class="err-msg" *ngIf="catError">{{ catError }}</p>
+        <div class="form-actions">
+          <button class="btn btn-green" [disabled]="!catName.trim() || catLoading" (click)="createCategory()">
+            {{ catLoading ? 'Creando…' : 'Crear categoría' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
 
   <!-- ── Brands ──────────────────────────────────────────────── -->
   <div class="row-two">
