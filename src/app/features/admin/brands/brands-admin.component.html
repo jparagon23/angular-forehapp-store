@@ -1,0 +1,92 @@
+<app-admin-topbar title="Brands & Lines"></app-admin-topbar>
+
+<div class="content">
+
+  <!-- ── Brands ──────────────────────────────────────────────── -->
+  <div class="row-two">
+
+    <!-- Lista de brands -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2>Brands existentes</h2>
+        <span class="count-chip">{{ brands.length }}</span>
+      </div>
+      <div class="panel-body">
+        <p class="empty-hint" *ngIf="!loading && brands.length === 0">Sin brands registradas aún.</p>
+        <div class="brand-chips" *ngIf="brands.length > 0">
+          <span class="brand-chip" *ngFor="let b of brands">
+            <span class="chip-id">#{{ b.id }}</span> {{ b.name }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Crear brand -->
+    <div class="panel">
+      <div class="panel-header"><h2>Nueva brand</h2></div>
+      <div class="panel-body">
+
+        <div class="success-bar" *ngIf="brandCreated">
+          ✅ Brand <strong>{{ brandCreated.name }}</strong> creada (ID {{ brandCreated.id }})
+        </div>
+
+        <div class="form-group">
+          <label>Nombre <span class="req">*</span></label>
+          <input [(ngModel)]="brandName" placeholder="Ej. Wilson" maxlength="100"
+                 (keyup.enter)="createBrand()" />
+        </div>
+        <p class="err-msg" *ngIf="brandError">{{ brandError }}</p>
+        <div class="form-actions">
+          <button class="btn btn-green" [disabled]="!brandName.trim() || brandLoading" (click)="createBrand()">
+            {{ brandLoading ? 'Creando…' : 'Crear brand' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Lines ───────────────────────────────────────────────── -->
+  <div class="panel">
+    <div class="panel-header"><h2>Nueva line</h2></div>
+    <div class="panel-body">
+
+      <div class="success-bar" *ngIf="lineCreated">
+        ✅ Line <strong>{{ lineCreated.name }}</strong> creada (ID {{ lineCreated.id }}) —
+        categoría: {{ categoryName(lineCreated.categoryId) }}
+      </div>
+
+      <div class="line-row">
+        <div class="form-group">
+          <label>Brand <span class="req">*</span></label>
+          <select [(ngModel)]="lineSelectedBrandId">
+            <option [ngValue]="null" disabled>Selecciona una brand</option>
+            <option *ngFor="let b of brands" [ngValue]="b.id">{{ b.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Categoría <span class="req">*</span></label>
+          <select [(ngModel)]="lineCategoryId">
+            <option [ngValue]="null" disabled>Selecciona una categoría</option>
+            <option *ngFor="let c of categories" [ngValue]="c.id">{{ c.name }}</option>
+          </select>
+        </div>
+        <div class="form-group flex1">
+          <label>Nombre <span class="req">*</span></label>
+          <input [(ngModel)]="lineName" placeholder="Ej. Pro Staff" maxlength="100"
+                 (keyup.enter)="createLine()" />
+        </div>
+      </div>
+
+      <p class="err-msg" *ngIf="lineError">{{ lineError }}</p>
+      <div class="form-actions">
+        <button class="btn btn-green"
+                [disabled]="!lineName.trim() || !lineSelectedBrandId || !lineCategoryId || lineLoading"
+                (click)="createLine()">
+          {{ lineLoading ? 'Creando…' : 'Crear line' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
