@@ -68,6 +68,72 @@
   &:hover { background: var(--green-dark); }
 }
 
+// ── Search bar ────────────────────────────────────────────────
+.search-bar {
+  position: relative;
+  margin-bottom: 24px;
+
+  input {
+    width: 100%;
+    height: 44px;
+    padding: 0 16px 0 44px;
+    border: 1.5px solid #dde;
+    border-radius: 10px;
+    font-size: .9rem;
+    color: var(--dark);
+    background: #fff;
+    box-sizing: border-box;
+    transition: border-color .15s, box-shadow .15s;
+
+    &:focus {
+      outline: none;
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(66,170,20,.08);
+    }
+
+    &::placeholder { color: #bbb; }
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    stroke: #bbb;
+    pointer-events: none;
+    transition: stroke .15s;
+  }
+
+  &:focus-within .search-icon { stroke: var(--green); }
+}
+
+// ── No results ────────────────────────────────────────────────
+.no-results {
+  text-align: center;
+  padding: 56px 20px;
+  background: #fff;
+  border: 1px solid #dde8dd;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+
+  p { font-size: .95rem; color: #888; margin-bottom: 14px; }
+
+  button {
+    background: none;
+    border: none;
+    color: var(--green);
+    font-size: .88rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+
+    &:hover { color: var(--green-dark); }
+  }
+}
+
 // ── Address grid ──────────────────────────────────────────────
 .addr-grid {
   display: grid;
@@ -209,6 +275,75 @@
 .optional { font-weight: 400; color: #bbb; font-size: .78rem; }
 .required  { color: var(--green); }
 .error-msg { font-size: .75rem; color: #e74c3c; }
+
+// ── Searchable select dropdown ────────────────────────────────
+.search-select {
+  position: relative;
+
+  input {
+    width: 100%;
+    height: 42px;
+    padding: 0 36px 0 13px;
+    border: 1.5px solid #dde;
+    border-radius: 8px;
+    font-size: .9rem;
+    color: var(--dark);
+    background: #fafafa;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: border-color .15s;
+
+    &:focus { outline: none; border-color: var(--green); background: #fff; cursor: text; }
+    &::placeholder { color: #aaa; }
+    &:disabled { opacity: .45; cursor: not-allowed; background: #f5f5f5; }
+  }
+
+  .chevron {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px; height: 14px;
+    stroke: #aaa;
+    pointer-events: none;
+    transition: transform .15s, stroke .15s;
+  }
+
+  &.open .chevron { transform: translateY(-50%) rotate(180deg); stroke: var(--green); }
+  &.disabled .chevron { opacity: .4; }
+  &.invalid input { border-color: #e74c3c; }
+}
+
+.select-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0; right: 0;
+  background: #fff;
+  border: 1.5px solid #dde;
+  border-radius: 9px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.13);
+  max-height: 210px;
+  overflow-y: auto;
+  z-index: 300;
+
+  .option {
+    padding: 10px 14px;
+    font-size: .88rem;
+    color: var(--dark);
+    cursor: pointer;
+    transition: background .1s;
+
+    &:hover    { background: #f0fbe8; color: var(--green); }
+    &.selected { background: #eaf7e3; font-weight: 700; color: var(--green); }
+  }
+
+  .no-opts {
+    padding: 14px;
+    font-size: .84rem;
+    color: #bbb;
+    text-align: center;
+  }
+}
 
 .check-row {
   display: flex; align-items: center; gap: 10px; cursor: pointer;

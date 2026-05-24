@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {
   AuthResponse,
@@ -20,7 +21,16 @@ export class AuthApiService {
   }
 
   verifyCode(req: VerifyCodeRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.BASE}/auth/verify-code`, req);
+    return this.http.post<AuthResponse>(`${this.BASE}/auth/verify-code`, req).pipe(
+      map(res => {
+        if (!res.storeRoles) {
+          const payload = JSON.parse(atob(res.access_token.split('.')[1]));
+          const roles: string = payload.roles ?? '';
+          res.storeRoles = roles.split(',').map((r: string) => r.trim()).filter(Boolean);
+        }
+        return res;
+      })
+    );
   }
 
   resendCode(userId: number): Observable<RegisterResponse> {

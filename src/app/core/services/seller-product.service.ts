@@ -14,6 +14,8 @@ export class SellerProductService {
   private readonly BASE = environment.apiBaseUrl;
   private http = inject(HttpClient);
 
+  // ── Reference data (no storeId needed) ───────────────────────────────────
+
   getBrands(): Observable<Brand[]> {
     return this.http.get<Brand[]>(`${this.BASE}/brands`);
   }
@@ -31,59 +33,75 @@ export class SellerProductService {
     return this.http.get<CategoryAttribute[]>(`${this.BASE}/categories/${categoryId}/attributes`);
   }
 
-  getSellerProducts(): Observable<SellerProduct[]> {
-    return this.http.get<SellerProduct[]>(`${this.BASE}/products/seller`);
+  // ── Products (scoped to store) ────────────────────────────────────────────
+
+  getSellerProducts(storeId: number): Observable<SellerProduct[]> {
+    return this.http.get<SellerProduct[]>(`${this.BASE}/stores/${storeId}/products`);
   }
 
-  getProduct(id: number): Observable<SellerProduct> {
-    return this.http.get<SellerProduct>(`${this.BASE}/products/${id}`);
+  getProduct(storeId: number, id: number): Observable<SellerProduct> {
+    return this.http.get<SellerProduct>(`${this.BASE}/stores/${storeId}/products/${id}`);
   }
 
-  createProduct(req: CreateProductRequest): Observable<SellerProduct> {
-    return this.http.post<SellerProduct>(`${this.BASE}/products`, req);
+  createProduct(storeId: number, req: CreateProductRequest): Observable<SellerProduct> {
+    return this.http.post<SellerProduct>(`${this.BASE}/stores/${storeId}/products`, req);
   }
 
-  updateProduct(id: number, req: Partial<CreateProductRequest>): Observable<SellerProduct> {
-    return this.http.patch<SellerProduct>(`${this.BASE}/products/${id}`, req);
+  updateProduct(storeId: number, id: number, req: Partial<CreateProductRequest>): Observable<SellerProduct> {
+    return this.http.patch<SellerProduct>(`${this.BASE}/stores/${storeId}/products/${id}`, req);
   }
 
-  publishProduct(id: number): Observable<SellerProduct> {
-    return this.http.patch<SellerProduct>(`${this.BASE}/products/${id}/publish`, {});
+  publishProduct(storeId: number, id: number): Observable<SellerProduct> {
+    return this.http.patch<SellerProduct>(`${this.BASE}/stores/${storeId}/products/${id}/publish`, {});
   }
 
-  deactivateProduct(id: number): Observable<SellerProduct> {
-    return this.http.patch<SellerProduct>(`${this.BASE}/products/${id}/deactivate`, {});
+  deactivateProduct(storeId: number, id: number): Observable<SellerProduct> {
+    return this.http.patch<SellerProduct>(`${this.BASE}/stores/${storeId}/products/${id}/deactivate`, {});
   }
 
-  activateProduct(id: number): Observable<SellerProduct> {
-    return this.http.patch<SellerProduct>(`${this.BASE}/products/${id}/activate`, {});
+  activateProduct(storeId: number, id: number): Observable<SellerProduct> {
+    return this.http.patch<SellerProduct>(`${this.BASE}/stores/${storeId}/products/${id}/activate`, {});
   }
 
-  deleteProduct(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.BASE}/products/${id}`);
+  deleteProduct(storeId: number, id: number): Observable<void> {
+    return this.http.delete<void>(`${this.BASE}/stores/${storeId}/products/${id}`);
   }
 
-  addVariant(productId: number, req: CreateVariantRequest): Observable<ProductVariant> {
-    return this.http.post<ProductVariant>(`${this.BASE}/products/${productId}/variants`, req);
+  // ── Variants ──────────────────────────────────────────────────────────────
+
+  addVariant(storeId: number, productId: number, req: CreateVariantRequest): Observable<ProductVariant> {
+    return this.http.post<ProductVariant>(`${this.BASE}/stores/${storeId}/products/${productId}/variants`, req);
   }
 
-  deleteVariant(productId: number, variantId: number): Observable<void> {
-    return this.http.delete<void>(`${this.BASE}/products/${productId}/variants/${variantId}`);
+  deactivateVariant(storeId: number, productId: number, variantId: number): Observable<ProductVariant> {
+    return this.http.patch<ProductVariant>(`${this.BASE}/stores/${storeId}/products/${productId}/variants/${variantId}/deactivate`, {});
   }
 
-  getImages(productId: number): Observable<ProductImage[]> {
-    return this.http.get<ProductImage[]>(`${this.BASE}/products/${productId}/images`);
+  activateVariant(storeId: number, productId: number, variantId: number): Observable<ProductVariant> {
+    return this.http.patch<ProductVariant>(`${this.BASE}/stores/${storeId}/products/${productId}/variants/${variantId}/activate`, {});
   }
 
-  uploadImage(productId: number, file: File): Observable<ProductImage> {
+  deleteVariant(storeId: number, productId: number, variantId: number): Observable<void> {
+    return this.http.delete<void>(`${this.BASE}/stores/${storeId}/products/${productId}/variants/${variantId}`);
+  }
+
+  // ── Images ────────────────────────────────────────────────────────────────
+
+  getImages(storeId: number, productId: number): Observable<ProductImage[]> {
+    return this.http.get<ProductImage[]>(`${this.BASE}/stores/${storeId}/products/${productId}/images`);
+  }
+
+  uploadImage(storeId: number, productId: number, file: File): Observable<ProductImage> {
     const form = new FormData();
     form.append('file', file);
-    return this.http.post<ProductImage>(`${this.BASE}/products/${productId}/images`, form);
+    return this.http.post<ProductImage>(`${this.BASE}/stores/${storeId}/products/${productId}/images`, form);
   }
 
-  deleteImage(productId: number, imageId: number): Observable<void> {
-    return this.http.delete<void>(`${this.BASE}/products/${productId}/images/${imageId}`);
+  deleteImage(storeId: number, productId: number, imageId: number): Observable<void> {
+    return this.http.delete<void>(`${this.BASE}/stores/${storeId}/products/${productId}/images/${imageId}`);
   }
+
+  // ── Inventory (unchanged endpoints) ──────────────────────────────────────
 
   updateInventory(productId: number, variantId: number, req: InventoryRequest): Observable<void> {
     return this.http.post<void>(
@@ -103,9 +121,9 @@ export class SellerProductService {
     opts: { page?: number; size?: number; reason?: MovementReason } = {}
   ): Observable<MovementsPage> {
     const params: Record<string, string> = {};
-    if (opts.page  !== undefined) params['page']   = String(opts.page);
-    if (opts.size  !== undefined) params['size']   = String(opts.size);
-    if (opts.reason)              params['reason'] = opts.reason;
+    if (opts.page   !== undefined) params['page']   = String(opts.page);
+    if (opts.size   !== undefined) params['size']   = String(opts.size);
+    if (opts.reason)               params['reason'] = opts.reason;
     return this.http.get<MovementsPage>(
       `${this.BASE}/inventory/products/${productId}/variants/${variantId}/movements`,
       { params }

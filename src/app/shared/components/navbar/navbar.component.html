@@ -25,7 +25,7 @@
         <span class="nb-top-sup">Enviar a</span>
         <!-- Logged in: show default address city or fallback -->
         <ng-container *ngIf="isLoggedIn$ | async; else guestLocation">
-          <span class="nb-top-main" *ngIf="defaultAddress$ | async as def">{{ def.alias || def.city }}</span>
+          <span class="nb-top-main" *ngIf="defaultAddress$ | async as def">{{ def.alias || def.city.name }}</span>
           <span class="nb-top-main" *ngIf="!(defaultAddress$ | async)">Colombia 🇨🇴</span>
         </ng-container>
         <ng-template #guestLocation>
@@ -73,11 +73,11 @@
                   </div>
                   <div class="loc-item-info">
                     <p class="loc-item-alias">
-                      {{ addr.alias || addr.city }}
+                      {{ addr.alias || addr.city.name }}
                       <span class="loc-default-tag" *ngIf="addr.isDefault">Predeterminada</span>
                     </p>
                     <p class="loc-item-detail">{{ addr.street }}</p>
-                    <p class="loc-item-city">{{ addr.city }}<span *ngIf="addr.state">, {{ addr.state }}</span></p>
+                    <p class="loc-item-city">{{ addr.city.name }}<span *ngIf="addr.state">, {{ addr.state.name }}</span></p>
                   </div>
                   <button class="loc-del"
                           [class.loc-del-disabled]="addr.isDefault"
@@ -133,8 +133,15 @@
 
       <!-- Autocomplete dropdown -->
       <div class="nb-drop" [class.nb-drop-open]="dropOpen()">
-        <div class="nb-drop-loading" *ngIf="searching()">
-          Buscando<span class="nb-dots">...</span>
+        <div class="nb-drop-searching" *ngIf="searching()">
+          <div class="nb-skel-item" *ngFor="let i of [1,2,3]">
+            <div class="nb-skel-emoji"></div>
+            <div class="nb-skel-info">
+              <div class="nb-skel-line nb-skel-name"></div>
+              <div class="nb-skel-line nb-skel-brand"></div>
+            </div>
+            <div class="nb-skel-price"></div>
+          </div>
         </div>
         <ng-container *ngIf="!searching()">
           <div
@@ -172,7 +179,7 @@
           <span class="nb-top-main">Identifícate ▾</span>
         </ng-container>
         <ng-container *ngIf="isLoggedIn$ | async">
-          <span class="nb-top-sup">Hola, {{ (authUser$ | async)?.name }}</span>
+          <span class="nb-top-sup">Hola, {{ (authUser$ | async)?.name | titlecase }}</span>
           <span class="nb-top-main">Mi cuenta ▾</span>
         </ng-container>
       </div>
@@ -209,7 +216,7 @@
           <div class="nb-drop-user">
             <div class="nb-drop-avatar">{{ (authUser$ | async)?.name?.charAt(0) | uppercase }}</div>
             <div>
-              <p class="nb-drop-uname">{{ (authUser$ | async)?.name }}</p>
+              <p class="nb-drop-uname">{{ (authUser$ | async)?.name | titlecase }}</p>
               <p class="nb-drop-uemail">{{ (authUser$ | async)?.email }}</p>
             </div>
           </div>
@@ -251,9 +258,9 @@
       <span class="nb-cart-label">Deseos</span>
     </button>
 
-    <!-- Cart: only for BUYER role (CUSTOMER in backend) and guests -->
+    <!-- Cart: visible para guests y usuarios con rol CUSTOMER -->
     <button class="nb-cart" (click)="openCart()"
-            *ngIf="(userRole$ | async) !== 'SELLER' && (userRole$ | async) !== 'STORE_ADMIN'">
+            *ngIf="!(isLoggedIn$ | async) || (canShop$ | async)">
       <div class="nb-cart-icon-wrap">
         <svg class="nb-cart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
@@ -295,11 +302,14 @@
       🔥 Ofertas del día
     </button>
 
-    <a *ngIf="(userRole$ | async) === 'STORE_ADMIN'" routerLink="/admin" class="nb-cat nb-admin">
+    <a *ngIf="hasAdmin$ | async" routerLink="/admin" class="nb-cat nb-admin">
       Panel Admin →
     </a>
-    <a *ngIf="(userRole$ | async) === 'SELLER'" routerLink="/seller" class="nb-cat nb-admin">
+    <a *ngIf="hasSeller$ | async" routerLink="/seller" class="nb-cat nb-seller">
       Panel Seller →
+    </a>
+    <a *ngIf="hasSeller$ | async" routerLink="/stores" class="nb-cat nb-stores">
+      Mis Tiendas
     </a>
 
   </div>

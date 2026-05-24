@@ -5,10 +5,11 @@ import { AsyncPipe, DatePipe, NgFor, NgIf, TitleCasePipe } from '@angular/common
 import { Observable, combineLatest, map, take } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { clearSelectedProduct, loadProduct, loadProducts } from '../../store/products/products.actions';
-import { selectSelectedProduct, selectProductsLoading, selectAllProducts } from '../../store/products/products.selectors';
+import { selectSelectedProduct, selectSelectedProductLoading, selectAllProducts } from '../../store/products/products.selectors';
 import { addCartItem, openCart } from '../../store/cart/cart.actions';
 import { selectIsLoggedIn } from '../../store/auth/auth.selectors';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
+import { apiCode } from '../../core/models/api-error.model';
 import { CartDrawerComponent } from '../cart/cart-drawer.component';
 import { ToastComponent } from '../../shared/components/toast/toast.component';
 import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
@@ -35,15 +36,16 @@ export class ProductDetailComponent implements OnInit {
   private reviewService = inject(ReviewService);
 
   product$          = this.store.select(selectSelectedProduct);
-  loading$          = this.store.select(selectProductsLoading);
+  selectedLoading$  = this.store.select(selectSelectedProductLoading);
   relatedProducts$!: Observable<Product[]>;
 
   isLoggedIn        = toSignal(this.store.select(selectIsLoggedIn), { initialValue: false });
 
   selectedAttributes = signal<Record<string, string>>({});
-  qty          = signal(1);
-  toastMessage = signal('');
-  currentSlide = signal(0);
+  qty            = signal(1);
+  toastMessage   = signal('');
+  currentSlide   = signal(0);
+  slideImgLoaded = signal(false);
 
   // Reviews state
   reviews         = signal<ReviewResponse[]>([]);
@@ -62,13 +64,20 @@ export class ProductDetailComponent implements OnInit {
   private currentProductId = 0;
 
   readonly colorHex = COLOR_HEX;
-  readonly slideBackgrounds = [
+  readonly fallbackBackgrounds = [
     'linear-gradient(135deg, #e8f7e2, #f5faf5)',
     'linear-gradient(135deg, #ddeaf7, #eef4fc)',
     'linear-gradient(135deg, #fdf5e2, #faf8f0)',
     'linear-gradient(135deg, #fde8f2, #faf0f6)',
   ];
   readonly starNums = [1, 2, 3, 4, 5];
+
+  productImages = computed(() => {
+    const p = this.productSignal();
+    return p?.images?.length ? p.images : [];
+  });
+
+  slideCount = computed(() => Math.max(this.productImages().length, 1));
 
   private productSignal = toSignal(this.store.select(selectSelectedProduct));
 
@@ -163,8 +172,7 @@ export class ProductDetailComponent implements OnInit {
       },
       error: err => {
         this.rvSubmitting.set(false);
-        const status = err?.status;
-        if (status === 409) this.rvError.set('Ya tienes una reseña para este producto.');
+        if (apiCode(err) === 'REVIEW_DUPLICATE') this.rvError.set('Ya tienes una reseña para este producto.');
         else this.rvError.set('No se pudo enviar la reseña. Intenta de nuevo.');
       },
     });
@@ -176,9 +184,26 @@ export class ProductDetailComponent implements OnInit {
     return '⏳ En revisión';
   }
 
-  setSlide(i: number) { this.currentSlide.set(i); }
-  prevSlide() { this.currentSlide.update(i => (i - 1 + this.slideBackgrounds.length) % this.slideBackgrounds.length); }
-  nextSlide() { this.currentSlide.update(i => (i + 1) % this.slideBackgrounds.length); }
+  setSlide(i: number) { this.slideImgLoaded.set(false); this.currentSlide.set(i); }
+  prevSlide() { this.slideImgLoaded.set(false); this.currentSlide.update(i => (i - 1 + this.slideCount()) % this.slideCount()); }
+  nextSlide() { this.slideImgLoaded.set(false); this.currentSlide.update(i => (i + 1) % this.slideCount()); }
+  onSlideImgLoad() { this.slideImgLoaded.set(true); }
+  onImgLoad(event: Event) {
+    const img = event.target as HTMLImageElement;
+    img.classList.add('loaded');
+    const skeleton = img.parentElement?.querySelector('.img-skeleton') as HTMLElement | null;
+    if (skeleton) skeleton.style.display = 'none';
+  }
+
+  isValueOutOfStock(groupName: string, value: string, product: Product): boolean {
+    if (!product.variants?.length) return false;
+    const sel = this.selectedAttributes();
+    const matching = product.variants.filter(v =>
+      v.attributes.some(a => a.attribute === groupName && a.value === value) &&
+      v.attributes.every(a => a.attribute === groupName || !sel[a.attribute] || sel[a.attribute] === a.value)
+    );
+    return matching.length === 0 || matching.every(v => v.stock === 0);
+  }
 
   selectAttribute(name: string, value: string) {
     this.selectedAttributes.update(attrs => ({ ...attrs, [name]: value }));
@@ -190,6 +215,10 @@ export class ProductDetailComponent implements OnInit {
     return product.variants.find(v =>
       v.attributes.every(a => sel[a.attribute] === a.value)
     ) ?? null;
+  }
+
+  variantDiscountPct(compareAt: number, price: number): number {
+    return Math.round((1 - price / compareAt) * 100);
   }
 
   availableStock(product: Product): number | null {
@@ -232,6 +261,7 @@ export class ProductDetailComponent implements OnInit {
       productTitle: product.name,
       sku:          target.sku,
       unitPrice:    target.price ?? product.price,
+      imageUrl:     product.images?.[0]?.url || product.image,
     }));
     this.store.dispatch(openCart());
     this.toastMessage.set(`${product.name} agregado al carrito 🎾 — ${Date.now()}`);
@@ -245,6 +275,9 @@ export class ProductDetailComponent implements OnInit {
   }
 
   onImgError(event: Event) {
-    (event.target as HTMLImageElement).style.display = 'none';
+    const img = event.target as HTMLImageElement;
+    img.style.display = 'none';
+    const skeleton = img.parentElement?.querySelector('.img-skeleton') as HTMLElement | null;
+    if (skeleton) skeleton.style.display = 'none';
   }
 }

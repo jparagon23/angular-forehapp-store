@@ -1,33 +1,42 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { AsyncPipe, NgFor, NgIf, UpperCasePipe } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { filter, take } from 'rxjs/operators';
+import { filter, skip, take } from 'rxjs/operators';
+import { CartService } from '../../core/services/cart.service';
+import { ShippingEstimateGroup, ShippingEstimateResponse } from '../../core/models/cart.model';
 import { selectSellerGroups, selectCartTotal, selectCartCount } from '../../store/cart/cart.selectors';
+import { removeCartItem } from '../../store/cart/cart.actions';
 import { selectIsLoggedIn, selectAuthUser } from '../../store/auth/auth.selectors';
 import { loadAddresses, createAddress } from '../../store/addresses/addresses.actions';
 import { selectAllAddresses, selectAddressesLoading, selectAddressesSaving } from '../../store/addresses/addresses.selectors';
 import { createOrder, resetCreateOrder } from '../../store/orders/orders.actions';
 import { selectCreatingOrder, selectCreatedOrder, selectCreateOrderError } from '../../store/orders/orders.selectors';
 import { Address, CreateAddressRequest } from '../../core/models/address.model';
+import { City, Country, State } from '../../core/models/location.model';
+import { LocationService } from '../../core/services/location.service';
+import { PaymentMethod } from '../../core/models/order.model';
 import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
 import { CouponService } from '../../core/services/coupon.service';
 import { AppliedCoupon, CouponValidationResponse } from '../../core/models/coupon.model';
+import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [AsyncPipe, NgFor, NgIf, RouterLink, CurrencyCopPipe, UpperCasePipe, ReactiveFormsModule, FormsModule],
+  imports: [AsyncPipe, NgFor, NgIf, RouterLink, CurrencyCopPipe, UpperCasePipe, ReactiveFormsModule, FormsModule, NavbarComponent],
   templateUrl: './checkout.component.html',
   styleUrl: './checkout.component.scss',
 })
 export class CheckoutComponent implements OnInit, OnDestroy {
-  private store         = inject(Store);
-  private router        = inject(Router);
-  private fb            = inject(FormBuilder);
-  private couponService = inject(CouponService);
+  private store           = inject(Store);
+  private router          = inject(Router);
+  private fb              = inject(FormBuilder);
+  private couponService   = inject(CouponService);
+  private locationService = inject(LocationService);
+  private cartService     = inject(CartService);
 
   sellerGroups$ = this.store.select(selectSellerGroups);
   total$        = this.store.select(selectCartTotal);
@@ -41,25 +50,39 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   creatingOrder$    = this.store.select(selectCreatingOrder);
   createOrderError$ = this.store.select(selectCreateOrderError);
+  createdOrder$     = this.store.select(selectCreatedOrder);
 
   selectedAddressId: number | null = null;
+  selectedPaymentMethod: PaymentMethod = 'MERCADO_PAGO';
   showAddressPicker = false;
   showAddressForm   = false;
 
-  // coupon state keyed by sellerId
-  couponInputs:   Record<number, string>                 = {};
-  couponLoading:  Record<number, boolean>                = {};
-  couponErrors:   Record<number, string>                 = {};
-  appliedCoupons: Record<number, AppliedCoupon>          = {};
+  // Location cascade for address form
+  addrCountries = signal<Country[]>([]);
+  addrStates    = signal<State[]>([]);
+  addrCities    = signal<City[]>([]);
+  addrCountryId = signal<number | null>(null);
+  addrStateId   = signal<number | null>(null);
+
+  // Shipping estimate
+  shippingEstimate  = signal<ShippingEstimateResponse | null>(null);
+  shippingLoading   = signal(false);
+  shippingError     = signal<string | null>(null);
+
+  removingItem = signal<number | null>(null);
+
+  // coupon state keyed by storeId
+  couponInputs:   Record<number, string>        = {};
+  couponLoading:  Record<number, boolean>       = {};
+  couponErrors:   Record<number, string>        = {};
+  appliedCoupons: Record<number, AppliedCoupon> = {};
 
   cartTotal = 0;
 
   addressForm = this.fb.group({
     alias:   [''],
     street:  ['', [Validators.required, Validators.maxLength(255)]],
-    city:    ['', [Validators.required, Validators.maxLength(100)]],
-    state:   [''],
-    country: ['', [Validators.required, Validators.maxLength(100)]],
+    cityId:  [null as number | null, Validators.required],
     zipCode: [''],
   });
 
@@ -76,12 +99,16 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         return;
       }
       this.store.dispatch(loadAddresses());
+      this.locationService.getCountries().subscribe(cs => this.addrCountries.set(cs));
       this.addrSub = this.addresses$.pipe(
         filter(addrs => addrs.length > 0),
         take(1),
       ).subscribe(addrs => {
         const def = addrs.find(a => a.isDefault) ?? addrs[0];
-        if (!this.selectedAddressId) this.selectedAddressId = def.id;
+        if (!this.selectedAddressId) {
+          this.selectedAddressId = def.id;
+          this.loadShippingEstimate(def.id);
+        }
       });
     });
 
@@ -92,11 +119,13 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.totalSub = this.total$.subscribe(t => (this.cartTotal = t));
 
     this.orderSub = this.store.select(selectCreatedOrder).pipe(
-      filter(order => order !== null && order.checkoutUrl !== null),
+      filter(order => order !== null),
       take(1),
     ).subscribe(order => {
       this.redeemAll(order!.orderId).then(() => {
-        window.location.href = order!.checkoutUrl!;
+        if (order!.checkoutUrl) {
+          window.location.href = order!.checkoutUrl;
+        }
       });
     });
   }
@@ -114,9 +143,34 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   selectAddress(id: number) {
     this.selectedAddressId = id;
     this.showAddressPicker = false;
+    this.loadShippingEstimate(id);
+  }
+
+  private loadShippingEstimate(addressId: number) {
+    this.shippingLoading.set(true);
+    this.shippingError.set(null);
+    this.cartService.getShippingEstimate(addressId).subscribe({
+      next: est => {
+        this.shippingEstimate.set(est);
+        this.shippingLoading.set(false);
+      },
+      error: () => {
+        this.shippingEstimate.set(null);
+        this.shippingError.set('No se pudo calcular el costo de envío');
+        this.shippingLoading.set(false);
+      },
+    });
+  }
+
+  getGroupShipping(storeId: number): ShippingEstimateGroup | null {
+    return this.shippingEstimate()?.sellerGroups.find(g => g.storeId === storeId) ?? null;
   }
 
   openAddressForm() {
+    this.addrCountryId.set(null);
+    this.addrStateId.set(null);
+    this.addrStates.set([]);
+    this.addrCities.set([]);
     this.addressForm.reset();
     this.showAddressForm = true;
   }
@@ -126,15 +180,36 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.addressForm.reset();
   }
 
+  onAddrCountryChange(event: Event) {
+    const id = Number((event.target as HTMLSelectElement).value) || null;
+    this.addrCountryId.set(id);
+    this.addrStateId.set(null);
+    this.addrStates.set([]);
+    this.addrCities.set([]);
+    this.addressForm.patchValue({ cityId: null });
+    if (id) this.locationService.getStates(id).subscribe(ss => this.addrStates.set(ss));
+  }
+
+  onAddrStateChange(event: Event) {
+    const id = Number((event.target as HTMLSelectElement).value) || null;
+    this.addrStateId.set(id);
+    this.addrCities.set([]);
+    this.addressForm.patchValue({ cityId: null });
+    if (id) this.locationService.getCities(id).subscribe(cs => this.addrCities.set(cs));
+  }
+
+  onAddrCityChange(event: Event) {
+    const id = Number((event.target as HTMLSelectElement).value) || null;
+    this.addressForm.patchValue({ cityId: id });
+  }
+
   submitAddress() {
     if (this.addressForm.invalid) { this.addressForm.markAllAsTouched(); return; }
     const v = this.addressForm.getRawValue();
     const req: CreateAddressRequest = {
       alias:     v.alias   || undefined,
       street:    v.street!,
-      city:      v.city!,
-      state:     v.state   || undefined,
-      country:   v.country!,
+      cityId:    v.cityId!,
       zipCode:   v.zipCode || undefined,
       isDefault: true,
     };
@@ -143,7 +218,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       this.addressesSaving$.pipe(filter(s => !s), take(1)).subscribe(() => {
         this.addresses$.pipe(take(1)).subscribe(addresses => {
           const newAddr = addresses.find(a => a.isDefault) ?? addresses[addresses.length - 1];
-          if (newAddr) this.selectedAddressId = newAddr.id;
+          if (newAddr) {
+            this.selectedAddressId = newAddr.id;
+            this.loadShippingEstimate(newAddr.id);
+          }
           this.showAddressForm = false;
           this.showAddressPicker = false;
         });
@@ -156,50 +234,71 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     return !!(c?.invalid && c.touched);
   }
 
-  applyCoupon(sellerId: number, subtotal: number) {
-    const code = (this.couponInputs[sellerId] ?? '').trim().toUpperCase();
+  applyCoupon(storeId: number, subtotal: number) {
+    const code = (this.couponInputs[storeId] ?? '').trim().toUpperCase();
     if (!code) return;
-    this.couponLoading[sellerId] = true;
-    this.couponErrors[sellerId]  = '';
-    this.couponService.validate({ code, sellerId, orderAmount: subtotal }).subscribe({
+    this.couponLoading[storeId] = true;
+    this.couponErrors[storeId]  = '';
+    this.couponService.validate({ code, storeId, orderAmount: subtotal }).subscribe({
       next: (res: CouponValidationResponse) => {
-        this.appliedCoupons[sellerId] = {
-          sellerId,
-          code: res.code,
+        this.appliedCoupons[storeId] = {
+          storeId,
+          code:           res.code,
           discountAmount: res.discountAmount,
           finalAmount:    res.finalAmount,
           discountType:   res.discountType,
           discountValue:  res.discountValue,
         };
-        this.couponLoading[sellerId] = false;
+        this.couponLoading[storeId] = false;
       },
       error: (err) => {
         const msg = err?.error?.message ?? 'Cupón no válido';
-        this.couponErrors[sellerId]  = msg;
-        this.couponLoading[sellerId] = false;
-        delete this.appliedCoupons[sellerId];
+        this.couponErrors[storeId]  = msg;
+        this.couponLoading[storeId] = false;
+        delete this.appliedCoupons[storeId];
       },
     });
   }
 
-  removeCoupon(sellerId: number) {
-    delete this.appliedCoupons[sellerId];
-    this.couponInputs[sellerId] = '';
-    this.couponErrors[sellerId] = '';
+  removeCoupon(storeId: number) {
+    delete this.appliedCoupons[storeId];
+    this.couponInputs[storeId] = '';
+    this.couponErrors[storeId] = '';
+  }
+
+  removeItem(itemId: number) {
+    this.removingItem.set(itemId);
+    this.store.dispatch(removeCartItem({ itemId }));
+    this.sellerGroups$.pipe(skip(1), take(1)).subscribe(groups => {
+      this.removingItem.set(null);
+      const activeStoreIds = new Set(groups.map(g => g.storeId));
+      Object.keys(this.appliedCoupons).forEach(key => {
+        if (!activeStoreIds.has(Number(key))) {
+          delete this.appliedCoupons[Number(key)];
+        }
+      });
+      if (groups.length === 0) {
+        this.router.navigate(['/']);
+        return;
+      }
+      if (this.selectedAddressId) {
+        this.loadShippingEstimate(this.selectedAddressId);
+      }
+    });
   }
 
   get totalWithDiscounts(): number {
-    const totalDiscount = Object.values(this.appliedCoupons)
-      .reduce((sum, c) => sum + c.discountAmount, 0);
-    return this.cartTotal - totalDiscount;
+    const shipping  = this.shippingEstimate()?.shippingTotal ?? 0;
+    const discount  = Object.values(this.appliedCoupons).reduce((sum, c) => sum + c.discountAmount, 0);
+    return this.cartTotal + shipping - discount;
   }
 
   get totalDiscount(): number {
     return Object.values(this.appliedCoupons).reduce((sum, c) => sum + c.discountAmount, 0);
   }
 
-  getGroupTotal(sellerId: number, subtotal: number): number {
-    return this.appliedCoupons[sellerId]?.finalAmount ?? subtotal;
+  getGroupTotal(storeId: number, subtotal: number): number {
+    return this.appliedCoupons[storeId]?.finalAmount ?? subtotal;
   }
 
   private async redeemAll(orderId: number): Promise<void> {
@@ -208,7 +307,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       groups.map(c =>
         this.couponService.redeem({
           code:        c.code,
-          sellerId:    c.sellerId,
+          storeId:     c.storeId,
           orderAmount: c.finalAmount + c.discountAmount,
           orderId,
         }).toPromise().catch(() => {})
@@ -216,8 +315,13 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     );
   }
 
+  isSelectedAddressCali(addresses: Address[]): boolean {
+    const addr = this.getSelected(addresses);
+    return addr?.city?.name?.toLowerCase() === 'cali';
+  }
+
   confirm() {
     if (!this.selectedAddressId) return;
-    this.store.dispatch(createOrder({ addressId: this.selectedAddressId }));
+    this.store.dispatch(createOrder({ addressId: this.selectedAddressId, paymentMethod: this.selectedPaymentMethod }));
   }
 }

@@ -12,30 +12,34 @@
     <!-- CAROUSEL -->
     <div class="carousel-wrap">
       <div class="carousel-main">
-        <button class="carousel-btn prev" (click)="prevSlide()">&#8249;</button>
-        <div class="carousel-slide" [style.background]="slideBackgrounds[currentSlide()]">
-          <img *ngIf="currentSlide() === 0 && product.image"
-               class="slide-real-img" [src]="product.image" [alt]="product.name"
-               (error)="onImgError($event)">
-          <span class="carousel-emoji" *ngIf="currentSlide() !== 0 || !product.image">{{ product.emoji }}</span>
+        <button class="carousel-btn prev" (click)="prevSlide()" *ngIf="slideCount() > 1">&#8249;</button>
+        <div class="carousel-slide" [style.background]="fallbackBackgrounds[currentSlide() % fallbackBackgrounds.length]">
+          <ng-container *ngIf="productImages().length; else emojiSlide">
+            <div class="slide-skeleton sk" *ngIf="!slideImgLoaded()"></div>
+            <img class="slide-real-img" [class.loaded]="slideImgLoaded()"
+                 [src]="productImages()[currentSlide()].url" [alt]="product.name"
+                 (load)="onSlideImgLoad()" (error)="onImgError($event)">
+          </ng-container>
+          <ng-template #emojiSlide>
+            <span class="carousel-emoji">{{ product.emoji }}</span>
+          </ng-template>
         </div>
-        <button class="carousel-btn next" (click)="nextSlide()">&#8250;</button>
+        <button class="carousel-btn next" (click)="nextSlide()" *ngIf="slideCount() > 1">&#8250;</button>
       </div>
-      <div class="carousel-thumbs">
+      <div class="carousel-thumbs" *ngIf="productImages().length > 1">
         <button
-          *ngFor="let bg of slideBackgrounds; let i = index"
+          *ngFor="let img of productImages(); let i = index"
           class="carousel-thumb"
           [class.active]="currentSlide() === i"
-          [style.background]="bg"
+          [style.background]="fallbackBackgrounds[i % fallbackBackgrounds.length]"
           (click)="setSlide(i)">
-          <img *ngIf="i === 0 && product.image" class="thumb-real-img"
-               [src]="product.image" [alt]="product.name" (error)="onImgError($event)">
-          <span *ngIf="i !== 0 || !product.image">{{ product.emoji }}</span>
+          <img class="thumb-real-img" [src]="img.url" [alt]="product.name"
+               (load)="onImgLoad($event)" (error)="onImgError($event)">
         </button>
       </div>
-      <div class="carousel-dots">
+      <div class="carousel-dots" *ngIf="productImages().length > 1">
         <button
-          *ngFor="let bg of slideBackgrounds; let i = index"
+          *ngFor="let img of productImages(); let i = index"
           class="dot"
           [class.active]="currentSlide() === i"
           (click)="setSlide(i)">
@@ -48,8 +52,36 @@
       <div class="product-brand-badge">{{ product.brand }}</div>
       <h1 class="product-name">{{ product.name }}</h1>
       <p class="product-desc">{{ product.desc }}</p>
-      <div class="product-price">
-        {{ (selectedVariant(product)?.price ?? product.price) | currencyCop }}
+
+      <div class="store-badge" *ngIf="product.store">
+        <img *ngIf="product.store.logoUrl" class="store-logo" [src]="product.store.logoUrl" [alt]="product.store.name">
+        <div *ngIf="!product.store.logoUrl" class="store-logo-fallback">
+          {{ product.store.name[0].toUpperCase() }}
+        </div>
+        <span class="store-name">{{ product.store.name }}</span>
+      </div>
+      <div class="product-price-block">
+        <ng-container *ngIf="selectedVariant(product) as v">
+          <span class="product-compare-price"
+            *ngIf="v.compareAtPrice && v.compareAtPrice > v.price">
+            {{ v.compareAtPrice | currencyCop }}
+          </span>
+          <span class="product-price">{{ v.price | currencyCop }}</span>
+          <span class="product-discount-badge"
+            *ngIf="v.compareAtPrice && v.compareAtPrice > v.price">
+            -{{ variantDiscountPct(v.compareAtPrice, v.price) }}%
+          </span>
+        </ng-container>
+        <ng-container *ngIf="!selectedVariant(product)">
+          <span class="product-price">{{ product.price | currencyCop }}</span>
+        </ng-container>
+      </div>
+
+      <div class="free-ship-badge" *ngIf="product.freeShipping">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+        </svg>
+        Envío gratis
       </div>
 
       <ng-container *ngIf="attributeGroups().length">
@@ -66,6 +98,8 @@
             <button *ngFor="let val of group.values"
               class="size-opt"
               [class.active]="selectedAttributes()[group.name] === val"
+              [class.out-of-stock]="isValueOutOfStock(group.name, val, product)"
+              [disabled]="isValueOutOfStock(group.name, val, product)"
               (click)="selectAttribute(group.name, val)">
               {{ val }}
             </button>
@@ -239,10 +273,11 @@
       <h2 class="section-title">Productos relacionados</h2>
       <div class="related-grid">
         <a class="related-card" *ngFor="let rp of related" [routerLink]="['/product', rp.id]">
-          <div class="related-img" [style.background]="slideBackgrounds[0]">
-            <img *ngIf="rp.image" [src]="rp.image" [alt]="rp.name" class="related-real-img"
-                 (error)="onImgError($event)">
+          <div class="related-img" [style.background]="fallbackBackgrounds[0]">
             <span *ngIf="!rp.image">{{ rp.emoji }}</span>
+            <div class="img-skeleton sk" *ngIf="rp.image"></div>
+            <img *ngIf="rp.image" [src]="rp.image" [alt]="rp.name" class="related-real-img"
+                 (load)="onImgLoad($event)" (error)="onImgError($event)">
           </div>
           <div class="related-info">
             <span class="related-brand">{{ rp.brand }}</span>
@@ -258,18 +293,14 @@
 
 <ng-template #loadingOrNotFound>
   <!-- Skeleton mientras carga -->
-  <ng-container *ngIf="loading$ | async; else notFound">
+  <ng-container *ngIf="selectedLoading$ | async; else notFound">
     <div class="product-layout">
 
       <!-- Carousel skeleton -->
       <div class="carousel-wrap">
         <div class="sk sk-img"></div>
-        <div class="sk-thumbs">
-          <div class="sk sk-thumb" *ngFor="let t of [1,2,3,4]"></div>
-        </div>
-        <div class="sk-dots">
-          <div class="sk sk-dot" *ngFor="let t of [1,2,3,4]"></div>
-        </div>
+        <div class="sk-thumbs"></div>
+        <div class="sk-dots"></div>
       </div>
 
       <!-- Info skeleton -->

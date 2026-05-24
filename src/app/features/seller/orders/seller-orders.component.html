@@ -57,7 +57,9 @@
 
 <!-- Orders list -->
 <div class="so-list" *ngIf="!loading() && !error() && filtered().length">
-  <div class="so-card" *ngFor="let g of filtered()" [class.so-card-open]="expandedId() === g.groupId">
+  <div class="so-card" *ngFor="let g of filtered()"
+       [class.so-card-open]="expandedId() === g.groupId"
+       [class.so-card-cod]="g.paymentMethod === 'CASH_ON_DELIVERY'">
 
     <!-- Card header (always visible) -->
     <div class="so-card-head" (click)="toggleExpand(g.groupId)">
@@ -68,40 +70,41 @@
              stroke-linecap="round" stroke-linejoin="round">
           <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
         </svg>
-        {{ g.buyerName }}
+        {{ g.buyerName | titlecase }}
       </div>
 
       <div class="so-date" *ngIf="relevantDate(g)">{{ relevantDate(g) | date:'dd MMM yyyy' }}</div>
       <div class="so-items-count">{{ g.items.length }} ítem{{ g.items.length !== 1 ? 's' : '' }}</div>
       <div class="so-total">{{ g.subtotal | currencyCop }}</div>
       <span class="so-badge" [ngClass]="statusClass(g.status)">{{ statusLabel(g.status) }}</span>
+      <span class="so-pay-badge" [ngClass]="paymentClass(g)">
+        <svg *ngIf="g.paymentMethod === 'CASH_ON_DELIVERY'" width="13" height="13"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="6" width="20" height="12" rx="2"/>
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M6 12h.01M18 12h.01"/>
+        </svg>
+        {{ paymentLabel(g) }}
+      </span>
 
       <!-- Action area -->
       <div class="so-card-actions" (click)="$event.stopPropagation()">
 
-        <!-- PREPARING: mostrar botón o formulario inline de guía -->
-        <ng-container *ngIf="g.status === 'PREPARING' && !cancelMode().has(g.groupId)">
-          <button *ngIf="!shippingMode().has(g.groupId)"
-                  class="so-btn so-btn-ship"
-                  (click)="startShip(g.groupId)">
-            Marcar enviado
-          </button>
-          <ng-container *ngIf="shippingMode().has(g.groupId)">
-            <input class="so-tracking-input"
-                   type="text"
-                   placeholder="Número de guía"
-                   [value]="trackingDraft()[g.groupId] ?? ''"
-                   (input)="setTracking(g.groupId, $any($event.target).value)" />
-            <button class="so-btn so-btn-ship"
-                    [disabled]="!trackingDraft()[g.groupId]?.trim() || actionLoading().has(g.groupId)"
-                    (click)="confirmShip(g.groupId)">
-              {{ actionLoading().has(g.groupId) ? 'Enviando...' : 'Confirmar' }}
-            </button>
-            <button class="so-btn so-btn-cancel" (click)="cancelShip(g.groupId)">
-              Cancelar
-            </button>
-          </ng-container>
-        </ng-container>
+        <!-- PENDING: marcar en preparación -->
+        <button *ngIf="g.status === 'PENDING' && !cancelMode().has(g.groupId)"
+                class="so-btn so-btn-prepare"
+                [disabled]="actionLoading().has(g.groupId)"
+                (click)="confirmPrepare(g.groupId)">
+          {{ actionLoading().has(g.groupId) ? 'Procesando...' : 'Preparar pedido' }}
+        </button>
+
+        <!-- PREPARING: abrir modal de envío -->
+        <button *ngIf="g.status === 'PREPARING' && !cancelMode().has(g.groupId)"
+                class="so-btn so-btn-ship"
+                (click)="startShip(g.groupId)">
+          Marcar enviado
+        </button>
 
         <!-- SHIPPED: confirmar entrega -->
         <button *ngIf="g.status === 'SHIPPED'"
@@ -112,7 +115,7 @@
         </button>
 
         <!-- PENDING / PREPARING: botón cancelar pedido -->
-        <button *ngIf="(g.status === 'PENDING' || g.status === 'PREPARING') && !cancelMode().has(g.groupId) && !shippingMode().has(g.groupId)"
+        <button *ngIf="(g.status === 'PENDING' || g.status === 'PREPARING') && !cancelMode().has(g.groupId)"
                 class="so-btn so-btn-cancel-order"
                 (click)="startCancel(g.groupId)">
           Cancelar pedido
@@ -182,7 +185,14 @@
         <tbody>
           <tr *ngFor="let item of g.items">
             <td class="so-sku">{{ item.sku }}</td>
-            <td>{{ item.productTitle }}</td>
+            <td>
+              {{ item.productTitle }}
+              <div class="so-attr-tags" *ngIf="item.attributes?.length">
+                <span class="so-attr-tag" *ngFor="let attr of item.attributes">
+                  {{ attr.attribute }}: {{ attr.value }}
+                </span>
+              </div>
+            </td>
             <td>{{ item.quantity }}</td>
             <td>{{ item.unitPrice | currencyCop }}</td>
             <td><strong>{{ item.subtotal | currencyCop }}</strong></td>
@@ -193,7 +203,45 @@
       <div class="so-card-total">
         Subtotal del grupo: <strong>{{ g.subtotal | currencyCop }}</strong>
       </div>
+      <div class="so-shipping-row">
+        <span>Envío:</span>
+        <span *ngIf="g.shippingCost === 0" class="so-free-badge">Gratis</span>
+        <strong *ngIf="g.shippingCost > 0">{{ g.shippingCost | currencyCop }}</strong>
+      </div>
     </div>
 
+  </div>
+</div>
+
+<!-- Ship modal -->
+<div class="so-modal-overlay" *ngIf="shipModal() !== null" (click)="closeShipModal()">
+  <div class="so-modal" (click)="$event.stopPropagation()">
+    <div class="so-modal-header">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+        <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+      </svg>
+      <h3 class="so-modal-title">Marcar como enviado</h3>
+    </div>
+    <p class="so-modal-desc">
+      Ingresa el número de guía para el pedido
+      <strong>#{{ modalOrder()?.orderId }}</strong>.
+    </p>
+    <label class="so-modal-label">Número de guía</label>
+    <input class="so-modal-input"
+           type="text"
+           placeholder="Ej. 9400111899223453234567"
+           [value]="shipModalTracking()"
+           (input)="shipModalTracking.set($any($event.target).value)"
+           (keydown.enter)="confirmShip()" />
+    <div class="so-modal-actions">
+      <button class="so-btn so-btn-cancel" (click)="closeShipModal()">Cancelar</button>
+      <button class="so-btn so-btn-ship"
+              [disabled]="!shipModalTracking().trim() || shipModalBusy()"
+              (click)="confirmShip()">
+        {{ shipModalBusy() ? 'Enviando...' : 'Confirmar envío' }}
+      </button>
+    </div>
   </div>
 </div>

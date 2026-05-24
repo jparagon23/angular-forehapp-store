@@ -26,30 +26,30 @@ export class CouponService {
   }
 
   // Seller endpoints
-  createCoupon(req: CreateCouponRequest): Observable<CouponResponse> {
-    return this.http.post<CouponResponse>(`${this.base}/seller/coupons`, req);
+  createCoupon(storeId: number, req: CreateCouponRequest): Observable<CouponResponse> {
+    return this.http.post<CouponResponse>(`${this.base}/stores/${storeId}/coupons`, req);
   }
 
-  getMyCoupons(page = 0, size = 20): Observable<CouponPageResponse> {
-    return this.http.get<CouponPageResponse>(`${this.base}/seller/coupons`, {
+  getMyCoupons(storeId: number, page = 0, size = 20): Observable<CouponPageResponse> {
+    return this.http.get<CouponPageResponse>(`${this.base}/stores/${storeId}/coupons`, {
       params: { page: page.toString(), size: size.toString() },
     });
   }
 
-  getMyCoupon(couponId: number): Observable<CouponResponse> {
-    return this.http.get<CouponResponse>(`${this.base}/seller/coupons/${couponId}`);
+  getMyCoupon(storeId: number, couponId: number): Observable<CouponResponse> {
+    return this.http.get<CouponResponse>(`${this.base}/stores/${storeId}/coupons/${couponId}`);
   }
 
-  updateCoupon(couponId: number, req: UpdateCouponRequest): Observable<CouponResponse> {
-    return this.http.patch<CouponResponse>(`${this.base}/seller/coupons/${couponId}`, req);
+  updateCoupon(storeId: number, couponId: number, req: UpdateCouponRequest): Observable<CouponResponse> {
+    return this.http.patch<CouponResponse>(`${this.base}/stores/${storeId}/coupons/${couponId}`, req);
   }
 
-  deactivateCoupon(couponId: number): Observable<CouponResponse> {
-    return this.http.patch<CouponResponse>(`${this.base}/seller/coupons/${couponId}/deactivate`, {});
+  deactivateCoupon(storeId: number, couponId: number): Observable<CouponResponse> {
+    return this.http.patch<CouponResponse>(`${this.base}/stores/${storeId}/coupons/${couponId}/deactivate`, {});
   }
 
-  reactivateCoupon(couponId: number): Observable<CouponResponse> {
-    return this.http.patch<CouponResponse>(`${this.base}/seller/coupons/${couponId}`, { status: 'ACTIVA' });
+  reactivateCoupon(storeId: number, couponId: number): Observable<CouponResponse> {
+    return this.http.patch<CouponResponse>(`${this.base}/stores/${storeId}/coupons/${couponId}`, { status: 'ACTIVA' });
   }
 
   // Admin endpoint

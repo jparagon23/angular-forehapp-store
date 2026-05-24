@@ -1,13 +1,21 @@
 // ── Shared ──────────────────────────────────────────────────────────────────
 
-export type OrderApiStatus = 'PENDING' | 'PAID' | 'CANCELLED';
+export type PaymentMethod = 'MERCADO_PAGO' | 'CASH' | 'TRANSFER' | 'CASH_ON_DELIVERY';
+export type PaymentStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'REFUNDED';
+export type OrderApiStatus = 'PENDING' | 'PAYMENT_CONFIRMED' | 'PAID' | 'CANCELLED';
 export type SellerGroupStatus = 'PENDING' | 'PREPARING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+
+export interface VariantAttributeDto {
+  attribute: string;
+  value: string;
+}
 
 export interface OrderItemResponse {
   itemId: number;
   variantId: number;
   sku: string;
   productTitle: string;
+  attributes: VariantAttributeDto[];
   quantity: number;
   unitPrice: number;
   subtotal: number;
@@ -17,17 +25,20 @@ export interface OrderItemResponse {
 
 export interface OrderSummaryDto {
   orderId: number;
-  status: OrderApiStatus;
+  paymentStatus: OrderApiStatus;
+  shippingStatus: SellerGroupStatus;
+  paymentMethod: PaymentMethod;
   total: number;
   createdAt: string;
 }
 
 export interface OrderSellerGroup {
   groupId: number;
-  sellerId: number;
-  sellerName: string;
+  storeId: number;
+  storeName: string;
   status: SellerGroupStatus;
   subtotal: number;
+  shippingCost: number;
   trackingNumber: string | null;
   shippedAt: string | null;
   items: OrderItemResponse[];
@@ -35,7 +46,8 @@ export interface OrderSellerGroup {
 
 export interface OrderResponse {
   orderId: number;
-  status: OrderApiStatus;
+  paymentStatus: OrderApiStatus;
+  paymentMethod: PaymentMethod;
   total: number;
   shippingAddress: string;
   shippingCity: string;
@@ -55,7 +67,10 @@ export interface SellerOrderGroupDetail {
   shippingCity: string;
   shippingCountry: string;
   status: SellerGroupStatus;
+  paymentMethod: PaymentMethod;
+  orderPaymentStatus: OrderApiStatus;
   subtotal: number;
+  shippingCost: number;
   trackingNumber: string | null;
   preparedAt: string | null;
   shippedAt: string | null;

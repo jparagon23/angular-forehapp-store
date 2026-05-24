@@ -24,9 +24,9 @@
       <div class="card" *ngFor="let product of products" (click)="goToProduct(product.id)">
         <div class="card-img">
           <span class="prod-emoji">{{ product.emoji }}</span>
+          <div class="img-skeleton" *ngIf="product.image"></div>
           <img class="prod-img" [src]="product.image" [alt]="product.name"
-               (error)="onImgError($event)">
-          <div class="card-img-overlay">Ver producto →</div>
+               (load)="onImgLoad($event)" (error)="onImgError($event)">
           <button *ngIf="isLoggedIn()" class="wish-btn" [class.active]="isWishlisted(product.id)"
                   (click)="toggleWishlist(product, $event)" aria-label="Lista de deseos">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -39,10 +39,27 @@
           <div class="card-brand">{{ product.brand }}</div>
           <div class="card-name">{{ product.name }}</div>
           <div class="card-desc">{{ product.desc }}</div>
-          <div class="card-price">{{ product.price | currencyCop }}</div>
+          <div class="card-price-row">
+            <span class="card-compare"
+              *ngIf="product.compareAtPrice && product.compareAtPrice > product.price">
+              {{ product.compareAtPrice | currencyCop }}
+            </span>
+            <span class="card-price">{{ product.price | currencyCop }}</span>
+            <span class="card-discount-badge"
+              *ngIf="product.compareAtPrice && product.compareAtPrice > product.price">
+              -{{ discountPct(product.compareAtPrice, product.price) }}%
+            </span>
+          </div>
+          <div class="card-free-ship" *ngIf="product.freeShipping">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+            </svg>
+            Envío gratis
+          </div>
           <button *ngIf="!hasVariations(product)" class="add-btn"
+            [disabled]="addingProductId() === product.id"
             (click)="addToCart(product, $event)">
-            + Agregar al carrito
+            {{ addingProductId() === product.id ? 'Agregando...' : '+ Agregar al carrito' }}
           </button>
           <button *ngIf="hasVariations(product)" class="add-btn add-btn--var"
             (click)="goToProduct(product.id); $event.stopPropagation()">
@@ -79,7 +96,9 @@
 
 <footer class="site-footer">
   &copy; 2026 <span>Forehapp Store</span> — Todos los derechos reservados
-  &nbsp;·&nbsp; <a routerLink="/admin">Panel Admin →</a>
+  <ng-container *ngIf="(userRole$ | async) === 'STORE_ADMIN'">
+    &nbsp;·&nbsp; <a routerLink="/admin">Panel Admin →</a>
+  </ng-container>
 </footer>
 
 <app-cart-drawer></app-cart-drawer>

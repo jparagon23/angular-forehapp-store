@@ -1,18 +1,24 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { DatePipe, NgClass, NgFor, NgIf, TitleCasePipe } from '@angular/common';
+import { Store } from '@ngrx/store';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { CurrencyCopPipe } from '../../../shared/pipes/currency-cop.pipe';
 import { OrderService } from '../../../core/services/order.service';
 import { SellerGroupStatus, SellerOrderGroupDetail } from '../../../core/models/order.model';
+import { selectActiveSellerStoreId } from '../../../store/seller/seller.selectors';
 
 @Component({
   selector: 'app-seller-orders',
   standalone: true,
-  imports: [NgFor, NgIf, NgClass, DatePipe, CurrencyCopPipe],
+  imports: [NgFor, NgIf, NgClass, DatePipe, TitleCasePipe, CurrencyCopPipe],
   templateUrl: './seller-orders.component.html',
   styleUrl: './seller-orders.component.scss',
 })
 export class SellerOrdersComponent implements OnInit {
   private orderService = inject(OrderService);
+  private ngrx         = inject(Store);
+
+  private storeId = toSignal(this.ngrx.select(selectActiveSellerStoreId), { initialValue: null });
 
   groups       = signal<SellerOrderGroupDetail[]>([]);
   loading      = signal(true);
@@ -20,11 +26,14 @@ export class SellerOrdersComponent implements OnInit {
   activeFilter = signal<SellerGroupStatus | null>(null);
   expandedId   = signal<number | null>(null);
 
-  shippingMode  = signal<Set<number>>(new Set());
-  trackingDraft = signal<Record<number, string>>({});
-  cancelMode    = signal<Set<number>>(new Set());
-  cancelReason  = signal<Record<number, string>>({});
-  actionLoading = signal<Set<number>>(new Set());
+  shipModal         = signal<number | null>(null);
+  shipModalTracking = signal<string>('');
+  cancelMode        = signal<Set<number>>(new Set());
+  cancelReason      = signal<Record<number, string>>({});
+  actionLoading     = signal<Set<number>>(new Set());
+
+  modalOrder    = computed(() => this.groups().find(g => g.groupId === this.shipModal()) ?? null);
+  shipModalBusy = computed(() => { const id = this.shipModal(); return id !== null && this.actionLoading().has(id); });
 
   filtered = computed(() => {
     const f = this.activeFilter();
@@ -44,7 +53,9 @@ export class SellerOrdersComponent implements OnInit {
   });
 
   ngOnInit() {
-    this.orderService.getSellerOrderGroups().subscribe({
+    const storeId = this.storeId();
+    if (!storeId) { this.loading.set(false); return; }
+    this.orderService.getSellerOrderGroups(storeId).subscribe({
       next:  groups => { this.groups.set(groups); this.loading.set(false); },
       error: ()     => { this.error.set('No se pudieron cargar los pedidos.'); this.loading.set(false); },
     });
@@ -55,26 +66,40 @@ export class SellerOrdersComponent implements OnInit {
   }
 
   startShip(groupId: number) {
-    this.shippingMode.update(s => { const n = new Set(s); n.add(groupId); return n; });
-    this.trackingDraft.update(d => ({ ...d, [groupId]: '' }));
+    this.shipModal.set(groupId);
+    this.shipModalTracking.set('');
   }
 
-  cancelShip(groupId: number) {
-    this.shippingMode.update(s => { const n = new Set(s); n.delete(groupId); return n; });
+  closeShipModal() {
+    this.shipModal.set(null);
+    this.shipModalTracking.set('');
   }
 
-  setTracking(groupId: number, value: string) {
-    this.trackingDraft.update(d => ({ ...d, [groupId]: value }));
+  confirmPrepare(groupId: number) {
+    const storeId = this.storeId();
+    if (!storeId) return;
+    this.setLoading(groupId, true);
+    this.orderService.prepareSellerGroup(storeId, groupId).subscribe({
+      next: () => {
+        this.patchGroup(groupId, 'PREPARING', { preparedAt: new Date().toISOString() });
+        this.setLoading(groupId, false);
+      },
+      error: () => this.setLoading(groupId, false),
+    });
   }
 
-  confirmShip(groupId: number) {
-    const tracking = (this.trackingDraft()[groupId] ?? '').trim();
+  confirmShip() {
+    const groupId = this.shipModal();
+    if (groupId === null) return;
+    const storeId = this.storeId();
+    if (!storeId) return;
+    const tracking = this.shipModalTracking().trim();
     if (!tracking) return;
     this.setLoading(groupId, true);
-    this.orderService.shipSellerGroup(groupId, tracking).subscribe({
+    this.orderService.shipSellerGroup(storeId, groupId, tracking).subscribe({
       next: () => {
         this.patchGroup(groupId, 'SHIPPED', { trackingNumber: tracking, shippedAt: new Date().toISOString() });
-        this.cancelShip(groupId);
+        this.closeShipModal();
         this.setLoading(groupId, false);
       },
       error: () => this.setLoading(groupId, false),
@@ -97,8 +122,10 @@ export class SellerOrdersComponent implements OnInit {
   confirmCancel(groupId: number) {
     const reason = (this.cancelReason()[groupId] ?? '').trim();
     if (!reason) return;
+    const storeId = this.storeId();
+    if (!storeId) return;
     this.setLoading(groupId, true);
-    this.orderService.cancelSellerGroup(groupId, reason).subscribe({
+    this.orderService.cancelSellerGroup(storeId, groupId, reason).subscribe({
       next: () => {
         this.patchGroup(groupId, 'CANCELLED', { cancelledAt: new Date().toISOString(), cancellationReason: reason });
         this.abortCancel(groupId);
@@ -109,8 +136,10 @@ export class SellerOrdersComponent implements OnInit {
   }
 
   confirmDeliver(groupId: number) {
+    const storeId = this.storeId();
+    if (!storeId) return;
     this.setLoading(groupId, true);
-    this.orderService.deliverSellerGroup(groupId).subscribe({
+    this.orderService.deliverSellerGroup(storeId, groupId).subscribe({
       next: () => {
         this.patchGroup(groupId, 'DELIVERED', { deliveredAt: new Date().toISOString() });
         this.setLoading(groupId, false);
@@ -121,6 +150,18 @@ export class SellerOrdersComponent implements OnInit {
 
   relevantDate(g: SellerOrderGroupDetail): string | null {
     return g.shippedAt ?? g.preparedAt ?? g.deliveredAt ?? null;
+  }
+
+  paymentLabel(g: SellerOrderGroupDetail): string {
+    if (g.paymentMethod === 'CASH_ON_DELIVERY') return 'Contra entrega';
+    if (g.orderPaymentStatus === 'PAID' || g.orderPaymentStatus === 'PAYMENT_CONFIRMED') return 'Pagado';
+    return 'Pago pendiente';
+  }
+
+  paymentClass(g: SellerOrderGroupDetail): string {
+    if (g.paymentMethod === 'CASH_ON_DELIVERY') return 'so-pay-cod';
+    if (g.orderPaymentStatus === 'PAID' || g.orderPaymentStatus === 'PAYMENT_CONFIRMED') return 'so-pay-paid';
+    return 'so-pay-pending';
   }
 
   statusLabel(s: SellerGroupStatus): string {

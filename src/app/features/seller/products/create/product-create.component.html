@@ -56,6 +56,19 @@
     </div>
 
     <div class="form-row">
+      <div class="form-group form-group--full">
+        <label class="toggle-label">
+          <input type="checkbox" formControlName="freeShipping" class="toggle-check" />
+          <span class="toggle-track">
+            <span class="toggle-thumb"></span>
+          </span>
+          <span class="toggle-text">Envío gratis para este producto</span>
+        </label>
+        <p class="toggle-hint">Si está activo, este producto no generará costo de envío independientemente de la zona.</p>
+      </div>
+    </div>
+
+    <div class="form-row">
       <!-- Categoría -->
       <div class="form-group">
         <label>Categoría <span class="req">*</span></label>
@@ -178,7 +191,7 @@
       <button type="submit" class="btn-secondary" [disabled]="addingVariant()">
         {{ addingVariant() ? 'Agregando…' : '+ Agregar variante' }}
       </button>
-      <button type="button" class="btn-primary" (click)="step.set(3)" [disabled]="!variants().length">
+      <button type="button" class="btn-primary" (click)="goToImages()" [disabled]="addingVariant()">
         Continuar → Imágenes
       </button>
     </div>
@@ -193,11 +206,15 @@
   <p class="wiz-card-hint">Sube al menos una imagen. Formatos: JPEG, PNG, WebP. Máx. 5 MB por archivo.</p>
 
   <!-- Grid de imágenes -->
-  <div class="img-grid" *ngIf="images().length">
+  <div class="img-grid" *ngIf="images().length || uploadingImage()">
     <div class="img-item" *ngFor="let img of images()">
-      <img [src]="img.url" alt="Imagen producto" />
+      <div class="img-skeleton" *ngIf="!loadedImageIds().has(img.id)"></div>
+      <img [src]="img.url" alt="Imagen producto"
+           [style.display]="loadedImageIds().has(img.id) ? 'block' : 'none'"
+           (load)="onImageLoad(img.id)" />
       <button class="img-remove" (click)="removeImage(img.id)" title="Eliminar">✕</button>
     </div>
+    <div class="img-item img-skeleton" *ngIf="uploadingImage()"></div>
   </div>
 
   <div class="img-upload-area">

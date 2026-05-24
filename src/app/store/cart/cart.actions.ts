@@ -15,6 +15,7 @@ export const addCartItem        = createAction('[Cart] Add Item', props<{
   productTitle?: string;
   sku?: string;
   unitPrice?: number;
+  imageUrl?: string;
 }>());
 export const addCartItemSuccess = createAction('[Cart] Add Item Success', props<{ cart: CartResponse }>());
 export const addCartItemFailure = createAction('[Cart] Add Item Failure', props<{ error: string }>());

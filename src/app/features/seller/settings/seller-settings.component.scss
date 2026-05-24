@@ -1,0 +1,70 @@
+.ss-header { margin-bottom: 24px; }
+.ss-title  { font-size: 1.5rem; font-weight: 800; color: #1a1a1a; margin-bottom: 4px; }
+.ss-sub    { color: #888; font-size: .9rem; }
+
+.ss-loading {
+  display: flex; justify-content: center; padding: 60px;
+}
+.ss-spin {
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.ss-card {
+  background: #fff; border: 1px solid #e8e8e8; border-radius: 14px;
+  padding: 28px; display: flex; gap: 20px; align-items: flex-start;
+  max-width: 560px;
+}
+.ss-card-icon {
+  width: 44px; height: 44px; border-radius: 10px;
+  background: #e8f5e9; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  svg { stroke: #2e7d32; }
+}
+.ss-card-body { flex: 1; }
+.ss-card-title { font-size: 1rem; font-weight: 700; color: #1a1a1a; margin-bottom: 6px; }
+.ss-card-desc  { font-size: .85rem; color: #666; line-height: 1.5; margin-bottom: 16px; }
+
+.ss-current {
+  font-size: .85rem; color: #2e7d32; font-weight: 600;
+  background: #e8f5e9; border: 1px solid #a5d6a7;
+  border-radius: 8px; padding: 8px 12px; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+  &--off { color: #999; background: #f5f5f5; border-color: #e0e0e0; font-weight: 400; }
+}
+.ss-clear-btn {
+  margin-left: auto; background: none; border: none;
+  color: #e53935; font-size: .78rem; font-weight: 600; cursor: pointer;
+  &:hover { text-decoration: underline; }
+  &:disabled { opacity: .5; cursor: default; }
+}
+
+.ss-label { display: block; font-size: .82rem; font-weight: 600; color: #555; margin-bottom: 6px; }
+.ss-input-row {
+  display: flex; align-items: center;
+  border: 1.5px solid #ddd; border-radius: 8px; overflow: hidden;
+  &:focus-within { border-color: #4caf50; }
+}
+.ss-prefix {
+  padding: 0 10px; background: #f5f5f5; border-right: 1.5px solid #ddd;
+  font-size: .9rem; color: #666; height: 40px; display: flex; align-items: center;
+}
+.ss-input {
+  flex: 1; border: none; outline: none; padding: 0 12px;
+  font-size: .9rem; height: 40px; background: transparent;
+  &:disabled { background: #fafafa; }
+}
+
+.ss-error { font-size: .82rem; color: #e53935; margin-top: 8px; }
+.ss-ok    { font-size: .82rem; color: #2e7d32; margin-top: 8px; font-weight: 600; }
+
+.ss-actions { margin-top: 16px; }
+.ss-btn-save {
+  height: 40px; padding: 0 24px;
+  background: #4caf50; color: #fff;
+  border: none; border-radius: 8px;
+  font-size: .9rem; font-weight: 700; cursor: pointer;
+  transition: background .15s;
+  &:hover { background: #388e3c; }
+  &:disabled { opacity: .6; cursor: default; }
+}

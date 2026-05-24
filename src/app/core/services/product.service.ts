@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { Product, ProductVariations } from '../models/product.model';
+import { Product, ProductImage, ProductStore, ProductVariations } from '../models/product.model';
 import { Category } from '../models/seller-product.model';
 
 // Formato del listado público (sin variantes detalladas)
@@ -14,8 +14,11 @@ interface ApiProductSummary {
   line: string | null;
   category: string;
   minPrice: number;
+  compareAtPrice: number | null;
   variantCount: number;
   createdAt: string;
+  thumbnailUrl: string | null;
+  freeShipping?: boolean;
 }
 
 interface PageResponse<T> {
@@ -78,10 +81,14 @@ export class ProductService {
           sizes.size || colors.size
             ? { sizes: sizes.size ? [...sizes] : undefined, colors: colors.size ? [...colors] : undefined }
             : (raw.variantCount > 0 ? { sizes: [''] } : undefined);
+        const images: ProductImage[] = (raw.images ?? []).map((img: any) => ({
+          id: img.id, url: img.url, displayOrder: img.displayOrder ?? 0,
+        }));
         return {
           id:         raw.id,
           emoji:      EMOJI_MAP[raw.category] ?? '📦',
-          image:      raw.images?.[0]?.url ?? '',
+          image:      images[0]?.url ?? '',
+          images,
           brand:      raw.brand,
           name:       raw.title,
           desc:       raw.description ?? raw.line ?? '',
@@ -89,8 +96,10 @@ export class ProductService {
           price:      minPrice,
           stock:      raw.variants?.reduce((s: number, v: any) => s + v.stock, 0) ?? 0,
           status:     raw.status === 'ACTIVE' ? 'Activo' : raw.status === 'DRAFT' ? 'Borrador' : 'Agotado',
+          freeShipping: raw.freeShipping ?? false,
           variations,
           variants:   raw.variants ?? [],
+          store:      raw.store ? (raw.store as ProductStore) : undefined,
         } as Product;
       })
     );
@@ -120,19 +129,21 @@ export class ProductService {
   private mapProduct(raw: ApiProductSummary): Product {
     // Si tiene variantes, el usuario debe ir al detalle a elegir opciones
     const variations: ProductVariations | undefined =
-      raw.variantCount > 0 ? { sizes: [''] } : undefined;
+      raw.variantCount > 1 ? { sizes: [''] } : undefined;
 
     return {
-      id:         raw.id,
-      emoji:      EMOJI_MAP[raw.category] ?? '📦',
-      image:      '',
-      brand:      raw.brand,
-      name:       raw.title,
-      desc:       raw.line ?? '',
-      cat:        raw.category,
-      price:      raw.minPrice,
-      stock:      raw.variantCount,
-      status:     'Activo',
+      id:             raw.id,
+      emoji:          EMOJI_MAP[raw.category] ?? '📦',
+      image:          raw.thumbnailUrl ?? '',
+      brand:          raw.brand,
+      name:           raw.title,
+      desc:           raw.line ?? '',
+      cat:            raw.category,
+      price:          raw.minPrice,
+      compareAtPrice: raw.compareAtPrice ?? null,
+      stock:          raw.variantCount,
+      status:         'Activo',
+      freeShipping:   raw.freeShipping ?? false,
       variations,
     };
   }

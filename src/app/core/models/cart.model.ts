@@ -8,11 +8,12 @@ export interface CartItemResponse {
   subtotal: number;
   priceChanged: boolean;
   previousPrice: number | null;
+  thumbnailUrl?: string;
 }
 
 export interface CartSellerGroup {
-  sellerId: number;
-  sellerName: string;
+  storeId: number;
+  storeName: string;
   subtotal: number;
   items: CartItemResponse[];
 }
@@ -23,4 +24,19 @@ export interface CartResponse {
   updatedAt: string | null;
   total: number;
   sellerGroups: CartSellerGroup[];
+}
+
+export interface ShippingEstimateGroup {
+  storeId: number;
+  storeName: string;
+  subtotal: number;
+  shippingCost: number;
+  freeShipping: boolean;
+}
+
+export interface ShippingEstimateResponse {
+  sellerGroups: ShippingEstimateGroup[];
+  itemsTotal: number;
+  shippingTotal: number;
+  grandTotal: number;
 }

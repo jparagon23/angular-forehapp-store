@@ -83,6 +83,11 @@ export const routes: Routes = [
         canActivate: [sellerGuard],
       },
       {
+        path: 'products/:id/edit',
+        loadComponent: () => import('./features/seller/products/edit/product-edit.component').then(m => m.ProductEditComponent),
+        canActivate: [sellerGuard],
+      },
+      {
         path: 'orders',
         loadComponent: () => import('./features/seller/orders/seller-orders.component').then(m => m.SellerOrdersComponent),
         canActivate: [sellerGuard],
@@ -92,7 +97,22 @@ export const routes: Routes = [
         loadComponent: () => import('./features/seller/coupons/seller-coupons.component').then(m => m.SellerCouponsComponent),
         canActivate: [sellerGuard],
       },
+      {
+        path: 'settings',
+        loadComponent: () => import('./features/seller/settings/seller-settings.component').then(m => m.SellerSettingsComponent),
+        canActivate: [sellerGuard],
+      },
     ],
+  },
+  {
+    path: 'stores',
+    loadComponent: () => import('./features/stores/my-stores.component').then(m => m.MyStoresComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'stores/:storeId',
+    loadComponent: () => import('./features/stores/store-detail/store-detail.component').then(m => m.StoreDetailComponent),
+    canActivate: [authGuard],
   },
   {
     path: 'admin',
@@ -109,6 +129,8 @@ export const routes: Routes = [
       { path: 'discounts', loadComponent: () => import('./features/admin/discounts/discounts-admin.component').then(m => m.DiscountsAdminComponent) },
       { path: 'reviews',  loadComponent: () => import('./features/admin/reviews/reviews-admin.component').then(m => m.ReviewsAdminComponent) },
       { path: 'returns',  loadComponent: () => import('./features/admin/returns/returns-admin.component').then(m => m.ReturnsAdminComponent) },
+      { path: 'stores',   loadComponent: () => import('./features/admin/stores/stores-admin.component').then(m => m.StoresAdminComponent) },
+      { path: 'shipping-zones', loadComponent: () => import('./features/admin/shipping-zones/shipping-zones.component').then(m => m.ShippingZonesComponent) },
     ]
   },
   { path: '**', redirectTo: '' },

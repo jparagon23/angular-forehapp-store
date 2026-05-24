@@ -1,0 +1,64 @@
+:host { display: block; min-height: 100vh; background: var(--bg, #f5f7f5); }
+
+.page-header {
+  background: #fff; border-bottom: 1px solid var(--border);
+  padding: 28px 36px;
+  h1 { font-size: 1.5rem; font-weight: 900; color: var(--dark); margin-bottom: 4px; }
+  p  { font-size: .9rem; color: var(--muted); }
+}
+
+.page-body { padding: 32px 36px; }
+
+.loader { color: var(--muted); font-size: .95rem; padding: 24px 0; }
+
+.alert-err {
+  background: #fde8e8; color: #c53030; border: 1px solid #f5c6c6;
+  border-radius: 10px; padding: 12px 18px; margin-bottom: 20px; font-weight: 600;
+}
+
+.empty-state {
+  text-align: center; padding: 60px 20px;
+  .empty-icon { font-size: 4rem; margin-bottom: 16px; }
+  h3 { font-size: 1.2rem; font-weight: 800; color: var(--dark); margin-bottom: 8px; }
+  p  { font-size: .9rem; color: var(--muted); max-width: 340px; margin: 0 auto; }
+}
+
+.stores-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.store-card {
+  background: #fff; border: 1px solid var(--border); border-radius: 16px;
+  padding: 22px 24px; display: flex; flex-direction: column; gap: 10px;
+  transition: box-shadow .2s, transform .15s;
+  &:hover { box-shadow: 0 4px 20px rgba(0,0,0,.08); transform: translateY(-2px); }
+}
+
+.store-card-top {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.store-icon { font-size: 2rem; }
+.badges { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.role-badge, .status-badge {
+  padding: 3px 10px; border-radius: 20px; font-size: .75rem; font-weight: 700;
+}
+.role-owner   { background: #d4edda; color: #276749; }
+.role-manager { background: #cce5ff; color: #0c5460; }
+.role-staff   { background: #f0f0f0; color: #555; }
+
+.status-active   { background: #d4edda; color: #276749; }
+.status-inactive { background: #f0f0f0; color: #777; }
+
+.store-name { font-size: 1.1rem; font-weight: 800; color: var(--dark); }
+.store-slug { font-size: .82rem; color: var(--muted); font-family: monospace; }
+
+.btn-manage {
+  display: inline-block; margin-top: 6px; padding: 9px 18px;
+  background: var(--green); color: #fff; border-radius: 9px;
+  font-size: .88rem; font-weight: 700; text-decoration: none;
+  transition: opacity .15s;
+  &:hover { opacity: .88; }
+}

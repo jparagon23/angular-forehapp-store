@@ -7,6 +7,15 @@
 
     <h1 class="auth-title">Crear cuenta</h1>
 
+    <div class="forehapp-notice">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8"/>
+        <line x1="12" y1="12" x2="12" y2="16"/>
+      </svg>
+      ¿Ya tienes cuenta en <strong>Forehapp</strong>? Usa el mismo correo y contraseña.
+    </div>
+
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
 
       <div class="form-group">
@@ -71,13 +80,18 @@
 
       <div class="form-group">
         <label for="confirm">Confirmar contraseña</label>
-        <input
-          id="confirm"
-          [type]="showPass ? 'text' : 'password'"
-          formControlName="confirm"
-          [class.invalid]="submitted && (confirm.invalid || form.hasError('mismatch'))"
-          autocomplete="new-password"
-        />
+        <div class="input-wrap">
+          <input
+            id="confirm"
+            [type]="showConfirmPass ? 'text' : 'password'"
+            formControlName="confirm"
+            [class.invalid]="submitted && (confirm.invalid || form.hasError('mismatch'))"
+            autocomplete="new-password"
+          />
+          <button type="button" class="toggle-pass" (click)="showConfirmPass = !showConfirmPass">
+            {{ showConfirmPass ? 'Ocultar' : 'Mostrar' }}
+          </button>
+        </div>
         <span class="form-error" *ngIf="submitted && confirm.hasError('required')">Confirma tu contraseña.</span>
         <span class="form-error" *ngIf="submitted && form.hasError('mismatch') && !confirm.hasError('required')">
           Las contraseñas no coinciden.

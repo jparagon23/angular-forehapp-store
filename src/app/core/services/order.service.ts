@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { Order, OrderResponse, OrderStatus, OrderSummaryDto, SellerOrderGroupDetail } from '../models/order.model';
+import { Order, OrderResponse, OrderStatus, OrderSummaryDto, PaymentMethod, SellerOrderGroupDetail } from '../models/order.model';
 import { environment } from '../../../environments/environment';
 
 const MOCK_ORDERS: Order[] = [
@@ -20,8 +20,12 @@ export class OrderService {
   private http = inject(HttpClient);
   private base = environment.apiBaseUrl;
 
-  createOrder(addressId: number): Observable<OrderResponse> {
-    return this.http.post<OrderResponse>(`${this.base}/orders`, { addressId });
+  createOrder(addressId: number, paymentMethod: PaymentMethod): Observable<OrderResponse> {
+    return this.http.post<OrderResponse>(`${this.base}/orders`, { addressId, paymentMethod });
+  }
+
+  confirmCashPayment(orderId: number): Observable<void> {
+    return this.http.patch<void>(`${this.base}/admin/payments/orders/${orderId}/confirm-cash`, {});
   }
 
   getBuyerOrders(): Observable<OrderSummaryDto[]> {
@@ -32,20 +36,28 @@ export class OrderService {
     return this.http.get<OrderResponse>(`${this.base}/orders/${orderId}`);
   }
 
-  getSellerOrderGroups(): Observable<SellerOrderGroupDetail[]> {
-    return this.http.get<SellerOrderGroupDetail[]>(`${this.base}/seller/order-groups`);
+  getSellerOrderGroups(storeId: number): Observable<SellerOrderGroupDetail[]> {
+    return this.http.get<SellerOrderGroupDetail[]>(`${this.base}/stores/${storeId}/order-groups`);
   }
 
-  shipSellerGroup(groupId: number, trackingNumber: string): Observable<void> {
-    return this.http.patch<void>(`${this.base}/seller/order-groups/${groupId}/ship`, { trackingNumber });
+  getSellerOrderGroupById(storeId: number, groupId: number): Observable<SellerOrderGroupDetail> {
+    return this.http.get<SellerOrderGroupDetail>(`${this.base}/stores/${storeId}/order-groups/${groupId}`);
   }
 
-  deliverSellerGroup(groupId: number): Observable<void> {
-    return this.http.patch<void>(`${this.base}/seller/order-groups/${groupId}/deliver`, {});
+  prepareSellerGroup(storeId: number, groupId: number): Observable<void> {
+    return this.http.patch<void>(`${this.base}/stores/${storeId}/order-groups/${groupId}/prepare`, {});
   }
 
-  cancelSellerGroup(groupId: number, reason: string): Observable<void> {
-    return this.http.patch<void>(`${this.base}/seller/order-groups/${groupId}/cancel`, { reason });
+  shipSellerGroup(storeId: number, groupId: number, trackingNumber: string): Observable<void> {
+    return this.http.patch<void>(`${this.base}/stores/${storeId}/order-groups/${groupId}/ship`, { trackingNumber });
+  }
+
+  deliverSellerGroup(storeId: number, groupId: number): Observable<void> {
+    return this.http.patch<void>(`${this.base}/stores/${storeId}/order-groups/${groupId}/deliver`, {});
+  }
+
+  cancelSellerGroup(storeId: number, groupId: number, reason: string): Observable<void> {
+    return this.http.patch<void>(`${this.base}/stores/${storeId}/order-groups/${groupId}/cancel`, { reason });
   }
 
   // Admin panel (mock)

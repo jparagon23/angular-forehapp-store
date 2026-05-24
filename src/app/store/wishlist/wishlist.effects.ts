@@ -7,9 +7,10 @@ import { WishlistService } from '../../core/services/wishlist.service';
 import * as WishlistActions from './wishlist.actions';
 import { loginSuccess } from '../auth/auth.actions';
 import { logout } from '../auth/auth.actions';
+import { apiCode, apiMessage } from '../../core/models/api-error.model';
 
 function extractError(err: unknown): string {
-  if (err instanceof HttpErrorResponse) return err.error?.message ?? err.message;
+  if (err instanceof HttpErrorResponse) return apiMessage(err);
   if (err instanceof Error) return err.message;
   return 'Error desconocido';
 }
@@ -52,7 +53,7 @@ export class WishlistEffects {
         this.wishlistService.addItem(productId).pipe(
           map(response => WishlistActions.addToWishlistSuccess({ response })),
           catchError((error: unknown) => {
-            if (error instanceof HttpErrorResponse && error.status === 409) {
+            if (error instanceof HttpErrorResponse && apiCode(error) === 'WISHLIST_ITEM_DUPLICATE') {
               // Producto ya en wishlist o race condition: resetear loading y resincronizar
               return concat(
                 of(WishlistActions.addToWishlistFailure({ error: '' })),

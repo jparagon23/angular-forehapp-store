@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { NgIf } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { AuthApiService } from '../../../core/services/auth-api.service';
+import { apiCode, apiMessage } from '../../../core/models/api-error.model';
 import { TokenStore } from '../../../core/services/token-store.service';
 import { resolveRole } from '../../../core/utils/jwt.utils';
 import { loginSuccess } from '../../../store/auth/auth.actions';
@@ -42,14 +43,20 @@ export class VerifyCodeComponent implements OnInit {
     this.authService.verifyCode({ userId: this.userId, code: this.code }).subscribe({
       next: res => {
         const role = resolveRole(res.storeRoles);
-        const user = { userId: res.userId, name: res.name, email: res.email, role };
+        const user = { userId: res.userId, name: res.name, email: res.email, role, storeRoles: res.storeRoles };
         this.tokenStore.setTokens(res.access_token, res.refresh_token, user);
         this.store.dispatch(loginSuccess({ user }));
         this.router.navigate(['/']);
       },
       error: err => {
         this.loading.set(false);
-        this.error.set(err.error?.message ?? 'Código inválido o expirado.');
+        const code = apiCode(err);
+        this.error.set(
+          code === 'AUTH_CODE_EXPIRED'      ? 'El código ha expirado. Solicita uno nuevo.' :
+          code === 'AUTH_CODE_ALREADY_USED' ? 'Este código ya fue utilizado.' :
+          code === 'AUTH_CODE_INVALID'      ? 'Código inválido. Verifica e intenta de nuevo.' :
+          apiMessage(err, 'Código inválido o expirado.')
+        );
       },
     });
   }

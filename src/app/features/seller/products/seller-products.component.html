@@ -187,7 +187,7 @@
   <button class="sp-clear-link" (click)="clearFilters()">Limpiar filtros</button>
 </div>
 
-<div class="sp-status-guide" *ngIf="allProducts().length">
+<div class="sp-status-guide" *ngIf="!(loading$ | async) && allProducts().length">
   <span class="sp-guide-label">Flujo de publicación:</span>
   <span class="sp-badge status-draft">Borrador</span>
   <span class="sp-guide-arrow">→ Publicar →</span>
@@ -199,7 +199,7 @@
   <span class="sp-guide-hint">· Haz clic en una fila para ver y gestionar sus variantes</span>
 </div>
 
-<div class="sp-table-wrap" *ngIf="filteredProducts().length">
+<div class="sp-table-wrap" *ngIf="!(loading$ | async) && filteredProducts().length">
   <div class="sp-results-bar" *ngIf="hasFilters()">
     {{ filteredProducts().length }} resultado{{ filteredProducts().length !== 1 ? 's' : '' }} de {{ allProducts().length }}
     <button class="sp-clear-link" (click)="clearFilters()">× Limpiar</button>
@@ -221,8 +221,8 @@
         <tr [class.sp-row-expanded]="expandedId() === p.id" (click)="toggleExpand(p.id)" class="sp-row-clickable">
           <td>
             <div class="sp-product-cell">
-              <img *ngIf="p.images?.length" [src]="p.images[0].url" alt="" class="sp-thumb" />
-              <div *ngIf="!p.images?.length" class="sp-thumb-placeholder">📦</div>
+              <img *ngIf="p.thumbnailUrl" [src]="p.thumbnailUrl" [alt]="p.title" class="sp-thumb" />
+              <div *ngIf="!p.thumbnailUrl" class="sp-thumb-placeholder">📦</div>
               <div>
                 <strong class="sp-product-name">{{ p.title }}</strong>
                 <span class="sp-product-brand">{{ p.brand }}<span *ngIf="p.line"> · {{ p.line }}</span></span>
@@ -239,13 +239,21 @@
                    style="transition: transform .18s">
                 <polyline points="6 9 12 15 18 9"/>
               </svg>
-              {{ p.variants.length }} variante{{ p.variants.length !== 1 ? 's' : '' }}
+              {{ activeVariantCount(p.variants) }} variante{{ activeVariantCount(p.variants) !== 1 ? 's' : '' }}
+              <span class="sp-inactive-hint"
+                    *ngIf="p.variants.length > activeVariantCount(p.variants)">
+                · {{ p.variants.length - activeVariantCount(p.variants) }} inactiva{{ (p.variants.length - activeVariantCount(p.variants)) !== 1 ? 's' : '' }}
+              </span>
             </button>
           </td>
-          <td>{{ minPrice(p.variants) | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td>
+            {{ minPrice(p.variants) | currency:'USD':'symbol':'1.2-2' }}
+            <span class="free-ship-badge" *ngIf="p.freeShipping" title="Envío gratis">🚚 Gratis</span>
+          </td>
           <td>{{ p.createdAt | date:'dd/MM/yy' }}</td>
           <td>
             <div class="sp-actions" (click)="$event.stopPropagation()">
+              <a [routerLink]="['/seller/products', p.id, 'edit']" class="btn-action btn-edit">Editar</a>
               <button *ngIf="p.status === 'DRAFT'"       class="btn-action btn-publish"    (click)="publish(p.id)">Publicar</button>
               <button *ngIf="p.status === 'ACTIVE'"      class="btn-action btn-deactivate" (click)="deactivate(p.id)">Desactivar</button>
               <button *ngIf="p.status === 'INACTIVE' || p.status === 'OUT_OF_STOCK'"
@@ -263,6 +271,7 @@
                 <thead>
                   <tr>
                     <th>SKU</th>
+                    <th>Estado</th>
                     <th>Atributos</th>
                     <th>Precio</th>
                     <th>Precio tachado</th>
@@ -271,8 +280,13 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let v of p.variants">
+                  <tr *ngFor="let v of p.variants" [class.sp-variant-inactive]="!v.active">
                     <td class="sp-sku">{{ v.sku }}</td>
+                    <td>
+                      <span class="sp-variant-badge" [class.sp-variant-badge--active]="v.active" [class.sp-variant-badge--inactive]="!v.active">
+                        {{ v.active ? 'Activa' : 'Inactiva' }}
+                      </span>
+                    </td>
                     <td>
                       <span class="sp-attr-pill" *ngFor="let a of v.attributes">
                         {{ a.attribute }}: <strong>{{ a.value }}</strong>
@@ -283,8 +297,16 @@
                     <td [class.sp-stock-warn]="v.stock === 0">{{ v.stock }}</td>
                     <td>
                       <div class="sp-actions">
-                        <button class="btn-action btn-inv"   (click)="openInvModal(p, v, $event)">Ajustar</button>
-                        <button class="btn-action btn-hist"  (click)="openMovements(p, v, $event)">Historial</button>
+                        <button class="btn-action btn-inv"  [disabled]="!v.active" (click)="openInvModal(p, v, $event)">Ajustar</button>
+                        <button class="btn-action btn-hist" (click)="openMovements(p, v, $event)">Historial</button>
+                        <button class="btn-action"
+                                [class.btn-deactivate]="v.active"
+                                [class.btn-activate]="!v.active"
+                                [disabled]="togglingVariantId() !== null"
+                                (click)="toggleVariant(p, v, $event)"
+                                [title]="v.active ? 'Ocultar a compradores' : 'Volver a mostrar'">
+                          {{ togglingVariantId() === v.id ? '…' : (v.active ? 'Desactivar' : 'Activar') }}
+                        </button>
                       </div>
                     </td>
                   </tr>

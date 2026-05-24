@@ -44,10 +44,23 @@
   margin-top: auto; padding: 16px 20px;
   border-top: 1px solid rgba(255,255,255,.1);
 }
+.cross-panel-link {
+  display: block; padding: 5px 0; margin-bottom: 6px;
+  font-size: .78rem; font-weight: 600; text-decoration: none; transition: color .15s;
+  color: #a78bfa;
+  &:hover { color: #c4b5fd; }
+}
+
+.stores-link {
+  color: #93c5fd;
+  &:hover { color: #bfdbfe; }
+}
+
 .back-store {
   display: flex; align-items: center; gap: 8px;
   color: rgba(255,255,255,.55); font-size: .85rem;
   cursor: pointer; text-decoration: none; transition: color .15s;
+  margin-top: 8px;
   &:hover { color: var(--green); }
 }
 

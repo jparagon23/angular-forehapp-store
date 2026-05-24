@@ -52,12 +52,16 @@
               <path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
               <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
             </svg>
-            <span>{{ group.sellerName }}</span>
+            <span>{{ group.storeName }}</span>
           </div>
 
           <div class="cart-item" *ngFor="let item of group.items">
 
-            <div class="ci-thumb">📦</div>
+            <div class="ci-thumb">
+              <img *ngIf="item.thumbnailUrl" class="ci-thumb-img"
+                   [src]="item.thumbnailUrl" [alt]="item.productTitle">
+              <span *ngIf="!item.thumbnailUrl">📦</span>
+            </div>
 
             <div class="ci-info">
               <p class="ci-name">{{ item.productTitle }}</p>
@@ -99,7 +103,7 @@
           </div>
 
           <div class="seller-subtotal">
-            Subtotal {{ group.sellerName }}: <strong>{{ group.subtotal | currencyCop }}</strong>
+            Subtotal {{ group.storeName }}: <strong>{{ group.subtotal | currencyCop }}</strong>
           </div>
 
         </div>
@@ -113,14 +117,16 @@
             <span>Subtotal ({{ count$ | async }} art.)</span>
             <span>{{ total$ | async | currencyCop }}</span>
           </div>
-          <div class="foot-row">
-            <span>Envío</span>
-            <span class="free-ship">Gratis</span>
+          <div class="foot-row ship-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+            </svg>
+            <span>El envío se calcula al seleccionar tu dirección</span>
           </div>
         </div>
 
         <div class="foot-total">
-          <span>Total</span>
+          <span>Subtotal (sin envío)</span>
           <strong class="total-val">{{ total$ | async | currencyCop }}</strong>
         </div>
 

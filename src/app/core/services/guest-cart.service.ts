@@ -7,6 +7,7 @@ export interface GuestCartItem {
   sku: string;
   productTitle: string;
   unitPrice: number;
+  thumbnailUrl?: string;
 }
 
 const KEY = 'forehapp_guest_cart';
@@ -59,10 +60,11 @@ export class GuestCartService {
       subtotal:      i.unitPrice * i.quantity,
       priceChanged:  false,
       previousPrice: null,
+      thumbnailUrl:  i.thumbnailUrl,
     }));
     const group: CartSellerGroup = {
-      sellerId:   0,
-      sellerName: 'Tu carrito',
+      storeId:   0,
+      storeName: 'Tu carrito',
       subtotal:   cartItems.reduce((s, i) => s + i.subtotal, 0),
       items:      cartItems,
     };

@@ -1,14 +1,14 @@
 import { Component, DestroyRef, HostListener, inject, signal } from '@angular/core';
 import { Router, RouterLink, NavigationEnd } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { AsyncPipe, NgFor, NgIf, UpperCasePipe } from '@angular/common';
+import { AsyncPipe, NgFor, NgIf, TitleCasePipe, UpperCasePipe } from '@angular/common';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject } from 'rxjs';
 import { filter, map, startWith, take, debounceTime, distinctUntilChanged, switchMap, catchError, of } from 'rxjs';
 import { selectCartCount } from '../../../store/cart/cart.selectors';
 import { selectWishlistCount } from '../../../store/wishlist/wishlist.selectors';
 import { openCart } from '../../../store/cart/cart.actions';
-import { selectIsLoggedIn, selectAuthUser, selectUserRole } from '../../../store/auth/auth.selectors';
+import { selectIsLoggedIn, selectAuthUser, selectUserRole, selectCanShop, selectHasSeller, selectHasAdmin } from '../../../store/auth/auth.selectors';
 import { logout } from '../../../store/auth/auth.actions';
 import { loadAddresses, deleteAddress, setDefaultAddress } from '../../../store/addresses/addresses.actions';
 import { selectAllAddresses, selectDefaultAddress, selectAddressesLoading } from '../../../store/addresses/addresses.selectors';
@@ -23,7 +23,7 @@ const CATEGORIES = ['Raquetas', 'Zapatillas', 'Ropa', 'Pelotas', 'Accesorios'];
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink, AsyncPipe, NgFor, NgIf, UpperCasePipe, CurrencyCopPipe],
+  imports: [RouterLink, AsyncPipe, NgFor, NgIf, TitleCasePipe, UpperCasePipe, CurrencyCopPipe],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.scss',
 })
@@ -43,6 +43,9 @@ export class NavbarComponent {
   isLoggedIn$       = this.store.select(selectIsLoggedIn);
   authUser$         = this.store.select(selectAuthUser);
   userRole$         = this.store.select(selectUserRole);
+  canShop$          = this.store.select(selectCanShop);
+  hasSeller$        = this.store.select(selectHasSeller);
+  hasAdmin$         = this.store.select(selectHasAdmin);
   addresses$        = this.store.select(selectAllAddresses);
   defaultAddress$   = this.store.select(selectDefaultAddress);
   addressesLoading$ = this.store.select(selectAddressesLoading);
@@ -89,6 +92,7 @@ export class NavbarComponent {
     this.searchQuery.set(val);
     if (val.trim().length >= 2) {
       this.searching.set(true);
+      this.dropOpen.set(true);
       this.searchSubject.next(val.trim());
     } else {
       this.searching.set(false);

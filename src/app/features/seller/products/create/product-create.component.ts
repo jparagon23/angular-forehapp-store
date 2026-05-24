@@ -3,6 +3,8 @@ import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { Router, RouterLink } from '@angular/router';
 import { DecimalPipe, NgFor, NgIf } from '@angular/common';
 import { forkJoin } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { SellerProductService } from '../../../../core/services/seller-product.service';
 import {
   Brand,
@@ -13,6 +15,7 @@ import {
   ProductVariant,
   SellerProduct,
 } from '../../../../core/models/seller-product.model';
+import { selectActiveSellerStoreId } from '../../../../store/seller/seller.selectors';
 
 type WizardStep = 1 | 2 | 3 | 4;
 
@@ -27,6 +30,9 @@ export class ProductCreateComponent implements OnInit {
   private service = inject(SellerProductService);
   private router  = inject(Router);
   private fb      = inject(FormBuilder);
+  private ngrx    = inject(Store);
+
+  private storeId = toSignal(this.ngrx.select(selectActiveSellerStoreId), { initialValue: null });
 
   // ── Wizard state ─────────────────────────────────────────────
   step = signal<WizardStep>(1);
@@ -41,11 +47,12 @@ export class ProductCreateComponent implements OnInit {
   loadingAttrs     = signal(false);
 
   basicForm = this.fb.group({
-    title:       ['', [Validators.required, Validators.maxLength(255)]],
-    description: [''],
-    brandId:     [null as number | null, Validators.required],
-    lineId:      [null as number | null],
-    categoryId:  [null as number | null, Validators.required],
+    title:        ['', [Validators.required, Validators.maxLength(255)]],
+    description:  [''],
+    brandId:      [null as number | null, Validators.required],
+    lineId:       [null as number | null],
+    categoryId:   [null as number | null, Validators.required],
+    freeShipping: [false],
   });
 
   creatingDraft = signal(false);
@@ -68,6 +75,11 @@ export class ProductCreateComponent implements OnInit {
   images         = signal<ProductImage[]>([]);
   uploadingImage = signal(false);
   imageError     = signal<string | null>(null);
+  loadedImageIds = signal(new Set<number>());
+
+  onImageLoad(id: number) {
+    this.loadedImageIds.update(s => new Set([...s, id]));
+  }
 
   // ── Step 4 – publish ─────────────────────────────────────────
   publishing    = signal(false);
@@ -130,15 +142,18 @@ export class ProductCreateComponent implements OnInit {
   createDraft() {
     this.basicForm.markAllAsTouched();
     if (this.basicForm.invalid) return;
-    const { title, description, brandId, lineId, categoryId } = this.basicForm.value;
+    const storeId = this.storeId();
+    if (!storeId) return;
+    const { title, description, brandId, lineId, categoryId, freeShipping } = this.basicForm.value;
     this.creatingDraft.set(true);
     this.draftError.set(null);
-    this.service.createProduct({
+    this.service.createProduct(storeId, {
       title: title!,
       description: description || undefined,
       brandId: brandId!,
       lineId: lineId ?? undefined,
       categoryId: categoryId!,
+      freeShipping: freeShipping ?? false,
     }).subscribe({
       next: product => {
         this.draftProduct.set(product);
@@ -155,6 +170,8 @@ export class ProductCreateComponent implements OnInit {
   addVariant() {
     this.variantForm.markAllAsTouched();
     if (this.variantForm.invalid) return;
+    const storeId = this.storeId();
+    if (!storeId) return;
     const productId = this.draftProduct()!.id;
     const { sku, price, compareAtPrice, stock } = this.variantForm.value;
     const attributeValueIds = Object.values(this.selectedAttrValues)
@@ -162,7 +179,7 @@ export class ProductCreateComponent implements OnInit {
 
     this.addingVariant.set(true);
     this.variantError.set(null);
-    this.service.addVariant(productId, {
+    this.service.addVariant(storeId, productId, {
       sku: sku!,
       price: price!,
       compareAtPrice: compareAtPrice ?? undefined,
@@ -182,9 +199,55 @@ export class ProductCreateComponent implements OnInit {
     });
   }
 
+  goToImages() {
+    // Si el formulario tiene datos ingresados, guardar la variante antes de continuar
+    if (this.variantForm.dirty) {
+      this.variantForm.markAllAsTouched();
+      if (this.variantForm.invalid) return;
+      const storeId = this.storeId();
+      if (!storeId) return;
+      const productId = this.draftProduct()!.id;
+      const { sku, price, compareAtPrice, stock } = this.variantForm.value;
+      const attributeValueIds = Object.values(this.selectedAttrValues)
+        .filter((id): id is number => id !== null && id !== 0);
+
+      this.addingVariant.set(true);
+      this.variantError.set(null);
+      this.service.addVariant(storeId, productId, {
+        sku: sku!,
+        price: price!,
+        compareAtPrice: compareAtPrice ?? undefined,
+        stock: stock!,
+        attributeValueIds,
+      }).subscribe({
+        next: variant => {
+          this.variants.update(v => [...v, variant]);
+          this.variantForm.reset();
+          this.selectedAttrValues = {};
+          this.addingVariant.set(false);
+          this.step.set(3);
+        },
+        error: err => {
+          this.variantError.set(err.error?.message ?? 'SKU duplicado u otro error');
+          this.addingVariant.set(false);
+        },
+      });
+      return;
+    }
+
+    // Formulario vacío: si ya hay variantes continuar, si no mostrar errores de validación
+    if (this.variants().length > 0) {
+      this.step.set(3);
+    } else {
+      this.variantForm.markAllAsTouched();
+    }
+  }
+
   removeVariant(variantId: number) {
+    const storeId = this.storeId();
+    if (!storeId) return;
     const productId = this.draftProduct()!.id;
-    this.service.deleteVariant(productId, variantId).subscribe({
+    this.service.deleteVariant(storeId, productId, variantId).subscribe({
       next: () => this.variants.update(v => v.filter(x => x.id !== variantId)),
     });
   }
@@ -192,10 +255,12 @@ export class ProductCreateComponent implements OnInit {
   onFileSelected(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
+    const storeId = this.storeId();
+    if (!storeId) return;
     const productId = this.draftProduct()!.id;
     this.uploadingImage.set(true);
     this.imageError.set(null);
-    this.service.uploadImage(productId, file).subscribe({
+    this.service.uploadImage(storeId, productId, file).subscribe({
       next: img => {
         this.images.update(i => [...i, img]);
         this.uploadingImage.set(false);
@@ -208,18 +273,22 @@ export class ProductCreateComponent implements OnInit {
   }
 
   removeImage(imageId: number) {
+    const storeId = this.storeId();
+    if (!storeId) return;
     const productId = this.draftProduct()!.id;
-    this.service.deleteImage(productId, imageId).subscribe({
+    this.service.deleteImage(storeId, productId, imageId).subscribe({
       next: () => this.images.update(i => i.filter(x => x.id !== imageId)),
     });
   }
 
   publish() {
     if (!this.canPublish) return;
+    const storeId = this.storeId();
+    if (!storeId) return;
     const productId = this.draftProduct()!.id;
     this.publishing.set(true);
     this.publishError.set(null);
-    this.service.publishProduct(productId).subscribe({
+    this.service.publishProduct(storeId, productId).subscribe({
       next: () => this.router.navigate(['/seller/products']),
       error: err => {
         this.publishError.set(err.error?.message ?? 'Error al publicar. Verifica variantes e imágenes.');

@@ -262,6 +262,18 @@
   }
 }
 
+.img-skeleton {
+  border-radius: 8px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 .img-remove {
   position: absolute;
   top: -6px;
@@ -325,3 +337,23 @@
   color: #f57f17;
   margin-bottom: 16px;
 }
+
+// ── Toggle switch ──────────────────────────────────────────────
+.toggle-label {
+  display: inline-flex; align-items: center; gap: 10px; cursor: pointer;
+}
+.toggle-check { display: none; }
+.toggle-track {
+  width: 40px; height: 22px; border-radius: 11px;
+  background: #ccc; position: relative;
+  transition: background .2s; flex-shrink: 0;
+}
+.toggle-check:checked ~ .toggle-track { background: #4caf50; }
+.toggle-thumb {
+  position: absolute; top: 3px; left: 3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; transition: transform .2s;
+}
+.toggle-check:checked ~ .toggle-track .toggle-thumb { transform: translateX(18px); }
+.toggle-text { font-size: .9rem; font-weight: 600; color: #333; }
+.toggle-hint { font-size: .78rem; color: #999; margin-top: 4px; }

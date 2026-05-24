@@ -6,6 +6,7 @@ import * as ProductsActions from './products.actions';
 export interface ProductsState extends EntityState<Product> {
   selectedId: number | null;
   loading: boolean;
+  selectedLoading: boolean;
   error: string | null;
 }
 
@@ -13,12 +14,14 @@ const adapter = createEntityAdapter<Product>();
 
 const initialState: ProductsState = adapter.getInitialState({
   selectedId: null,
-  loading: false,
+  loading: true,
+  selectedLoading: false,
   error: null,
 });
 
 export const productsReducer = createReducer(
   initialState,
+  on(ProductsActions.resetProductList, state => adapter.removeAll({ ...state, loading: true, error: null })),
   on(ProductsActions.loadProducts, state => ({ ...state, loading: true, error: null })),
   on(ProductsActions.loadProductsSuccess, (state, { products }) => {
     // Preserva variants/image de un loadProduct detallado previo que setAll sobrescribiría
@@ -26,18 +29,19 @@ export const productsReducer = createReducer(
       ...p,
       variants: state.entities[p.id]?.variants ?? p.variants,
       image:    state.entities[p.id]?.image    || p.image,
+      images:   state.entities[p.id]?.images   ?? p.images,
     }));
     return adapter.setAll(enriched, { ...state, loading: false });
   }),
   on(ProductsActions.loadProductsFailure, (state, { error }) =>
     ({ ...state, loading: false, error })),
 
-  on(ProductsActions.clearSelectedProduct, state => ({ ...state, selectedId: null, loading: true })),
-  on(ProductsActions.loadProduct, state => ({ ...state, loading: true })),
+  on(ProductsActions.clearSelectedProduct, state => ({ ...state, selectedId: null, loading: true, selectedLoading: true })),
+  on(ProductsActions.loadProduct, state => ({ ...state, loading: true, selectedLoading: true })),
   on(ProductsActions.loadProductSuccess, (state, { product }) =>
-    adapter.upsertOne(product, { ...state, selectedId: product.id, loading: false })),
+    adapter.upsertOne(product, { ...state, selectedId: product.id, loading: false, selectedLoading: false })),
   on(ProductsActions.loadProductFailure, (state, { error }) =>
-    ({ ...state, loading: false, error })),
+    ({ ...state, loading: false, selectedLoading: false, error })),
 
   on(ProductsActions.createProductSuccess, (state, { product }) =>
     adapter.addOne(product, state)),

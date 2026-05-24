@@ -1,6 +1,6 @@
 {
   "name": "forehapp-store",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -25,6 +25,7 @@
     "apexcharts": "^3.54.1",
     "ng-apexcharts": "^1.9.0",
     "rxjs": "~7.8.0",
+    "sweetalert2": "^11.26.24",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.3"
   },

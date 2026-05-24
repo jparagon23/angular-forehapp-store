@@ -43,6 +43,10 @@
 .group-subtotal {
   margin-left: auto; font-size: .8rem; font-weight: 600; color: #777;
 }
+.group-shipping {
+  font-size: .8rem; font-weight: 600; color: #555;
+  .free { color: var(--green); }
+}
 
 .seller-group .items-list {
   padding: 14px 14px 4px;
@@ -140,6 +144,22 @@
 .oi-unit { font-size: .77rem; color: #aaa; margin-top: 1px; }
 .oi-total { font-weight: 800; font-size: .97rem; color: var(--dark); white-space: nowrap; }
 
+.btn-remove-item {
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: 1.5px solid #e0e0e0; border-radius: 6px;
+  cursor: pointer; padding: 0; transition: border-color .15s, background .15s;
+  svg { stroke: #bbb; transition: stroke .15s; }
+  &:hover:not(:disabled) {
+    border-color: #f44336; background: #fff5f5;
+    svg { stroke: #f44336; }
+  }
+  &:disabled { cursor: not-allowed; opacity: .5; }
+  &.removing { border-color: #ccc; }
+  .mini-spin { border-color: rgba(0,0,0,.15); border-top-color: #888; }
+}
+
 // ── Summary rows ──────────────────────────────────────────
 .summary-rows {
   border-top: 1px solid #eaf2ea;
@@ -151,6 +171,16 @@
   font-size: .88rem; color: #666;
 }
 .free { color: var(--green); font-weight: 700; }
+
+.ship-pending .ship-msg { color: #bbb; font-style: italic; }
+.ship-calc {
+  display: flex; align-items: center; gap: 6px; color: #aaa; font-style: italic;
+}
+.ship-err  { color: #e74c3c; font-size: .82rem; }
+.ship-store-label {
+  display: flex; align-items: center; gap: 5px;
+  svg { stroke: #aaa; }
+}
 
 .total-row {
   display: flex; justify-content: space-between; align-items: baseline;
@@ -396,16 +426,59 @@
   &:disabled { opacity: .5; cursor: not-allowed; }
 }
 
-// MercadoPago notice
-.mp-notice {
-  display: flex; align-items: center; gap: 12px;
-  padding: 14px 16px; border-radius: 10px;
-  background: #f0f7ff; border: 1.5px solid #c6deff;
-  margin-bottom: 4px;
-  svg { width: 28px; height: 28px; color: #1a6fe8; flex-shrink: 0; }
+// ── Payment method selector ───────────────────────────────
+.pm-section { margin-bottom: 16px; }
+.pm-section-label {
+  font-size: .78rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .8px; color: #777; margin-bottom: 8px;
 }
-.mp-title { font-size: .88rem; font-weight: 700; color: #1a3a6b; margin: 0 0 2px; }
-.mp-sub   { font-size: .78rem; color: #4a6fa5; margin: 0; }
+.pm-options { display: flex; flex-direction: column; gap: 7px; }
+.pm-opt {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 13px; border-radius: 9px;
+  border: 1.5px solid #dde8dd; background: #fff;
+  cursor: pointer; text-align: left; width: 100%;
+  transition: border-color .15s, background .15s;
+  &:hover:not(:disabled) { border-color: var(--green); background: #f8fdf6; }
+  &.active { border-color: var(--green); background: #f2fbee; }
+  &.pm-disabled, &:disabled { opacity: .45; cursor: not-allowed; }
+}
+.pm-opt-icon { font-size: 1.2rem; flex-shrink: 0; }
+.pm-opt-body { display: flex; flex-direction: column; gap: 1px; }
+.pm-opt-name {
+  font-size: .87rem; font-weight: 700; color: var(--dark);
+  display: flex; align-items: center; gap: 6px;
+}
+.pm-opt-desc { font-size: .74rem; color: #999; }
+.pm-opt-tag {
+  font-size: .65rem; font-weight: 700; color: var(--green);
+  background: #e8f7e2; padding: 1px 6px; border-radius: 8px;
+}
+
+// ── Order confirmation screen ─────────────────────────────
+.order-confirmed {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; padding: 16px 0 8px; gap: 12px;
+}
+.oc-check { font-size: 2.4rem; }
+.oc-title { font-size: 1.1rem; font-weight: 800; color: var(--dark); margin: 0; }
+.oc-total { font-size: .9rem; color: #555; margin: 0; }
+.oc-msg {
+  font-size: .87rem; color: #555; line-height: 1.5;
+  background: #f4fbf2; border: 1px solid #d8efd2;
+  border-radius: 8px; padding: 12px 14px; text-align: left; width: 100%;
+}
+.btn-view-orders {
+  display: inline-block; padding: 11px 22px;
+  background: var(--green); color: #fff; border-radius: 9px;
+  font-size: .9rem; font-weight: 700; text-decoration: none;
+  transition: background .15s;
+  &:hover { background: var(--green-dark); }
+}
+.redirect-msg {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 12px; padding: 32px 0; color: #888; font-size: .9rem;
+}
 
 // Order creation error
 .confirm-error {

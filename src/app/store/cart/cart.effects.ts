@@ -7,6 +7,7 @@ import { GuestCartService } from '../../core/services/guest-cart.service';
 import { loginSuccess } from '../auth/auth.actions';
 import { selectAuthUser } from '../auth/auth.selectors';
 import * as CartActions from './cart.actions';
+import { apiCode, apiMessage } from '../../core/models/api-error.model';
 
 @Injectable()
 export class CartEffects {
@@ -29,10 +30,10 @@ export class CartEffects {
       ofType(CartActions.loadCart),
       withLatestFrom(this.store.select(selectAuthUser)),
       switchMap(([, user]) => {
-        if (user?.role === 'BUYER') {
+        if (user?.storeRoles?.includes('CUSTOMER')) {
           return this.cartSvc.getCart().pipe(
             map(cart => CartActions.loadCartSuccess({ cart })),
-            catchError(err => of(CartActions.loadCartFailure({ error: err.error?.message ?? 'Error al cargar el carrito' })))
+            catchError(err => of(CartActions.loadCartFailure({ error: apiMessage(err, 'Error al cargar el carrito') })))
           );
         }
         return of(CartActions.loadCartSuccess({ cart: this.guestSvc.buildCartResponse() }));
@@ -44,7 +45,7 @@ export class CartEffects {
   loadCartOnLogin$ = createEffect(() =>
     this.actions$.pipe(
       ofType(loginSuccess),
-      filter(({ user }) => user.role === 'BUYER'),
+      filter(({ user }) => user.storeRoles?.includes('CUSTOMER') ?? false),
       switchMap(() => {
         const guestItems = this.guestSvc.getItems();
         this.guestSvc.clear();
@@ -69,12 +70,12 @@ export class CartEffects {
       ofType(CartActions.addCartItem),
       withLatestFrom(this.store.select(selectAuthUser)),
       switchMap(([action, user]) => {
-        if (user?.role === 'BUYER') {
+        if (user?.storeRoles?.includes('CUSTOMER')) {
           return this.cartSvc.addItem(action.variantId, action.quantity).pipe(
             map(cart => CartActions.addCartItemSuccess({ cart })),
             catchError(err => {
-              const error = err.error?.message ?? 'Error al agregar al carrito';
-              if (err.status === 409) {
+              const error = apiMessage(err, 'Error al agregar al carrito');
+              if (apiCode(err) === 'ORDER_INSUFFICIENT_STOCK') {
                 return of(CartActions.addCartItemFailure({ error }), CartActions.loadCart());
               }
               return of(CartActions.addCartItemFailure({ error }));
@@ -87,11 +88,13 @@ export class CartEffects {
           productTitle: action.productTitle ?? 'Producto',
           sku:          action.sku ?? '',
           unitPrice:    action.unitPrice ?? 0,
+          thumbnailUrl: action.imageUrl,
         });
         return of(CartActions.addCartItemSuccess({ cart: this.guestSvc.buildCartResponse() }));
       })
     )
   );
+
 
   /* ── Actualizar cantidad ─────────────────────────────────────── */
   updateCartItem$ = createEffect(() =>
@@ -99,10 +102,10 @@ export class CartEffects {
       ofType(CartActions.updateCartItem),
       withLatestFrom(this.store.select(selectAuthUser)),
       switchMap(([action, user]) => {
-        if (user?.role === 'BUYER') {
+        if (user?.storeRoles?.includes('CUSTOMER')) {
           return this.cartSvc.updateItem(action.itemId, action.quantity).pipe(
             map(cart => CartActions.updateCartItemSuccess({ cart })),
-            catchError(err => of(CartActions.updateCartItemFailure({ error: err.error?.message ?? 'Error al actualizar cantidad' })))
+            catchError(err => of(CartActions.updateCartItemFailure({ error: apiMessage(err, 'Error al actualizar cantidad') })))
           );
         }
         // Para ítems guest el itemId es negativo (-variantId)
@@ -118,11 +121,11 @@ export class CartEffects {
       ofType(CartActions.removeCartItem),
       withLatestFrom(this.store.select(selectAuthUser)),
       switchMap(([action, user]) => {
-        if (user?.role === 'BUYER') {
+        if (user?.storeRoles?.includes('CUSTOMER')) {
           return this.cartSvc.removeItem(action.itemId).pipe(
             switchMap(() => this.cartSvc.getCart()),
             map(cart => CartActions.removeCartItemSuccess({ cart })),
-            catchError(err => of(CartActions.removeCartItemFailure({ error: err.error?.message ?? 'Error al eliminar ítem' })))
+            catchError(err => of(CartActions.removeCartItemFailure({ error: apiMessage(err, 'Error al eliminar ítem') })))
           );
         }
         this.guestSvc.removeItem(Math.abs(action.itemId));
@@ -137,11 +140,11 @@ export class CartEffects {
       ofType(CartActions.clearCartItems),
       withLatestFrom(this.store.select(selectAuthUser)),
       switchMap(([, user]) => {
-        if (user?.role === 'BUYER') {
+        if (user?.storeRoles?.includes('CUSTOMER')) {
           return this.cartSvc.clearCart().pipe(
             switchMap(() => this.cartSvc.getCart()),
             map(cart => CartActions.clearCartItemsSuccess({ cart })),
-            catchError(err => of(CartActions.clearCartItemsFailure({ error: err.error?.message ?? 'Error al vaciar el carrito' })))
+            catchError(err => of(CartActions.clearCartItemsFailure({ error: apiMessage(err, 'Error al vaciar el carrito') })))
           );
         }
         this.guestSvc.clear();

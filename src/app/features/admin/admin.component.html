@@ -1,3 +1,5 @@
+<app-navbar></app-navbar>
+
 <div class="admin-layout">
   <aside class="sidebar">
     <div class="sidebar-logo">
@@ -22,8 +24,16 @@
     <div class="nav-section">Sistema</div>
     <a class="nav-item" routerLink="discounts" routerLinkActive="active"><span class="nav-icon">🏷️</span> Descuentos</a>
     <a class="nav-item" routerLink="returns"   routerLinkActive="active"><span class="nav-icon">↩️</span> Devoluciones</a>
+    <a class="nav-item" routerLink="stores"    routerLinkActive="active"><span class="nav-icon">🏪</span> Tiendas</a>
+    <a class="nav-item" routerLink="shipping-zones" routerLinkActive="active"><span class="nav-icon">🚚</span> Zonas de envío</a>
 
     <div class="sidebar-footer">
+      <a *ngIf="hasSeller$ | async" routerLink="/seller" class="cross-panel-link">
+        Panel Seller →
+      </a>
+      <a routerLink="/stores" class="cross-panel-link stores-link">
+        Mis Tiendas →
+      </a>
       <a routerLink="/" class="back-store">← Ver tienda</a>
     </div>
   </aside>

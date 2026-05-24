@@ -1,0 +1,282 @@
+<!-- ══ Inventory Adjustment Modal ══════════════════════════════ -->
+<div class="inv-overlay" [class.inv-open]="invOpen()">
+  <div class="inv-modal">
+    <h3 class="inv-title">Ajustar inventario</h3>
+    <div class="inv-meta">
+      <span class="inv-sku">{{ invSku() }}</span>
+      <span class="inv-stock-info">Stock actual: <strong>{{ invStock() }}</strong> uds.</span>
+    </div>
+    <div class="inv-fields">
+      <div class="inv-field">
+        <label>Cantidad</label>
+        <input type="number" [ngModel]="invQuantity()" (ngModelChange)="invQuantity.set($event)"
+               placeholder="Ej: 10 o -3" />
+      </div>
+      <div class="inv-field">
+        <label>Motivo</label>
+        <select [ngModel]="invReason()" (ngModelChange)="invReason.set($event)">
+          <option value="RESTOCK">Reposición</option>
+          <option value="RETURN">Devolución</option>
+          <option value="ADJUSTMENT">Ajuste manual</option>
+        </select>
+      </div>
+    </div>
+    <div class="inv-hint" *ngIf="invReason() === 'ADJUSTMENT'">
+      💡 Para reducir stock ingresa una cantidad negativa (ej: -3)
+    </div>
+    <div class="inv-error" *ngIf="invError()">{{ invError() }}</div>
+    <div class="inv-actions">
+      <button class="btn-action" (click)="closeInvModal()">Cancelar</button>
+      <button class="btn-action btn-apply" (click)="submitInventory()" [disabled]="invLoading()">
+        {{ invLoading() ? 'Aplicando…' : 'Aplicar' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Movements History Modal ════════════════════════════════ -->
+<div class="inv-overlay" [class.inv-open]="movOpen()">
+  <div class="mov-modal">
+    <div class="mov-header">
+      <div>
+        <h3 class="inv-title">Historial de movimientos</h3>
+        <div class="mov-sku">SKU: <code>{{ movSku() }}</code></div>
+      </div>
+      <button class="mov-close" (click)="closeMovements()">✕</button>
+    </div>
+
+    <div class="mov-filters">
+      <button class="mov-pill" [class.mov-pill-on]="movReasonFilter() === null"         (click)="setMovFilter(null)">Todos</button>
+      <button class="mov-pill" [class.mov-pill-on]="movReasonFilter() === 'RESTOCK'"    (click)="setMovFilter('RESTOCK')">Reposición</button>
+      <button class="mov-pill" [class.mov-pill-on]="movReasonFilter() === 'RETURN'"     (click)="setMovFilter('RETURN')">Devolución</button>
+      <button class="mov-pill" [class.mov-pill-on]="movReasonFilter() === 'ADJUSTMENT'" (click)="setMovFilter('ADJUSTMENT')">Ajuste</button>
+      <button class="mov-pill" [class.mov-pill-on]="movReasonFilter() === 'SALE'"       (click)="setMovFilter('SALE')">Venta</button>
+    </div>
+
+    <div class="mov-skeleton" *ngIf="movLoading()">
+      <div class="mov-skel-row" *ngFor="let i of [1,2,3,4,5]">
+        <div class="mov-skel-qty"></div>
+        <div class="mov-skel-badge"></div>
+        <div class="mov-skel-date"></div>
+      </div>
+    </div>
+
+    <div class="inv-error" *ngIf="movError()">{{ movError() }}</div>
+    <div class="mov-empty" *ngIf="!movLoading() && !movError() && movements().length === 0">
+      Sin movimientos para este filtro.
+    </div>
+
+    <div class="mov-list" *ngIf="!movLoading() && movements().length">
+      <div class="mov-row" *ngFor="let m of movements()">
+        <span class="mov-qty" [class.mov-pos]="m.quantity > 0" [class.mov-neg]="m.quantity < 0">
+          {{ m.quantity > 0 ? '+' : '' }}{{ m.quantity }}
+        </span>
+        <span class="mov-badge" [ngClass]="movReasonClass(m.reason)">{{ movReasonLabel(m.reason) }}</span>
+        <span class="mov-date">{{ m.createdAt | date:'dd/MM/yy, HH:mm' }}</span>
+      </div>
+    </div>
+
+    <div class="mov-footer" *ngIf="!movLoading()">
+      <span class="mov-total-txt">
+        {{ movTotalItems() }} movimiento{{ movTotalItems() !== 1 ? 's' : '' }}
+        <ng-container *ngIf="movTotalPages() > 1">· pág. {{ movPage() + 1 }} / {{ movTotalPages() }}</ng-container>
+      </span>
+      <div class="mov-page-btns" *ngIf="movTotalPages() > 1">
+        <button class="btn-action" [disabled]="movIsFirst()" (click)="movPrev()">← Ant.</button>
+        <button class="btn-action" [disabled]="movIsLast()"  (click)="movNext()">Sig. →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Header ═════════════════════════════════════════════════ -->
+<div class="edit-header">
+  <div>
+    <h1 class="edit-title">
+      <span *ngIf="loading()">Cargando…</span>
+      <span *ngIf="!loading() && product()">{{ product()!.title }}</span>
+    </h1>
+    <p class="edit-subtitle" *ngIf="product()">
+      {{ product()!.brand }} · {{ product()!.category }}
+      <span class="edit-status-badge status-{{ product()!.status.toLowerCase() }}">
+        {{ product()!.status }}
+      </span>
+    </p>
+  </div>
+  <a routerLink="/seller/products" class="edit-back">← Mis Productos</a>
+</div>
+
+<div class="edit-error-global" *ngIf="loadError()">{{ loadError() }}</div>
+
+<!-- ══ Información básica ══════════════════════════════════════ -->
+<div class="edit-card" *ngIf="!loading() && !loadError()">
+  <h2 class="edit-card-title">Información básica</h2>
+
+  <form [formGroup]="infoForm" (ngSubmit)="saveInfo()" novalidate>
+    <div class="form-group form-group--full">
+      <label>Título <span class="req">*</span></label>
+      <input formControlName="title" type="text" maxlength="255" />
+      <span class="form-error" *ngIf="infoForm.get('title')?.touched && infoForm.get('title')?.hasError('required')">El título es obligatorio.</span>
+      <span class="form-error" *ngIf="infoForm.get('title')?.hasError('maxlength')">Máximo 255 caracteres.</span>
+    </div>
+    <div class="form-group form-group--full" style="margin-top: 14px;">
+      <label>Descripción</label>
+      <textarea formControlName="description" rows="3" placeholder="Describe tu producto…"></textarea>
+    </div>
+    <div class="form-group form-group--full" style="margin-top: 14px;">
+      <label class="toggle-label">
+        <input type="checkbox" formControlName="freeShipping" class="toggle-check" />
+        <span class="toggle-track">
+          <span class="toggle-thumb"></span>
+        </span>
+        <span class="toggle-text">Envío gratis para este producto</span>
+      </label>
+      <p class="toggle-hint">Si está activo, este producto no generará costo de envío independientemente de la zona.</p>
+    </div>
+  </form>
+</div>
+
+<!-- ══ Variantes ══════════════════════════════════════════════ -->
+<div class="edit-card" *ngIf="!loading() && !loadError()">
+  <h2 class="edit-card-title">Variantes</h2>
+
+  <div class="variant-list" *ngIf="variants().length">
+    <div class="variant-row" [class.variant-row--inactive]="!v.active" *ngFor="let v of variants()">
+      <div class="variant-info">
+        <strong>{{ v.sku }}</strong>
+        <span class="variant-status-badge" [class.variant-status-badge--active]="v.active" [class.variant-status-badge--inactive]="!v.active">
+          {{ v.active ? 'Activa' : 'Inactiva' }}
+        </span>
+        <span>$ {{ v.price | number:'1.2-2' }}</span>
+        <span *ngIf="v.compareAtPrice" class="variant-compare">Antes: $ {{ v.compareAtPrice | number:'1.2-2' }}</span>
+        <span [class.stock-warn]="v.stock === 0">Stock: {{ v.stock }}</span>
+        <span class="variant-attrs" *ngIf="v.attributes?.length">
+          <ng-container *ngFor="let a of v.attributes; let last = last">
+            {{ a.attribute }}: {{ a.value }}{{ !last ? ' · ' : '' }}
+          </ng-container>
+        </span>
+      </div>
+      <div class="variant-row-actions">
+        <button class="btn-action btn-inv"  (click)="openInvModal(v)"    [disabled]="!v.active">Ajustar</button>
+        <button class="btn-action btn-hist" (click)="openMovements(v)">Historial</button>
+        <button class="btn-action"
+                [class.btn-deactivate]="v.active"
+                [class.btn-activate]="!v.active"
+                (click)="toggleVariant(v)"
+                [disabled]="togglingVariantId() !== null"
+                [title]="v.active ? 'Ocultar esta variante a los compradores' : 'Volver a mostrar esta variante'">
+          {{ togglingVariantId() === v.id ? '…' : (v.active ? 'Desactivar' : 'Activar') }}
+        </button>
+        <button class="btn-remove" (click)="removeVariant(v.id)" title="Eliminar variante">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-error form-error--global" *ngIf="variantToggleError()">{{ variantToggleError() }}</div>
+
+  <div class="variant-empty" *ngIf="!variants().length">
+    Sin variantes. Agrega al menos una para poder publicar el producto.
+  </div>
+
+  <form [formGroup]="variantForm" (ngSubmit)="addVariant()" novalidate class="variant-form">
+    <h3 class="variant-form-title">Agregar variante</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>SKU <span class="req">*</span></label>
+        <input formControlName="sku" type="text" placeholder="Ej: PROD-001-BLK" />
+        <span class="form-error" *ngIf="variantForm.get('sku')?.touched && variantForm.get('sku')?.hasError('required')">El SKU es obligatorio.</span>
+      </div>
+      <div class="form-group">
+        <label>Precio <span class="req">*</span></label>
+        <input formControlName="price" type="number" min="0.01" step="0.01" placeholder="0.00" />
+        <span class="form-error" *ngIf="variantForm.get('price')?.touched && variantForm.get('price')?.invalid">Precio mayor a 0 requerido.</span>
+      </div>
+      <div class="form-group">
+        <label>Precio tachado <span class="opt">(opcional)</span></label>
+        <input formControlName="compareAtPrice" type="number" min="0.01" step="0.01" placeholder="0.00" />
+      </div>
+      <div class="form-group">
+        <label>Stock <span class="req">*</span></label>
+        <input formControlName="stock" type="number" min="0" step="1" placeholder="0" />
+        <span class="form-error" *ngIf="variantForm.get('stock')?.touched && variantForm.get('stock')?.invalid">Stock >= 0 requerido.</span>
+      </div>
+    </div>
+    <div class="form-row" *ngIf="categoryAttrs().length">
+      <div class="form-group" *ngFor="let attr of categoryAttrs()">
+        <label>{{ attr.name }} <span class="req" *ngIf="attr.required">*</span></label>
+        <select [(ngModel)]="selectedAttrValues[attr.attributeId]" [ngModelOptions]="{standalone: true}">
+          <option [value]="null">— Seleccionar —</option>
+          <option *ngFor="let v of attr.values" [value]="v.id">{{ v.description }}</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-error form-error--global" *ngIf="variantError()">{{ variantError() }}</div>
+    <div class="edit-actions">
+      <button type="submit" class="btn-secondary" [disabled]="addingVariant()">
+        {{ addingVariant() ? 'Agregando…' : '+ Agregar variante' }}
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- ══ Imágenes ════════════════════════════════════════════════ -->
+<div class="edit-card" *ngIf="!loading() && !loadError()">
+  <h2 class="edit-card-title">Imágenes</h2>
+  <p class="edit-card-hint">JPEG, PNG o WebP · máx. 5 MB por archivo.</p>
+
+  <div class="img-grid" *ngIf="loadingImages()">
+    <div class="img-item img-skeleton" *ngFor="let i of [1,2,3]"></div>
+  </div>
+
+  <div class="img-grid" *ngIf="!loadingImages()">
+    <div class="img-item" *ngFor="let img of images()">
+      <div class="img-skeleton" *ngIf="!loadedImageIds().has(img.id)"></div>
+      <img [src]="img.url" alt="Imagen del producto"
+           [style.display]="loadedImageIds().has(img.id) ? 'block' : 'none'"
+           (load)="onImageLoad(img.id)" />
+      <button class="img-remove" (click)="removeImage(img.id)" title="Eliminar imagen">✕</button>
+    </div>
+    <div class="img-item img-skeleton" *ngIf="uploadingImage()"></div>
+    <div class="img-empty" *ngIf="!images().length && !uploadingImage()">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5">
+        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21 15 16 10 5 21"/>
+      </svg>
+      <span>Sin imágenes</span>
+    </div>
+  </div>
+
+  <div class="img-upload-area">
+    <label class="img-upload-btn" [class.loading]="uploadingImage()">
+      <span *ngIf="!uploadingImage()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+        </svg>
+        Subir imagen
+      </span>
+      <span *ngIf="uploadingImage()">Subiendo…</span>
+      <input type="file" accept="image/jpeg,image/png,image/webp"
+             (change)="onFileSelected($event)" [disabled]="uploadingImage()" hidden />
+    </label>
+  </div>
+
+  <div class="form-error form-error--global" *ngIf="imageError()">{{ imageError() }}</div>
+</div>
+
+<!-- ══ Acciones finales ════════════════════════════════════════ -->
+<div class="edit-card" *ngIf="!loading() && !loadError()">
+  <div class="form-error form-error--global" *ngIf="saveError()">{{ saveError() }}</div>
+  <div class="form-error form-error--global" *ngIf="publishError()">{{ publishError() }}</div>
+  <div class="save-ok" *ngIf="saveOk()">Cambios guardados correctamente.</div>
+  <div class="save-ok" *ngIf="publishOk()">Producto guardado y publicado.</div>
+  <div class="edit-actions edit-actions--final">
+    <button type="button" class="btn-primary" (click)="saveInfo()" [disabled]="saving() || publishing()">
+      {{ saving() ? 'Guardando…' : 'Guardar cambios' }}
+    </button>
+    <button type="button" class="btn-publish" (click)="saveAndPublish()"
+            *ngIf="product()?.status === 'DRAFT'"
+            [disabled]="saving() || publishing()">
+      {{ publishing() ? 'Publicando…' : 'Guardar y publicar' }}
+    </button>
+  </div>
+</div>

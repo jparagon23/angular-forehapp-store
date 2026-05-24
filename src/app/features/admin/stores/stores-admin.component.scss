@@ -1,0 +1,45 @@
+@use '../shared/admin-styles';
+
+.success-card {
+  display: flex; align-items: center; gap: 18px;
+  background: #f0faf0; border: 1px solid #c3e6b0; border-radius: 14px;
+  padding: 20px 24px; margin-bottom: 24px;
+}
+.success-icon { font-size: 2rem; }
+.success-title { font-size: 1rem; font-weight: 700; color: #276749; margin-bottom: 6px; }
+.success-meta { font-size: .88rem; color: var(--muted); display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.slug-chip {
+  background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9;
+  padding: 2px 8px; border-radius: 10px; font-size: .78rem; font-weight: 600; font-family: monospace;
+}
+.status-chip {
+  background: #d4edda; color: #276749;
+  padding: 2px 8px; border-radius: 10px; font-size: .78rem; font-weight: 700;
+}
+
+.form-card {
+  background: #fff; border: 1px solid var(--border); border-radius: 14px;
+  overflow: hidden; max-width: 620px;
+}
+.form-card-header {
+  padding: 22px 28px 18px; border-bottom: 1px solid var(--border);
+  h2 { font-size: 1.1rem; font-weight: 800; color: var(--dark); margin-bottom: 6px; }
+  p  { font-size: .88rem; color: var(--muted); }
+}
+.form-body {
+  padding: 24px 28px; display: flex; flex-direction: column; gap: 18px;
+}
+.form-group {
+  display: flex; flex-direction: column; gap: 5px;
+  label { font-size: .82rem; font-weight: 600; color: var(--muted); }
+  input, textarea {
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 9px 12px; font-size: .92rem; outline: none; font-family: inherit;
+    transition: border-color .2s;
+    &:focus { border-color: var(--green); }
+  }
+  textarea { resize: vertical; }
+}
+.req { color: #c53030; }
+.hint { font-size: .76rem; color: var(--muted); }
+.form-actions { display: flex; justify-content: flex-end; margin-top: 4px; }

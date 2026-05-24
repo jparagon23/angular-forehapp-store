@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { CartItemResponse, CartResponse, CartSellerGroup } from '../models/cart.model';
+import { CartItemResponse, CartResponse, CartSellerGroup, ShippingEstimateResponse } from '../models/cart.model';
 
 /* Shape que devuelve POST /cart/items/batch (campos distintos al modelo interno) */
 interface BatchItem {
@@ -16,8 +16,9 @@ interface BatchItem {
   subtotal: number;
   priceChanged: boolean;
   originalPrice: number | null;
+  thumbnailUrl: string | null;
 }
-interface BatchGroup  { sellerId: number; sellerName: string; subtotal: number; items: BatchItem[]; }
+interface BatchGroup  { storeId: number; storeName: string; subtotal: number; items: BatchItem[]; }
 interface BatchCartResponse { id: number | null; status: string; updatedAt: string | null; total: number; sellerGroups: BatchGroup[]; }
 
 @Injectable({ providedIn: 'root' })
@@ -51,10 +52,16 @@ export class CartService {
     return this.http.delete<void>(`${this.BASE}/cart`);
   }
 
+  getShippingEstimate(addressId: number): Observable<ShippingEstimateResponse> {
+    return this.http.get<ShippingEstimateResponse>(`${this.BASE}/cart/shipping-estimate`, {
+      params: { addressId: String(addressId) },
+    });
+  }
+
   private mapBatch(raw: BatchCartResponse): CartResponse {
     const sellerGroups: CartSellerGroup[] = raw.sellerGroups.map(g => ({
-      sellerId:   g.sellerId,
-      sellerName: g.sellerName,
+      storeId:   g.storeId,
+      storeName: g.storeName,
       subtotal:   g.subtotal,
       items:      g.items.map((i): CartItemResponse => ({
         itemId:        i.id,
@@ -66,6 +73,7 @@ export class CartService {
         subtotal:      i.subtotal,
         priceChanged:  i.priceChanged,
         previousPrice: i.originalPrice,
+        thumbnailUrl:  i.thumbnailUrl ?? undefined,
       })),
     }));
     return { cartId: raw.id, status: raw.status, updatedAt: raw.updatedAt, total: raw.total, sellerGroups };

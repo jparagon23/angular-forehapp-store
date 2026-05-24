@@ -7,7 +7,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import ApexCharts from 'apexcharts';
 
 import { loadSellerProducts } from '../../../store/seller/seller.actions';
-import { selectSellerProducts, selectSellerLoading } from '../../../store/seller/seller.selectors';
+import { selectSellerProducts, selectSellerLoading, selectActiveSellerStoreId } from '../../../store/seller/seller.selectors';
 import { CurrencyCopPipe } from '../../../shared/pipes/currency-cop.pipe';
 import { ReportService } from '../../../core/services/report.service';
 import { DateRange, ReportSummary, TopProduct } from '../../../core/models/report.model';
@@ -32,6 +32,8 @@ export class SellerStatsComponent implements OnInit, OnDestroy {
   private svc   = inject(ReportService);
   private store = inject(Store);
 
+  private storeId = toSignal(this.store.select(selectActiveSellerStoreId), { initialValue: null });
+
   @ViewChild('apexChart') apexChartEl?: ElementRef;
   private chartInstance?: ApexCharts;
 
@@ -47,12 +49,10 @@ export class SellerStatsComponent implements OnInit, OnDestroy {
   summary: ReportSummary | null = null;
   topProducts: TopProduct[]     = [];
 
-  private products  = toSignal(this.store.select(selectSellerProducts), { initialValue: [] });
-  catalogLoading$   = this.store.select(selectSellerLoading);
-  activeProducts    = computed(() => this.products().filter(p => p.status === 'ACTIVE').length);
-  totalProducts     = computed(() => this.products().length);
-  outOfStock        = computed(() => this.products().filter(p => p.status === 'OUT_OF_STOCK').length);
-  lowStock          = computed(() => this.products().flatMap(p => p.variants).filter(v => v.stock > 0 && v.stock <= 5).length);
+  private products = toSignal(this.store.select(selectSellerProducts), { initialValue: [] });
+  catalogLoading$  = this.store.select(selectSellerLoading);
+  activeProducts   = computed(() => this.products().filter(p => p.status === 'ACTIVE').length);
+  totalProducts    = computed(() => this.products().length);
 
   ngOnInit() {
     this.store.dispatch(loadSellerProducts());
@@ -78,16 +78,18 @@ export class SellerStatsComponent implements OnInit, OnDestroy {
   }
 
   private loadReport(key: string) {
+    const storeId = this.storeId();
+    if (!storeId) return;
     const range = this.buildRange(key);
     this.loading = true;
     this.error   = false;
 
-    this.svc.getSellerSummary(range).subscribe({
+    this.svc.getSellerSummary(storeId, range).subscribe({
       next: s => { this.summary = s; },
       error: () => { this.error = true; },
     });
 
-    this.svc.getSellerTopProducts(range, 8).subscribe({
+    this.svc.getSellerTopProducts(storeId, range, 8).subscribe({
       next: products => {
         this.topProducts = products;
         this.buildChart(products);

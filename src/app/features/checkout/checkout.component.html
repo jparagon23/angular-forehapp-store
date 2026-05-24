@@ -1,3 +1,5 @@
+<app-navbar></app-navbar>
+
 <div class="checkout-page">
   <div class="checkout-wrap">
 
@@ -13,8 +15,15 @@
             <path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
             <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
           </svg>
-          <span>{{ group.sellerName }}</span>
+          <span>{{ group.storeName }}</span>
           <span class="group-subtotal">Subtotal: {{ group.subtotal | currencyCop }}</span>
+          <ng-container *ngIf="getGroupShipping(group.storeId) as ship">
+            <span class="group-shipping">
+              Envío:
+              <span *ngIf="ship.freeShipping" class="free">Gratis</span>
+              <span *ngIf="!ship.freeShipping">{{ ship.shippingCost | currencyCop }}</span>
+            </span>
+          </ng-container>
         </div>
 
         <!-- Items -->
@@ -27,34 +36,44 @@
               <p class="oi-unit">{{ item.unitPrice | currencyCop }} × {{ item.quantity }}</p>
             </div>
             <div class="oi-total">{{ item.subtotal | currencyCop }}</div>
+            <button class="btn-remove-item"
+                    (click)="removeItem(item.itemId)"
+                    [disabled]="removingItem() !== null"
+                    [class.removing]="removingItem() === item.itemId"
+                    title="Quitar del pedido">
+              <span class="mini-spin" *ngIf="removingItem() === item.itemId"></span>
+              <svg *ngIf="removingItem() !== item.itemId" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
           </div>
         </div>
 
         <!-- Coupon field -->
         <div class="coupon-section">
-          <ng-container *ngIf="!appliedCoupons[group.sellerId]; else couponApplied">
+          <ng-container *ngIf="!appliedCoupons[group.storeId]; else couponApplied">
             <div class="coupon-input-row">
               <input
                 class="coupon-input"
                 type="text"
-                placeholder="Cupón de {{ group.sellerName }}"
-                [(ngModel)]="couponInputs[group.sellerId]"
-                (ngModelChange)="couponErrors[group.sellerId] = ''"
-                (keydown.enter)="applyCoupon(group.sellerId, group.subtotal)"
-                [disabled]="couponLoading[group.sellerId]"
-                [class.has-error]="couponErrors[group.sellerId]"
+                placeholder="Cupón de {{ group.storeName }}"
+                [(ngModel)]="couponInputs[group.storeId]"
+                (ngModelChange)="couponErrors[group.storeId] = ''"
+                (keydown.enter)="applyCoupon(group.storeId, group.subtotal)"
+                [disabled]="couponLoading[group.storeId]"
+                [class.has-error]="couponErrors[group.storeId]"
                 maxlength="50"
               />
               <button
                 class="btn-apply-coupon"
-                (click)="applyCoupon(group.sellerId, group.subtotal)"
-                [disabled]="couponLoading[group.sellerId] || !(couponInputs[group.sellerId] || '').trim()">
-                <span *ngIf="!couponLoading[group.sellerId]">Aplicar</span>
-                <span class="mini-spin" *ngIf="couponLoading[group.sellerId]"></span>
+                (click)="applyCoupon(group.storeId, group.subtotal)"
+                [disabled]="couponLoading[group.storeId] || !(couponInputs[group.storeId] || '').trim()">
+                <span *ngIf="!couponLoading[group.storeId]">Aplicar</span>
+                <span class="mini-spin" *ngIf="couponLoading[group.storeId]"></span>
               </button>
             </div>
-            <p class="coupon-error" *ngIf="couponErrors[group.sellerId]">
-              {{ couponErrors[group.sellerId] }}
+            <p class="coupon-error" *ngIf="couponErrors[group.storeId]">
+              {{ couponErrors[group.storeId] }}
             </p>
           </ng-container>
 
@@ -64,24 +83,24 @@
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
               <span>
-                {{ appliedCoupons[group.sellerId].code }}
-                <ng-container *ngIf="appliedCoupons[group.sellerId].discountType === 'PORCENTAJE'">
-                  — {{ appliedCoupons[group.sellerId].discountValue }}% descuento
+                {{ appliedCoupons[group.storeId].code }}
+                <ng-container *ngIf="appliedCoupons[group.storeId].discountType === 'PORCENTAJE'">
+                  — {{ appliedCoupons[group.storeId].discountValue }}% descuento
                 </ng-container>
-                <ng-container *ngIf="appliedCoupons[group.sellerId].discountType === 'MONTO_FIJO'">
-                  — {{ appliedCoupons[group.sellerId].discountValue | currencyCop }} descuento
+                <ng-container *ngIf="appliedCoupons[group.storeId].discountType === 'MONTO_FIJO'">
+                  — {{ appliedCoupons[group.storeId].discountValue | currencyCop }} descuento
                 </ng-container>
               </span>
-              <span class="coupon-saving">−{{ appliedCoupons[group.sellerId].discountAmount | currencyCop }}</span>
-              <button class="btn-remove-coupon" (click)="removeCoupon(group.sellerId)" title="Quitar cupón">
+              <span class="coupon-saving">−{{ appliedCoupons[group.storeId].discountAmount | currencyCop }}</span>
+              <button class="btn-remove-coupon" (click)="removeCoupon(group.storeId)" title="Quitar cupón">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                   <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
               </button>
             </div>
             <div class="group-final-row">
-              <span>Total {{ group.sellerName }}:</span>
-              <strong>{{ getGroupTotal(group.sellerId, group.subtotal) | currencyCop }}</strong>
+              <span>Total {{ group.storeName }}:</span>
+              <strong>{{ getGroupTotal(group.storeId, group.subtotal) | currencyCop }}</strong>
             </div>
           </ng-template>
         </div>
@@ -98,10 +117,38 @@
           <span>Descuentos aplicados</span>
           <span class="discount-val">−{{ totalDiscount | currencyCop }}</span>
         </div>
-        <div class="sum-row">
+
+        <!-- Envío: sin dirección -->
+        <div class="sum-row ship-pending" *ngIf="!selectedAddressId && !shippingLoading()">
           <span>Envío</span>
-          <span class="free">Gratis</span>
+          <span class="ship-msg">Selecciona una dirección</span>
         </div>
+
+        <!-- Envío: calculando -->
+        <div class="sum-row" *ngIf="shippingLoading()">
+          <span>Envío</span>
+          <span class="ship-calc"><span class="mini-spin"></span> Calculando...</span>
+        </div>
+
+        <!-- Envío: error -->
+        <div class="sum-row" *ngIf="!shippingLoading() && shippingError()">
+          <span>Envío</span>
+          <span class="ship-err">{{ shippingError() }}</span>
+        </div>
+
+        <!-- Envío: desglose por tienda -->
+        <ng-container *ngIf="!shippingLoading() && shippingEstimate() as estimate">
+          <div class="sum-row" *ngFor="let sg of estimate.sellerGroups">
+            <span class="ship-store-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
+                <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+              </svg>
+              {{ sg.storeName }}
+            </span>
+            <span *ngIf="sg.freeShipping" class="free">Gratis</span>
+            <span *ngIf="!sg.freeShipping">{{ sg.shippingCost | currencyCop }}</span>
+          </div>
+        </ng-container>
       </div>
 
       <div class="total-row">
@@ -110,7 +157,37 @@
       </div>
     </div>
 
-    <!-- Right: payment panel -->
+    <!-- Right: confirmation screen OR payment panel -->
+    <ng-container *ngIf="createdOrder$ | async as confirmedOrder; else payCardTpl">
+      <div class="pay-card">
+
+        <!-- MP: redirecting -->
+        <div class="redirect-msg" *ngIf="confirmedOrder.checkoutUrl">
+          <span class="btn-spinner"></span>
+          <p>Redirigiendo a MercadoPago...</p>
+        </div>
+
+        <!-- CASH / TRANSFER / COD: confirmation screen -->
+        <div class="order-confirmed" *ngIf="!confirmedOrder.checkoutUrl">
+          <div class="oc-check">✅</div>
+          <h2 class="oc-title">Pedido #{{ confirmedOrder.orderId }} creado</h2>
+          <p class="oc-total">Total: <strong>{{ confirmedOrder.total | currencyCop }}</strong></p>
+          <p class="oc-msg" *ngIf="confirmedOrder.paymentMethod === 'CASH'">
+            Un administrador verificará tu pago en efectivo y te notificará por email cuando sea aprobado.
+          </p>
+          <p class="oc-msg" *ngIf="confirmedOrder.paymentMethod === 'TRANSFER'">
+            Un administrador verificará tu transferencia bancaria y te notificará por email cuando sea aprobado.
+          </p>
+          <p class="oc-msg" *ngIf="confirmedOrder.paymentMethod === 'CASH_ON_DELIVERY'">
+            Tu pedido ya está siendo preparado. Pagarás <strong>{{ confirmedOrder.total | currencyCop }}</strong> al momento de la entrega.
+          </p>
+          <a routerLink="/orders" class="btn-view-orders">Ver mis pedidos →</a>
+        </div>
+
+      </div>
+    </ng-container>
+
+    <ng-template #payCardTpl>
     <div class="pay-card">
 
       <h2 class="card-title">Pago</h2>
@@ -159,8 +236,8 @@
             <div class="sel-info">
               <p class="sel-alias">{{ sel.alias || 'Dirección' }}</p>
               <p class="sel-street">{{ sel.street }}</p>
-              <p class="sel-city">{{ sel.city }}<span *ngIf="sel.state">, {{ sel.state }}</span><span *ngIf="sel.zipCode"> {{ sel.zipCode }}</span></p>
-              <p class="sel-country">{{ sel.country }}</p>
+              <p class="sel-city">{{ sel.city.name }}, {{ sel.state.name }}<span *ngIf="sel.zipCode"> {{ sel.zipCode }}</span></p>
+              <p class="sel-country">{{ sel.country.name }}</p>
             </div>
           </div>
 
@@ -175,7 +252,7 @@
                 <p class="pick-alias">{{ addr.alias || 'Dirección' }}
                   <span class="pick-default" *ngIf="addr.isDefault">Predeterminada</span>
                 </p>
-                <p class="pick-detail">{{ addr.street }}, {{ addr.city }}</p>
+                <p class="pick-detail">{{ addr.street }}, {{ addr.city.name }}</p>
               </div>
             </div>
             <button class="pick-add-new" (click)="openAddressForm()">
@@ -191,17 +268,33 @@
       </div>
       <!-- ── /Shipping address ──────────────────────────── -->
 
-      <!-- MercadoPago notice -->
-      <div class="mp-notice">
-        <div class="mp-logo">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-            <line x1="1" y1="10" x2="23" y2="10"/>
-          </svg>
-        </div>
-        <div class="mp-text">
-          <p class="mp-title">Pago procesado por MercadoPago</p>
-          <p class="mp-sub">Al confirmar serás redirigido a la plataforma de pago segura.</p>
+      <!-- Payment method selector -->
+      <div class="pm-section" *ngIf="addresses$ | async as addrs">
+        <p class="pm-section-label">Método de pago</p>
+        <div class="pm-options">
+
+          <button class="pm-opt" [class.active]="selectedPaymentMethod === 'MERCADO_PAGO'"
+                  (click)="selectedPaymentMethod = 'MERCADO_PAGO'">
+            <span class="pm-opt-icon">💳</span>
+            <div class="pm-opt-body">
+              <span class="pm-opt-name">MercadoPago</span>
+              <span class="pm-opt-desc">Tarjeta, PSE, efectivo online</span>
+            </div>
+          </button>
+
+
+          <button class="pm-opt"
+                  [class.active]="selectedPaymentMethod === 'CASH_ON_DELIVERY'"
+                  [class.pm-disabled]="!isSelectedAddressCali(addrs)"
+                  [disabled]="!isSelectedAddressCali(addrs)"
+                  (click)="selectedPaymentMethod = 'CASH_ON_DELIVERY'">
+            <span class="pm-opt-icon">🚚</span>
+            <div class="pm-opt-body">
+              <span class="pm-opt-name">Contra entrega <span class="pm-opt-tag">Solo Cali</span></span>
+              <span class="pm-opt-desc">Pago al momento de la entrega</span>
+            </div>
+          </button>
+
         </div>
       </div>
 
@@ -226,7 +319,8 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
-          Confirmar y pagar · {{ totalWithDiscounts | currencyCop }}
+          {{ selectedPaymentMethod === 'MERCADO_PAGO' ? 'Confirmar y pagar' : 'Confirmar pedido' }}
+          · {{ totalWithDiscounts | currencyCop }}
         </ng-container>
         <ng-template #loadingTpl>
           <span class="btn-spinner"></span>
@@ -236,6 +330,7 @@
 
       <a routerLink="/" class="back-link">← Seguir comprando</a>
     </div>
+    </ng-template>
 
   </div>
 </div>
@@ -267,30 +362,39 @@
         <span class="err" *ngIf="hasFormError('street')">La dirección es obligatoria</span>
       </div>
 
-      <div class="field-row">
-        <div class="field">
-          <label>Ciudad <span class="req">*</span></label>
-          <input type="text" formControlName="city" placeholder="Bogotá" maxlength="100"
-                 [class.invalid]="hasFormError('city')">
-          <span class="err" *ngIf="hasFormError('city')">La ciudad es obligatoria</span>
-        </div>
-        <div class="field">
-          <label>Estado / Depto</label>
-          <input type="text" formControlName="state" placeholder="Cundinamarca" maxlength="100">
-        </div>
+      <div class="field">
+        <label>País <span class="req">*</span></label>
+        <select (change)="onAddrCountryChange($event)">
+          <option value="">-- Seleccionar país --</option>
+          <option *ngFor="let c of addrCountries()" [value]="c.id"
+                  [selected]="c.id === addrCountryId()">{{ c.name }}</option>
+        </select>
       </div>
 
       <div class="field-row">
         <div class="field">
-          <label>País <span class="req">*</span></label>
-          <input type="text" formControlName="country" placeholder="Colombia" maxlength="100"
-                 [class.invalid]="hasFormError('country')">
-          <span class="err" *ngIf="hasFormError('country')">El país es obligatorio</span>
+          <label>Departamento <span class="req">*</span></label>
+          <select [disabled]="!addrCountryId()" (change)="onAddrStateChange($event)">
+            <option value="">-- Seleccionar departamento --</option>
+            <option *ngFor="let s of addrStates()" [value]="s.id"
+                    [selected]="s.id === addrStateId()">{{ s.name }}</option>
+          </select>
         </div>
         <div class="field">
-          <label>Código postal</label>
-          <input type="text" formControlName="zipCode" placeholder="110111" maxlength="20">
+          <label>Ciudad <span class="req">*</span></label>
+          <select [disabled]="!addrStateId()" (change)="onAddrCityChange($event)"
+                  [class.invalid]="hasFormError('cityId')">
+            <option value="">-- Seleccionar ciudad --</option>
+            <option *ngFor="let c of addrCities()" [value]="c.id"
+                    [selected]="c.id === addressForm.get('cityId')?.value">{{ c.name }}</option>
+          </select>
+          <span class="err" *ngIf="hasFormError('cityId')">La ciudad es obligatoria</span>
         </div>
+      </div>
+
+      <div class="field">
+        <label>Código postal</label>
+        <input type="text" formControlName="zipCode" placeholder="110111" maxlength="20">
       </div>
 
       <div class="modal-footer">

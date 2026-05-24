@@ -1,6 +1,8 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { NgFor, NgIf, NgSwitch, NgSwitchCase, DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Store } from '@ngrx/store';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { CouponService } from '../../../core/services/coupon.service';
 import {
   CouponResponse,
@@ -9,6 +11,7 @@ import {
   UpdateCouponRequest,
 } from '../../../core/models/coupon.model';
 import { CurrencyCopPipe } from '../../../shared/pipes/currency-cop.pipe';
+import { selectActiveSellerStoreId } from '../../../store/seller/seller.selectors';
 
 @Component({
   selector: 'app-seller-coupons',
@@ -20,6 +23,9 @@ import { CurrencyCopPipe } from '../../../shared/pipes/currency-cop.pipe';
 export class SellerCouponsComponent implements OnInit {
   private couponService = inject(CouponService);
   private fb            = inject(FormBuilder);
+  private ngrx          = inject(Store);
+
+  private storeId = toSignal(this.ngrx.select(selectActiveSellerStoreId), { initialValue: null });
 
   coupons  = signal<CouponResponse[]>([]);
   loading  = signal(true);
@@ -45,8 +51,10 @@ export class SellerCouponsComponent implements OnInit {
   ngOnInit() { this.load(); }
 
   load() {
+    const storeId = this.storeId();
+    if (!storeId) { this.loading.set(false); return; }
     this.loading.set(true);
-    this.couponService.getMyCoupons().subscribe({
+    this.couponService.getMyCoupons(storeId).subscribe({
       next: page => { this.coupons.set(page.content); this.loading.set(false); },
       error: ()   => { this.error.set('Error al cargar cupones'); this.loading.set(false); },
     });
@@ -79,7 +87,9 @@ export class SellerCouponsComponent implements OnInit {
       validUntil:     v.validUntil || undefined,
     };
 
-    this.couponService.createCoupon(req).subscribe({
+    const storeId = this.storeId();
+    if (!storeId) { this.saving.set(false); return; }
+    this.couponService.createCoupon(storeId, req).subscribe({
       next: () => { this.saving.set(false); this.closeForm(); this.load(); },
       error: err => {
         const msg = err?.error?.message ?? 'Error al crear el cupón';
@@ -90,13 +100,17 @@ export class SellerCouponsComponent implements OnInit {
   }
 
   deactivate(c: CouponResponse) {
-    this.couponService.deactivateCoupon(c.couponId).subscribe({
+    const storeId = this.storeId();
+    if (!storeId) return;
+    this.couponService.deactivateCoupon(storeId, c.couponId).subscribe({
       next: updated => this.coupons.update(list => list.map(x => x.couponId === updated.couponId ? updated : x)),
     });
   }
 
   reactivate(c: CouponResponse) {
-    this.couponService.reactivateCoupon(c.couponId).subscribe({
+    const storeId = this.storeId();
+    if (!storeId) return;
+    this.couponService.reactivateCoupon(storeId, c.couponId).subscribe({
       next: updated => this.coupons.update(list => list.map(x => x.couponId === updated.couponId ? updated : x)),
     });
   }

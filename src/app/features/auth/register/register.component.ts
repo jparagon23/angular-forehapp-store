@@ -3,6 +3,8 @@ import { AbstractControl, FormBuilder, ValidationErrors, Validators, ReactiveFor
 import { Router, RouterLink } from '@angular/router';
 import { NgIf } from '@angular/common';
 import { AuthApiService } from '../../../core/services/auth-api.service';
+import Swal from 'sweetalert2';
+import { apiCode } from '../../../core/models/api-error.model';
 
 function passwordsMatch(ctrl: AbstractControl): ValidationErrors | null {
   const pass    = ctrl.get('password')?.value;
@@ -30,9 +32,10 @@ export class RegisterComponent {
     confirm:  ['', Validators.required],
   }, { validators: passwordsMatch });
 
-  submitted   = false;
-  showPass    = false;
-  loading     = false;
+  submitted        = false;
+  showPass         = false;
+  showConfirmPass  = false;
+  loading          = false;
   serverError = '';
 
   get name()     { return this.form.controls['name']; }
@@ -55,8 +58,23 @@ export class RegisterComponent {
     }).subscribe({
       next: res => this.router.navigate(['/verify-code'], { queryParams: { userId: res.userId } }),
       error: err => {
-        this.loading     = false;
-        this.serverError = err.error?.message ?? 'Error al registrarse. Inténtalo de nuevo.';
+        this.loading = false;
+        if (apiCode(err) === 'AUTH_EMAIL_ALREADY_REGISTERED') {
+          Swal.fire({
+            icon: 'info',
+            title: 'Correo ya registrado',
+            html: 'Este correo ya tiene una cuenta en <strong>Forehapp Store</strong>.<br>Puedes iniciar sesión con el mismo correo y contraseña.',
+            confirmButtonText: 'Ir al inicio de sesión',
+            confirmButtonColor: '#2e7d32',
+            showCancelButton: true,
+            cancelButtonText: 'Cancelar',
+            cancelButtonColor: '#aaa',
+          }).then(result => {
+            if (result.isConfirmed) this.router.navigate(['/login']);
+          });
+        } else {
+          this.serverError = 'Error al registrarse. Inténtalo de nuevo.';
+        }
       },
     });
   }

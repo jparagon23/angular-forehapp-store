@@ -1,0 +1,43 @@
+<app-navbar></app-navbar>
+
+<div class="page-header">
+  <div>
+    <h1>Mis Tiendas</h1>
+    <p>Tiendas en las que eres miembro activo</p>
+  </div>
+</div>
+
+<div class="page-body">
+
+  <div *ngIf="loading$ | async" class="loader">Cargando tiendas…</div>
+
+  <div *ngIf="error$ | async as err" class="alert-err">⚠️ {{ err }}</div>
+
+  <ng-container *ngIf="stores$ | async as stores">
+    <div *ngIf="stores.length === 0 && !(loading$ | async)" class="empty-state">
+      <div class="empty-icon">🏪</div>
+      <h3>Sin tiendas asignadas</h3>
+      <p>Aún no eres miembro de ninguna tienda. Contacta a un administrador para ser invitado.</p>
+    </div>
+
+    <div class="stores-grid">
+      <div *ngFor="let s of stores" class="store-card">
+        <div class="store-card-top">
+          <div class="store-icon">🏪</div>
+          <div class="badges">
+            <span class="role-badge" [class]="'role-' + s.myRole.toLowerCase()">
+              {{ roleLabel(s.myRole) }}
+            </span>
+            <span class="status-badge" [class]="s.status === 'ACTIVE' ? 'status-active' : 'status-inactive'">
+              {{ s.status === 'ACTIVE' ? 'Activa' : 'Inactiva' }}
+            </span>
+          </div>
+        </div>
+        <h2 class="store-name">{{ s.name }}</h2>
+        <p class="store-slug">{{ s.slug }}</p>
+        <a class="btn-manage" [routerLink]="['/stores', s.storeId]">Gestionar →</a>
+      </div>
+    </div>
+  </ng-container>
+
+</div>

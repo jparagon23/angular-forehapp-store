@@ -5,11 +5,12 @@ import { AsyncPipe, NgFor, NgIf } from '@angular/common';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { combineLatest, map, take, catchError, of, Subscription } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { loadProducts } from '../../store/products/products.actions';
+import { loadProducts, resetProductList } from '../../store/products/products.actions';
 import { selectAllProducts, selectProductsLoading } from '../../store/products/products.selectors';
+import { addCartItem, openCart } from '../../store/cart/cart.actions';
 import { addToWishlist, addToWishlistFailure, removeFromWishlist } from '../../store/wishlist/wishlist.actions';
 import { selectWishlistProductIdToItemId } from '../../store/wishlist/wishlist.selectors';
-import { selectIsLoggedIn } from '../../store/auth/auth.selectors';
+import { selectIsLoggedIn, selectUserRole } from '../../store/auth/auth.selectors';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { CartDrawerComponent } from '../cart/cart-drawer.component';
 import { ToastComponent } from '../../shared/components/toast/toast.component';
@@ -34,8 +35,10 @@ export class CatalogComponent implements OnInit, OnDestroy {
   private sub            = new Subscription();
 
   loading$     = this.store.select(selectProductsLoading);
-  toastMessage = signal('');
-  toastTrigger = signal(0);
+  userRole$    = this.store.select(selectUserRole);
+  toastMessage   = signal('');
+  toastTrigger   = signal(0);
+  addingProductId = signal<number | null>(null);
 
   wishlistItemMap = toSignal(this.store.select(selectWishlistProductIdToItemId), { initialValue: new Map<number, number>() });
   isLoggedIn          = toSignal(this.store.select(selectIsLoggedIn),                 { initialValue: false });
@@ -72,6 +75,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
       const categoryId = catName
         ? categories.find((c: Category) => c.name === catName)?.id
         : undefined;
+      this.store.dispatch(resetProductList());
       this.store.dispatch(loadProducts({ search, categoryId }));
     });
   }
@@ -84,7 +88,26 @@ export class CatalogComponent implements OnInit, OnDestroy {
 
   addToCart(product: Product, event: Event) {
     event.stopPropagation();
-    this.router.navigate(['/product', product.id]);
+    this.addingProductId.set(product.id);
+    this.productService.getProduct(product.id).pipe(take(1)).subscribe({
+      next: detail => {
+        this.addingProductId.set(null);
+        const variant = detail?.variants?.[0];
+        if (!variant) return;
+        this.store.dispatch(addCartItem({
+          variantId:    variant.id,
+          quantity:     1,
+          productTitle: product.name,
+          sku:          variant.sku,
+          unitPrice:    variant.price ?? product.price,
+          imageUrl:     product.image || detail?.image,
+        }));
+        this.store.dispatch(openCart());
+        this.toastMessage.set(`${product.name} agregado al carrito`);
+        this.toastTrigger.update(n => n + 1);
+      },
+      error: () => this.addingProductId.set(null),
+    });
   }
 
   toggleWishlist(product: Product, event: Event) {
@@ -103,7 +126,21 @@ export class CatalogComponent implements OnInit, OnDestroy {
     return !!(p.variations?.sizes?.length || p.variations?.colors?.length);
   }
 
+  discountPct(compareAt: number, price: number): number {
+    return Math.round((1 - price / compareAt) * 100);
+  }
+
+  onImgLoad(event: Event) {
+    const img = event.target as HTMLImageElement;
+    img.classList.add('loaded');
+    const skeleton = img.parentElement?.querySelector('.img-skeleton') as HTMLElement | null;
+    if (skeleton) skeleton.style.display = 'none';
+  }
+
   onImgError(event: Event) {
-    (event.target as HTMLImageElement).style.display = 'none';
+    const img = event.target as HTMLImageElement;
+    img.style.display = 'none';
+    const skeleton = img.parentElement?.querySelector('.img-skeleton') as HTMLElement | null;
+    if (skeleton) skeleton.style.display = 'none';
   }
 }

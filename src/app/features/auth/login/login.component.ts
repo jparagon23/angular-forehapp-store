@@ -45,7 +45,7 @@ export class LoginComponent {
     this.authService.login(this.email.value!, this.password.value!).subscribe({
       next: res => {
         const role = resolveRole(res.storeRoles);
-        const user = { userId: res.userId, name: res.name, email: res.email, role };
+        const user = { userId: res.userId, name: res.name, email: res.email, role, storeRoles: res.storeRoles };
         this.tokenStore.setTokens(res.access_token, res.refresh_token, user);
         this.store.dispatch(loginSuccess({ user }));
         const redirect = this.route.snapshot.queryParams['redirect'] ?? '/';

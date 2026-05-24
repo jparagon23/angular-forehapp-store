@@ -33,14 +33,14 @@ export class ReportService {
     });
   }
 
-  getSellerSummary(range: DateRange): Observable<ReportSummary> {
-    return this.http.get<ReportSummary>(`${this.BASE}/seller/reports/summary`, {
+  getSellerSummary(storeId: number, range: DateRange): Observable<ReportSummary> {
+    return this.http.get<ReportSummary>(`${this.BASE}/stores/${storeId}/reports/summary`, {
       params: { from: range.from, to: range.to },
     });
   }
 
-  getSellerTopProducts(range: DateRange, limit = 10): Observable<TopProduct[]> {
-    return this.http.get<TopProduct[]>(`${this.BASE}/seller/reports/top-products`, {
+  getSellerTopProducts(storeId: number, range: DateRange, limit = 10): Observable<TopProduct[]> {
+    return this.http.get<TopProduct[]>(`${this.BASE}/stores/${storeId}/reports/top-products`, {
       params: { from: range.from, to: range.to, limit: String(limit) },
     });
   }

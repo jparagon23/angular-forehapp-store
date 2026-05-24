@@ -3,8 +3,8 @@ export type CouponStatus = 'ACTIVA' | 'INACTIVA';
 
 export interface CouponResponse {
   couponId: number;
-  sellerId: number;
-  sellerName: string;
+  storeId: number;
+  storeName: string;
   code: string;
   description: string | null;
   discountType: DiscountType;
@@ -32,13 +32,13 @@ export interface CouponValidationResponse {
 
 export interface ValidateCouponRequest {
   code: string;
-  sellerId: number;
+  storeId: number;
   orderAmount: number;
 }
 
 export interface RedeemCouponRequest {
   code: string;
-  sellerId: number;
+  storeId: number;
   orderAmount: number;
   orderId?: number;
 }
@@ -72,7 +72,7 @@ export interface CouponPageResponse {
 }
 
 export interface AppliedCoupon {
-  sellerId: number;
+  storeId: number;
   code: string;
   discountAmount: number;
   finalAmount: number;

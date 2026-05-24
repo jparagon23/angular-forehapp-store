@@ -1,0 +1,61 @@
+<app-admin-topbar title="Tiendas"></app-admin-topbar>
+
+<div class="content">
+
+  <div *ngIf="error$ | async as err" class="alert alert-warn">⚠️ {{ err }}</div>
+
+  <!-- Success card -->
+  <ng-container *ngIf="created$ | async as created">
+    <div class="success-card">
+      <div class="success-icon">✅</div>
+      <div>
+        <div class="success-title">Tienda creada exitosamente</div>
+        <div class="success-meta">
+          <strong>{{ created.name }}</strong> &nbsp;·&nbsp;
+          <span class="slug-chip">{{ created.slug }}</span> &nbsp;·&nbsp;
+          <span class="status-chip">{{ created.status }}</span>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm" (click)="reset()">Crear otra</button>
+    </div>
+  </ng-container>
+
+  <!-- Create form -->
+  <div class="form-card">
+    <div class="form-card-header">
+      <h2>Nueva tienda</h2>
+      <p>Asigna un dueño (OWNER) al crear la tienda. El dueño podrá invitar otros miembros.</p>
+    </div>
+
+    <div class="form-body">
+      <div class="form-group">
+        <label>Nombre <span class="req">*</span></label>
+        <input [(ngModel)]="name" placeholder="Ej. Deportes García" maxlength="150" />
+        <span class="hint">Mín. 2 caracteres, máx. 150</span>
+      </div>
+
+      <div class="form-group">
+        <label>Descripción</label>
+        <textarea [(ngModel)]="description" rows="3" placeholder="Descripción opcional…" maxlength="1000"></textarea>
+        <span class="hint">Máx. 1 000 caracteres</span>
+      </div>
+
+      <div class="form-group">
+        <label>ID del owner <span class="req">*</span></label>
+        <input type="number" [(ngModel)]="ownerId" placeholder="userId del futuro dueño" min="1" />
+        <span class="hint">Usa el userId que devuelven los endpoints de usuarios</span>
+      </div>
+
+      <div class="form-actions">
+        <button
+          class="btn btn-green"
+          [disabled]="!name.trim() || !ownerId || (loading$ | async)"
+          (click)="submit()"
+        >
+          {{ (loading$ | async) ? 'Creando…' : 'Crear tienda' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -18,6 +18,7 @@ export interface ProductVariant {
   price: number;
   compareAtPrice?: number;
   stock: number;
+  active: boolean;
   attributes: VariantAttribute[];
 }
 
@@ -33,6 +34,8 @@ export type ProductStatus = 'DRAFT' | 'ACTIVE' | 'INACTIVE' | 'OUT_OF_STOCK';
 
 export interface SellerProduct {
   id: number;
+  storeId: number;
+  storeName: string;
   title: string;
   description?: string;
   brand: string;
@@ -41,7 +44,9 @@ export interface SellerProduct {
   status: ProductStatus;
   createdAt: string;
   variants: ProductVariant[];
-  images: ProductImage[];
+  thumbnailUrl?: string | null;
+  freeShipping: boolean;
+  images?: ProductImage[];
 }
 
 export interface CreateProductRequest {
@@ -50,6 +55,7 @@ export interface CreateProductRequest {
   brandId: number;
   lineId?: number;
   categoryId: number;
+  freeShipping?: boolean;
 }
 
 export interface CreateVariantRequest {
