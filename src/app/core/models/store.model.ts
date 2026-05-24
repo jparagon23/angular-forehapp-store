@@ -47,3 +47,10 @@ export interface InviteMemberRequest {
   userId: number;
   role: StoreRole;
 }
+
+export interface UserSearchResult {
+  id: number;
+  name: string;
+  lastname: string;
+  email: string;
+}

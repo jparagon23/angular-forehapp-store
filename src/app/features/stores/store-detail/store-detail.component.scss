@@ -113,12 +113,38 @@ tr:hover td { background: #f9fef9; }
   background: #fafcfa;
   h3 { font-size: .9rem; font-weight: 700; color: var(--dark); margin-bottom: 12px; }
 }
-.invite-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+.search-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
 .invite-input {
   border: 1px solid var(--border); border-radius: 8px;
-  padding: 7px 12px; font-size: .9rem; outline: none; width: 180px;
+  padding: 7px 12px; font-size: .9rem; outline: none;
   &:focus { border-color: var(--green); }
 }
+.search-email-input { flex: 1; min-width: 220px; max-width: 340px; }
+
+.search-error {
+  margin: 8px 0 0; font-size: .83rem; color: var(--red, #e53e3e); font-weight: 500;
+}
+
+.found-user {
+  display: flex; align-items: center; gap: 12px;
+  background: #f0f8f0; border: 1px solid #b8d8b8; border-radius: 10px;
+  padding: 10px 14px; margin-bottom: 12px;
+}
+.found-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--green); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .95rem; font-weight: 800; flex-shrink: 0;
+}
+.found-info {
+  display: flex; flex-direction: column; gap: 2px; flex: 1;
+}
+.found-name  { font-size: .9rem; font-weight: 700; color: var(--dark); }
+.found-email { font-size: .8rem; color: var(--muted); }
+
+.invite-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 
 .btn {
   padding: 8px 18px; border-radius: 8px; border: none;

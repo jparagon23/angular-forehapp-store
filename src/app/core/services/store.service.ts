@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   CreateStoreRequest, InviteMemberRequest, MyStore,
-  Store, StoreMember, StoreRole, UpdateStoreRequest,
+  Store, StoreMember, StoreRole, UpdateStoreRequest, UserSearchResult,
 } from '../models/store.model';
 
 @Injectable({ providedIn: 'root' })
@@ -42,5 +42,9 @@ export class StoreService {
 
   removeMember(storeId: number, membershipId: number): Observable<void> {
     return this.http.delete<void>(`${this.BASE}/stores/${storeId}/members/${membershipId}`);
+  }
+
+  searchUserByEmail(email: string): Observable<UserSearchResult> {
+    return this.http.get<UserSearchResult>(`${this.BASE}/users/search`, { params: { email } });
   }
 }
