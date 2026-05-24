@@ -25,6 +25,10 @@ export class SellerProductService {
     return this.http.get<BrandLine[]>(`${this.BASE}/brands/${brandId}/lines`, { params });
   }
 
+  createCategory(name: string): Observable<Category> {
+    return this.http.post<Category>(`${this.BASE}/admin/categories`, { name });
+  }
+
   createBrand(name: string): Observable<Brand> {
     return this.http.post<Brand>(`${this.BASE}/admin/brands`, { name });
   }

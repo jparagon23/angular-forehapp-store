@@ -20,6 +20,11 @@ export class BrandsAdminComponent implements OnInit {
   categories: Category[] = [];
   loading = true;
 
+  catName     = '';
+  catLoading  = false;
+  catError    = '';
+  catCreated: Category | null = null;
+
   brandName     = '';
   brandLoading  = false;
   brandError    = '';
@@ -40,6 +45,25 @@ export class BrandsAdminComponent implements OnInit {
         this.loading    = false;
       },
       error: () => { this.loading = false; },
+    });
+  }
+
+  createCategory() {
+    if (!this.catName.trim()) return;
+    this.catLoading = true;
+    this.catError   = '';
+    this.catCreated = null;
+    this.svc.createCategory(this.catName.trim()).subscribe({
+      next: cat => {
+        this.catCreated    = cat;
+        this.categories    = [...this.categories, cat];
+        this.catName       = '';
+        this.catLoading    = false;
+      },
+      error: err => {
+        this.catError   = err.error?.message ?? 'Error al crear la categoría.';
+        this.catLoading = false;
+      },
     });
   }
 
