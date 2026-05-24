@@ -98,7 +98,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
           variantId:    variant.id,
           quantity:     1,
           productTitle: product.name,
-          sku:          variant.sku,
+          sku:          variant.sku ?? undefined,
           unitPrice:    variant.price ?? product.price,
           imageUrl:     product.image || detail?.image,
         }));

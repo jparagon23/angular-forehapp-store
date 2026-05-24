@@ -65,7 +65,7 @@
 
             <div class="ci-info">
               <p class="ci-name">{{ item.productTitle }}</p>
-              <p class="ci-variant">{{ item.sku }}</p>
+              <p class="ci-variant" *ngIf="item.sku">{{ item.sku }}</p>
 
               <!-- Price change alert -->
               <div class="price-alert" *ngIf="item.priceChanged">

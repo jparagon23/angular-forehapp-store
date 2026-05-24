@@ -4,7 +4,7 @@ export type ReturnType = 'DEVOLUCION' | 'REEMBOLSO_PARCIAL' | 'REEMBOLSO_COMPLET
 export interface ReturnItemResponse {
   orderItemId: number;
   productTitle: string;
-  variantSku: string;
+  variantSku: string | null;
   quantityOrdered: number;
   quantityToReturn: number;
   unitPrice: number;

@@ -4,7 +4,7 @@ import { CartItemResponse, CartResponse, CartSellerGroup } from '../models/cart.
 export interface GuestCartItem {
   variantId: number;
   quantity: number;
-  sku: string;
+  sku: string | null;
   productTitle: string;
   unitPrice: number;
   thumbnailUrl?: string;

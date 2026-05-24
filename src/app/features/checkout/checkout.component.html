@@ -32,7 +32,7 @@
             <div class="oi-thumb">📦</div>
             <div class="oi-info">
               <p class="oi-name">{{ item.productTitle }}</p>
-              <p class="oi-variant">{{ item.sku }}</p>
+              <p class="oi-variant" *ngIf="item.sku">{{ item.sku }}</p>
               <p class="oi-unit">{{ item.unitPrice | currencyCop }} × {{ item.quantity }}</p>
             </div>
             <div class="oi-total">{{ item.subtotal | currencyCop }}</div>

@@ -72,7 +72,7 @@
     <!-- Items -->
     <div class="ret-items">
       <div class="ret-item" *ngFor="let item of r.items">
-        <span class="ret-item-sku">{{ item.variantSku }}</span>
+        <span class="ret-item-sku" *ngIf="item.variantSku">{{ item.variantSku }}</span>
         <span class="ret-item-name">{{ item.productTitle }}</span>
         <span class="ret-item-qty">× {{ item.quantityToReturn }}</span>
         <span class="ret-item-price">{{ item.subtotal | currencyCop }}</span>

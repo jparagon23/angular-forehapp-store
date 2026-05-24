@@ -9,7 +9,7 @@ import { CartItemResponse, CartResponse, CartSellerGroup, ShippingEstimateRespon
 interface BatchItem {
   id: number;
   variantId: number;
-  sku: string;
+  sku: string | null;
   productTitle: string;
   quantity: number;
   currentPrice: number;

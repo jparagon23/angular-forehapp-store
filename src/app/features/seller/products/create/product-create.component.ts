@@ -61,7 +61,7 @@ export class ProductCreateComponent implements OnInit {
 
   // ── Step 2 – variants ────────────────────────────────────────
   variantForm = this.fb.group({
-    sku:            ['', Validators.required],
+    sku:            ['', Validators.maxLength(100)],
     price:          [null as number | null, [Validators.required, Validators.min(0.01)]],
     compareAtPrice: [null as number | null],
     stock:          [null as number | null, [Validators.required, Validators.min(0)]],
@@ -180,7 +180,7 @@ export class ProductCreateComponent implements OnInit {
     this.addingVariant.set(true);
     this.variantError.set(null);
     this.service.addVariant(storeId, productId, {
-      sku: sku!,
+      sku: sku || undefined,
       price: price!,
       compareAtPrice: compareAtPrice ?? undefined,
       stock: stock!,
@@ -214,7 +214,7 @@ export class ProductCreateComponent implements OnInit {
       this.addingVariant.set(true);
       this.variantError.set(null);
       this.service.addVariant(storeId, productId, {
-        sku: sku!,
+        sku: sku || undefined,
         price: price!,
         compareAtPrice: compareAtPrice ?? undefined,
         stock: stock!,

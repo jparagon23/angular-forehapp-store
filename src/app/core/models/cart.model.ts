@@ -1,7 +1,7 @@
 export interface CartItemResponse {
   itemId: number;
   variantId: number;
-  sku: string;
+  sku: string | null;
   productTitle: string;
   quantity: number;
   unitPrice: number;

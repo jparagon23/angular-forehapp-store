@@ -14,7 +14,7 @@ export interface VariantAttribute { id: number; attribute: string; value: string
 
 export interface ProductVariant {
   id: number;
-  sku: string;
+  sku: string | null;
   price: number;
   compareAtPrice?: number;
   stock: number;
@@ -59,7 +59,7 @@ export interface CreateProductRequest {
 }
 
 export interface CreateVariantRequest {
-  sku: string;
+  sku?: string;
   price: number;
   compareAtPrice?: number;
   stock: number;

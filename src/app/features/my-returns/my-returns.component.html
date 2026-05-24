@@ -53,7 +53,7 @@
           <div class="mrt-item" *ngFor="let item of r.items">
             <div class="mrt-item-info">
               <span class="mrt-item-name">{{ item.productTitle }}</span>
-              <span class="mrt-item-sku">{{ item.variantSku }}</span>
+              <span class="mrt-item-sku" *ngIf="item.variantSku">{{ item.variantSku }}</span>
             </div>
             <span class="mrt-item-qty">× {{ item.quantityToReturn }}</span>
             <span class="mrt-item-price">{{ item.subtotal | currencyCop }}</span>

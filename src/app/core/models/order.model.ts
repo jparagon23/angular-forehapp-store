@@ -13,7 +13,7 @@ export interface VariantAttributeDto {
 export interface OrderItemResponse {
   itemId: number;
   variantId: number;
-  sku: string;
+  sku: string | null;
   productTitle: string;
   attributes: VariantAttributeDto[];
   quantity: number;

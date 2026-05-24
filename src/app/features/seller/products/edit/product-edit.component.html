@@ -143,7 +143,7 @@
   <div class="variant-list" *ngIf="variants().length">
     <div class="variant-row" [class.variant-row--inactive]="!v.active" *ngFor="let v of variants()">
       <div class="variant-info">
-        <strong>{{ v.sku }}</strong>
+        <strong>{{ v.sku ?? '—' }}</strong>
         <span class="variant-status-badge" [class.variant-status-badge--active]="v.active" [class.variant-status-badge--inactive]="!v.active">
           {{ v.active ? 'Activa' : 'Inactiva' }}
         </span>
@@ -182,9 +182,9 @@
     <h3 class="variant-form-title">Agregar variante</h3>
     <div class="form-row">
       <div class="form-group">
-        <label>SKU <span class="req">*</span></label>
-        <input formControlName="sku" type="text" placeholder="Ej: PROD-001-BLK" />
-        <span class="form-error" *ngIf="variantForm.get('sku')?.touched && variantForm.get('sku')?.hasError('required')">El SKU es obligatorio.</span>
+        <label>SKU <span class="opt">(opcional)</span></label>
+        <input formControlName="sku" type="text" placeholder="Ej: PROD-001-BLK" maxlength="100" />
+        <span class="form-error" *ngIf="variantForm.get('sku')?.touched && variantForm.get('sku')?.hasError('maxlength')">Máximo 100 caracteres.</span>
       </div>
       <div class="form-group">
         <label>Precio <span class="req">*</span></label>

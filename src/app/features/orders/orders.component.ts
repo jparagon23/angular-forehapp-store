@@ -15,7 +15,7 @@ import { CreateReturnRequest, ReturnType } from '../../core/models/return.model'
 interface ReturnFormItem {
   orderItemId: number;
   productTitle: string;
-  sku: string;
+  sku: string | null;
   quantityOrdered: number;
   unitPrice: number;
   checked: boolean;

@@ -136,7 +136,7 @@
        [routerLink]="['/seller/products', item.productId, 'edit']">
       <div class="ss-low-info">
         <span class="ss-low-title">{{ item.productTitle }}</span>
-        <span class="ss-low-sku">SKU: {{ item.sku }}</span>
+        <span class="ss-low-sku" *ngIf="item.sku">SKU: {{ item.sku }}</span>
       </div>
       <div class="ss-low-right">
         <span class="ss-low-stock" [class.ss-low-critical]="item.stock <= 2">
@@ -168,7 +168,7 @@
           <span class="ss-top-rank" [class.gold]="i===0" [class.silver]="i===1" [class.bronze]="i===2">{{ i+1 }}</span>
           <div class="ss-top-info">
             <span class="ss-top-name">{{ p.productTitle }}</span>
-            <span class="ss-top-sku">{{ p.variantSku }}</span>
+            <span class="ss-top-sku" *ngIf="p.variantSku">{{ p.variantSku }}</span>
             <div class="ss-bar-wrap">
               <div class="ss-bar" [style.width.%]="topProducts[0].unitsSold > 0 ? (p.unitsSold / topMax()) * 100 : 0"></div>
             </div>
