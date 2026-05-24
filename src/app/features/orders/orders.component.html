@@ -120,7 +120,7 @@
                 <!-- Items -->
                 <div class="oc-items">
                   <div class="oc-item" *ngFor="let item of g.items">
-                    <span class="oci-sku">{{ item.sku }}</span>
+                    <span class="oci-sku" *ngIf="item.sku">{{ item.sku }}</span>
                     <span class="oci-name">{{ item.productTitle }}</span>
                     <span class="oci-qty">× {{ item.quantity }}</span>
                     <span class="oci-price">{{ item.subtotal | currencyCop }}</span>
@@ -241,7 +241,7 @@
           </label>
           <div class="ret-item-info">
             <span class="ret-item-name">{{ item.productTitle }}</span>
-            <span class="ret-item-sku">{{ item.sku }}</span>
+            <span class="ret-item-sku" *ngIf="item.sku">{{ item.sku }}</span>
           </div>
           <div class="ret-item-qty-wrap" *ngIf="item.checked">
             <span class="ret-qty-label">Cant.:</span>

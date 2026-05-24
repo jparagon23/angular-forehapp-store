@@ -124,7 +124,7 @@
             <span class="prod-rank" [class.gold]="i===0" [class.silver]="i===1" [class.bronze]="i===2">{{ i+1 }}</span>
             <div class="prod-info">
               <span class="prod-name">{{ p.productTitle }}</span>
-              <span class="prod-sku">{{ p.variantSku }}</span>
+              <span class="prod-sku" *ngIf="p.variantSku">{{ p.variantSku }}</span>
             </div>
             <div class="prod-nums">
               <span class="prod-units">{{ p.unitsSold }} uds</span>

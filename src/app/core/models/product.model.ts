@@ -7,7 +7,7 @@ export interface DetailVariantAttribute { id: number; attribute: string; value: 
 
 export interface DetailVariant {
   id: number;
-  sku: string;
+  sku: string | null;
   price: number;
   compareAtPrice: number | null;
   stock: number;

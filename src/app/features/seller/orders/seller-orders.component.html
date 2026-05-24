@@ -184,7 +184,7 @@
         </thead>
         <tbody>
           <tr *ngFor="let item of g.items">
-            <td class="so-sku">{{ item.sku }}</td>
+            <td class="so-sku">{{ item.sku ?? '—' }}</td>
             <td>
               {{ item.productTitle }}
               <div class="so-attr-tags" *ngIf="item.attributes?.length">

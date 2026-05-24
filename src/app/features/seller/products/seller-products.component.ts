@@ -60,7 +60,7 @@ export class SellerProductsComponent implements OnInit {
         || p.title.toLowerCase().includes(q)
         || p.brand.toLowerCase().includes(q)
         || p.category.toLowerCase().includes(q)
-        || p.variants.some(v => v.sku.toLowerCase().includes(q));
+        || p.variants.some(v => (v.sku ?? '').toLowerCase().includes(q));
       const matchesStatus = !status || p.status === status;
       return matchesSearch && matchesStatus;
     });
@@ -129,7 +129,7 @@ export class SellerProductsComponent implements OnInit {
     e.stopPropagation();
     this.movProductId.set(p.id);
     this.movVariantId.set(v.id);
-    this.movSku.set(v.sku);
+    this.movSku.set(v.sku ?? '—');
     this.movPage.set(0);
     this.movReasonFilter.set(null);
     this.movOpen.set(true);
@@ -188,7 +188,7 @@ export class SellerProductsComponent implements OnInit {
     e.stopPropagation();
     this.invProductId.set(p.id);
     this.invVariantId.set(v.id);
-    this.invSku.set(v.sku);
+    this.invSku.set(v.sku ?? '—');
     this.invStock.set(v.stock);
     this.invQuantity.set(null);
     this.invReason.set('RESTOCK');

@@ -51,7 +51,7 @@ export class ProductEditComponent implements OnInit {
   selectedAttrValues: Record<number, number | null> = {};
 
   variantForm = this.fb.group({
-    sku:            ['', Validators.required],
+    sku:            ['', Validators.maxLength(100)],
     price:          [null as number | null, [Validators.required, Validators.min(0.01)]],
     compareAtPrice: [null as number | null],
     stock:          [null as number | null, [Validators.required, Validators.min(0)]],
@@ -218,7 +218,7 @@ export class ProductEditComponent implements OnInit {
     this.addingVariant.set(true);
     this.variantError.set(null);
     this.service.addVariant(storeId, this.productId, {
-      sku: sku!, price: price!,
+      sku: sku || undefined, price: price!,
       compareAtPrice: compareAtPrice ?? undefined,
       stock: stock!, attributeValueIds,
     }).subscribe({
@@ -271,7 +271,7 @@ export class ProductEditComponent implements OnInit {
   // ── Inventario modal ─────────────────────────────────────────
   openInvModal(v: ProductVariant) {
     this.invVariantId.set(v.id);
-    this.invSku.set(v.sku);
+    this.invSku.set(v.sku ?? '—');
     this.invStock.set(v.stock);
     this.invQuantity.set(null);
     this.invReason.set('RESTOCK');
@@ -310,7 +310,7 @@ export class ProductEditComponent implements OnInit {
   // ── Movimientos modal ────────────────────────────────────────
   openMovements(v: ProductVariant) {
     this.movVariantId.set(v.id);
-    this.movSku.set(v.sku);
+    this.movSku.set(v.sku ?? '—');
     this.movPage.set(0);
     this.movReasonFilter.set(null);
     this.movOpen.set(true);

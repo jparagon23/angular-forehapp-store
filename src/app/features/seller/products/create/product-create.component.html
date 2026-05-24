@@ -135,7 +135,7 @@
     <h3 class="variant-list-title">Variantes agregadas ({{ variants().length }})</h3>
     <div class="variant-row" *ngFor="let v of variants()">
       <div class="variant-info">
-        <strong>{{ v.sku }}</strong>
+        <strong>{{ v.sku ?? '—' }}</strong>
         <span>$ {{ v.price | number:'1.2-2' }}</span>
         <span>Stock: {{ v.stock }}</span>
         <span class="variant-attrs" *ngIf="v.attributes?.length">
@@ -154,9 +154,9 @@
 
     <div class="form-row">
       <div class="form-group">
-        <label>SKU <span class="req">*</span></label>
-        <input formControlName="sku" type="text" placeholder="Ej: AIRMAX90-WHT-US9" />
-        <span class="form-error" *ngIf="variantForm.get('sku')?.touched && variantForm.get('sku')?.hasError('required')">El SKU es obligatorio.</span>
+        <label>SKU <span class="opt">(opcional)</span></label>
+        <input formControlName="sku" type="text" placeholder="Ej: AIRMAX90-WHT-US9" maxlength="100" />
+        <span class="form-error" *ngIf="variantForm.get('sku')?.touched && variantForm.get('sku')?.hasError('maxlength')">Máximo 100 caracteres.</span>
       </div>
       <div class="form-group">
         <label>Precio <span class="req">*</span></label>

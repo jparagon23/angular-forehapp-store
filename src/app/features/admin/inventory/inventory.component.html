@@ -54,7 +54,7 @@
         <label>Variante</label>
         <select [ngModel]="selectedVarId()" (ngModelChange)="selectedVarId.set(+$event)">
           <option *ngFor="let v of modalVariants()" [value]="v.id">
-            {{ v.sku }} — Stock: {{ v.stock }} uds.
+            {{ v.sku ?? '—' }} — Stock: {{ v.stock }} uds.
           </option>
         </select>
       </div>
@@ -121,7 +121,7 @@
         <label>Variante</label>
         <select [ngModel]="movSelectedId()" (ngModelChange)="onMovVariantChange(+$event)">
           <option *ngFor="let v of movVariants()" [value]="v.id">
-            {{ v.sku }} — Stock: {{ v.stock }} uds.
+            {{ v.sku ?? '—' }} — Stock: {{ v.stock }} uds.
           </option>
         </select>
       </div>

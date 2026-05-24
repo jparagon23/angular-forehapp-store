@@ -2,7 +2,7 @@ export interface LowStockItem {
   variantId: number;
   productId: number;
   productTitle: string;
-  sku: string;
+  sku: string | null;
   stock: number;
 }
 
@@ -29,7 +29,7 @@ export interface RevenuePoint {
 export interface TopProduct {
   productId: number;
   productTitle: string;
-  variantSku: string;
+  variantSku: string | null;
   unitsSold: number;
   revenue: number;
 }

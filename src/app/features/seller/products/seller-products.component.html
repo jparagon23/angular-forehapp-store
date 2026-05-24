@@ -281,7 +281,7 @@
                 </thead>
                 <tbody>
                   <tr *ngFor="let v of p.variants" [class.sp-variant-inactive]="!v.active">
-                    <td class="sp-sku">{{ v.sku }}</td>
+                    <td class="sp-sku">{{ v.sku ?? '—' }}</td>
                     <td>
                       <span class="sp-variant-badge" [class.sp-variant-badge--active]="v.active" [class.sp-variant-badge--inactive]="!v.active">
                         {{ v.active ? 'Activa' : 'Inactiva' }}

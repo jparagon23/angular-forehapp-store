@@ -259,7 +259,7 @@ export class ProductDetailComponent implements OnInit {
       variantId,
       quantity:     this.qty(),
       productTitle: product.name,
-      sku:          target.sku,
+      sku:          target.sku ?? undefined,
       unitPrice:    target.price ?? product.price,
       imageUrl:     product.images?.[0]?.url || product.image,
     }));
