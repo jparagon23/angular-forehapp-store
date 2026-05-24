@@ -1,12 +1,13 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { AsyncPipe, DatePipe, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, DatePipe, NgFor, NgIf, UpperCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NavbarComponent } from '../../../shared/components/navbar/navbar.component';
 import { Subscription } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { StoreRole } from '../../../core/models/store.model';
+import { finalize, map } from 'rxjs/operators';
+import { StoreRole, UserSearchResult } from '../../../core/models/store.model';
+import { StoreService } from '../../../core/services/store.service';
 import {
   changeMemberRole, inviteMember,
   loadMembers, loadMyStores, loadStore,
@@ -23,14 +24,15 @@ import { AuthUser } from '../../../store/auth/auth.actions';
 @Component({
   selector: 'app-store-detail',
   standalone: true,
-  imports: [AsyncPipe, NgIf, NgFor, DatePipe, FormsModule, RouterLink, NavbarComponent],
+  imports: [AsyncPipe, NgIf, NgFor, DatePipe, UpperCasePipe, FormsModule, RouterLink, NavbarComponent],
   templateUrl: './store-detail.component.html',
   styleUrl: './store-detail.component.scss',
 })
 export class StoreDetailComponent implements OnInit, OnDestroy {
-  private ngrx    = inject(Store);
-  private route   = inject(ActivatedRoute);
-  private subs    = new Subscription();
+  private ngrx     = inject(Store);
+  private route    = inject(ActivatedRoute);
+  private storeSvc = inject(StoreService);
+  private subs     = new Subscription();
 
   storeId!: number;
   myRole: StoreRole | null = null;
@@ -47,7 +49,10 @@ export class StoreDetailComponent implements OnInit, OnDestroy {
   editName      = '';
   editDesc      = '';
 
-  inviteUserId: number | null = null;
+  searchEmail  = '';
+  searching    = false;
+  foundUser: UserSearchResult | null = null;
+  searchError  = '';
   inviteRole: StoreRole = 'STAFF';
 
   pendingRoles: Record<number, StoreRole | undefined> = {};
@@ -86,11 +91,31 @@ export class StoreDetailComponent implements OnInit, OnDestroy {
     this.editing = false;
   }
 
+  searchUser() {
+    const email = this.searchEmail.trim();
+    if (!email) return;
+    this.searching  = true;
+    this.foundUser  = null;
+    this.searchError = '';
+    this.storeSvc.searchUserByEmail(email).pipe(
+      finalize(() => this.searching = false)
+    ).subscribe({
+      next:  user  => this.foundUser = user,
+      error: ()    => this.searchError = 'No se encontró ningún usuario con ese correo.',
+    });
+  }
+
+  clearSearch() {
+    this.foundUser   = null;
+    this.searchError = '';
+    this.searchEmail = '';
+  }
+
   invite() {
-    if (!this.inviteUserId) return;
-    this.ngrx.dispatch(inviteMember({ storeId: this.storeId, req: { userId: this.inviteUserId, role: this.inviteRole } }));
-    this.inviteUserId = null;
-    this.inviteRole   = 'STAFF';
+    if (!this.foundUser) return;
+    this.ngrx.dispatch(inviteMember({ storeId: this.storeId, req: { userId: this.foundUser.id, role: this.inviteRole } }));
+    this.clearSearch();
+    this.inviteRole = 'STAFF';
   }
 
   applyRoleChange(membershipId: number) {
