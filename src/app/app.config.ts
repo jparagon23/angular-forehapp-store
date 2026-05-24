@@ -1,4 +1,5 @@
-import { APP_INITIALIZER, ApplicationConfig } from '@angular/core';
+import { APP_INITIALIZER, ApplicationConfig, ErrorHandler } from '@angular/core';
+import { ChunkErrorHandler } from './core/handlers/chunk-error.handler';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { provideStore } from '@ngrx/store';
 import { Store } from '@ngrx/store';
@@ -48,6 +49,7 @@ export const appConfig: ApplicationConfig = {
     }),
     provideEffects([ProductsEffects, OrdersEffects, CustomersEffects, DiscountsEffects, SellerEffects, AddressesEffects, CartEffects, WishlistEffects, StoresEffects]),
     provideStoreDevtools({ maxAge: 25, logOnly: false }),
+    { provide: ErrorHandler, useClass: ChunkErrorHandler },
     {
       provide: APP_INITIALIZER,
       useFactory: authInitFactory,
