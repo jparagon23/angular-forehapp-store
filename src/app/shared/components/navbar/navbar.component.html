@@ -230,6 +230,13 @@
             <a class="nb-drop-item" (click)="navTo('/my-returns')">Mis devoluciones</a>
             <a class="nb-drop-item" (click)="navTo('/account/addresses')">Mis direcciones</a>
           </div>
+          <div class="nb-drop-divider" *ngIf="(hasAdmin$ | async) || (hasSeller$ | async)"></div>
+          <div class="nb-drop-section" *ngIf="(hasAdmin$ | async) || (hasSeller$ | async)">
+            <strong class="nb-drop-heading">Gestión</strong>
+            <a class="nb-drop-item" *ngIf="hasAdmin$ | async" (click)="navTo('/admin')">Panel Admin</a>
+            <a class="nb-drop-item" *ngIf="hasSeller$ | async" (click)="navTo('/seller')">Panel Seller</a>
+            <a class="nb-drop-item" *ngIf="hasSeller$ | async" (click)="navTo('/stores')">Mis Tiendas</a>
+          </div>
           <div class="nb-drop-divider"></div>
           <div class="nb-drop-section">
             <button class="nb-drop-logout" (click)="logOut(); accountOpen = false">
@@ -309,6 +316,10 @@
           [class.active]="activeCategory() === cat.name"
           (click)="goToCategory(cat); moreOpen.set(false)">
           {{ cat.name }}
+        </button>
+        <div class="nb-more-divider"></div>
+        <button class="nb-more-item nb-more-promo" (click)="goToCategory(null); moreOpen.set(false)">
+          🔥 Ofertas del día
         </button>
       </div>
     </div>
