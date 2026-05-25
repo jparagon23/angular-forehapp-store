@@ -439,6 +439,12 @@ $green-h: #4fc217;
   &.active { color: #fff; font-weight: 600; background: rgba(255,255,255,.05); }
 }
 
+.nb-more-divider {
+  height: 1px; background: rgba(255,255,255,.1); margin: 4px 0;
+}
+
+.nb-more-promo { color: #ffd766 !important; font-weight: 600; }
+
 .nb-promo {
   color: #ffd766 !important; font-weight: 600;
 }
