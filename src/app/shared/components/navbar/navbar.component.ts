@@ -52,8 +52,17 @@ export class NavbarComponent {
   addressesLoading$ = this.store.select(selectAddressesLoading);
 
   private categoriesSig = toSignal(this.store.select(selectAllCategories), { initialValue: [] as Category[] });
-  visibleCats = computed(() => this.categoriesSig().slice(0, 5));
-  moreCats    = computed(() => this.categoriesSig().slice(5));
+  private windowWidth = signal(window.innerWidth);
+  private maxVisible  = computed(() => {
+    const w = this.windowWidth();
+    if (w >= 960) return 5;
+    if (w >= 600) return 2;
+    return 0;
+  });
+
+  visibleCats = computed(() => this.categoriesSig().slice(0, this.maxVisible()));
+  moreCats    = computed(() => this.categoriesSig().slice(this.maxVisible()));
+  moreLabel   = computed(() => this.maxVisible() === 0 ? 'Categorías ▾' : 'Más ▾');
 
   moreOpen = signal(false);
 
@@ -147,6 +156,9 @@ export class NavbarComponent {
   }
 
   toggleMore(e: Event) { e.stopPropagation(); this.moreOpen.update(v => !v); }
+
+  @HostListener('window:resize')
+  onResize() { this.windowWidth.set(window.innerWidth); }
 
   @HostListener('document:click')
   onDocumentClick() {

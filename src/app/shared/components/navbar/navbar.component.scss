@@ -597,3 +597,19 @@ $green-h: #4fc217;
   .nb-search { margin: 0 4px; }
   .nb-logo { padding: 5px 6px; gap: 6px; }
 }
+
+// ── Bottom bar responsive ─────────────────────────────────
+@media (max-width: 959px) {
+  .nb-bottom { padding: 0 8px; }
+  .nb-cat    { padding: 8px 9px; font-size: .82rem; }
+  .nb-all    { padding: 8px 9px; font-size: .82rem; }
+}
+
+@media (max-width: 599px) {
+  .nb-promo  { display: none; }
+  .nb-admin  { display: none; }
+  .nb-seller { display: none; }
+  .nb-stores { display: none; }
+  .nb-sep    { display: none; }
+  .nb-all    { padding: 8px 10px; }
+}

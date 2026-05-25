@@ -300,7 +300,7 @@
     <!-- "Más" dropdown for overflow categories -->
     <div class="nb-more-wrap" *ngIf="moreCats().length > 0" (click)="$event.stopPropagation()">
       <button class="nb-cat nb-more-btn" [class.open]="moreOpen()" (click)="toggleMore($event)">
-        Más ▾
+        {{ moreLabel() }}
       </button>
       <div class="nb-more-drop" [class.open]="moreOpen()">
         <button
