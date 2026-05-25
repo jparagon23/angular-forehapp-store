@@ -20,6 +20,7 @@ import { discountsReducer } from './store/discounts/discounts.reducer';
 import { sellerReducer } from './store/seller/seller.reducer';
 import { addressesReducer } from './store/addresses/addresses.reducer';
 import { storesReducer } from './store/stores/stores.reducer';
+import { categoriesReducer } from './store/categories/categories.reducer';
 import { ProductsEffects } from './store/products/products.effects';
 import { OrdersEffects } from './store/orders/orders.effects';
 import { CustomersEffects } from './store/customers/customers.effects';
@@ -29,6 +30,7 @@ import { AddressesEffects } from './store/addresses/addresses.effects';
 import { CartEffects } from './store/cart/cart.effects';
 import { WishlistEffects } from './store/wishlist/wishlist.effects';
 import { StoresEffects } from './store/stores/stores.effects';
+import { CategoriesEffects } from './store/categories/categories.effects';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
@@ -46,8 +48,9 @@ export const appConfig: ApplicationConfig = {
       seller: sellerReducer,
       addresses: addressesReducer,
       stores: storesReducer,
+      categories: categoriesReducer,
     }),
-    provideEffects([ProductsEffects, OrdersEffects, CustomersEffects, DiscountsEffects, SellerEffects, AddressesEffects, CartEffects, WishlistEffects, StoresEffects]),
+    provideEffects([ProductsEffects, OrdersEffects, CustomersEffects, DiscountsEffects, SellerEffects, AddressesEffects, CartEffects, WishlistEffects, StoresEffects, CategoriesEffects]),
     provideStoreDevtools({ maxAge: 25, logOnly: false }),
     { provide: ErrorHandler, useClass: ChunkErrorHandler },
     {
