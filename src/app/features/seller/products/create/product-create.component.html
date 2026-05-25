@@ -3,7 +3,12 @@
     <h1 class="wiz-title">Crear Producto</h1>
     <p class="wiz-subtitle">Completa los pasos para publicar tu producto</p>
   </div>
-  <a routerLink="/seller/products" class="wiz-back">← Mis Productos</a>
+  <div class="wiz-header-actions">
+    <button *ngIf="draftProduct()" class="btn-discard" (click)="cancelDraft()" [disabled]="discarding()">
+      {{ discarding() ? 'Descartando…' : 'Descartar borrador' }}
+    </button>
+    <a routerLink="/seller/products" class="wiz-back">← Mis Productos</a>
+  </div>
 </div>
 
 <!-- ── Stepper ──────────────────────────────────────────────── -->
@@ -37,7 +42,7 @@
 
   <div class="loading-ref" *ngIf="loadingRef()">Cargando marcas y categorías…</div>
 
-  <form [formGroup]="basicForm" (ngSubmit)="createDraft()" novalidate *ngIf="!loadingRef()">
+  <form [formGroup]="basicForm" (ngSubmit)="step1Submit()" novalidate *ngIf="!loadingRef()">
 
     <div class="form-row">
       <div class="form-group form-group--full">
@@ -117,7 +122,7 @@
 
     <div class="wiz-actions">
       <button type="submit" class="btn-primary" [disabled]="creatingDraft()">
-        {{ creatingDraft() ? 'Creando borrador…' : 'Crear borrador y continuar →' }}
+        {{ creatingDraft() ? 'Guardando…' : (draftProduct() ? 'Guardar cambios y continuar →' : 'Crear borrador y continuar →') }}
       </button>
     </div>
   </form>
@@ -188,6 +193,7 @@
     <div class="form-error form-error--global" *ngIf="variantError()">{{ variantError() }}</div>
 
     <div class="wiz-actions">
+      <button type="button" class="btn-ghost" (click)="step.set(1)" [disabled]="addingVariant()">← Datos básicos</button>
       <button type="submit" class="btn-secondary" [disabled]="addingVariant()">
         {{ addingVariant() ? 'Agregando…' : '+ Agregar variante' }}
       </button>
@@ -285,6 +291,7 @@
 
   <div class="wiz-actions">
     <button type="button" class="btn-ghost" (click)="step.set(3)">← Volver a imágenes</button>
+    <button type="button" class="btn-secondary" (click)="keepAsDraft()">Guardar borrador</button>
     <button type="button" class="btn-primary" (click)="publish()" [disabled]="!canPublish || publishing()">
       {{ publishing() ? 'Publicando…' : '🚀 Publicar producto' }}
     </button>

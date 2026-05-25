@@ -139,31 +139,56 @@ export class ProductCreateComponent implements OnInit {
     }
   }
 
-  createDraft() {
+  step1Submit() {
     this.basicForm.markAllAsTouched();
     if (this.basicForm.invalid) return;
     const storeId = this.storeId();
     if (!storeId) return;
     const { title, description, brandId, lineId, categoryId, freeShipping } = this.basicForm.value;
-    this.creatingDraft.set(true);
-    this.draftError.set(null);
-    this.service.createProduct(storeId, {
+    const payload = {
       title: title!,
       description: description || undefined,
       brandId: brandId!,
       lineId: lineId ?? undefined,
       categoryId: categoryId!,
       freeShipping: freeShipping ?? false,
-    }).subscribe({
+    };
+
+    const existing = this.draftProduct();
+    this.creatingDraft.set(true);
+    this.draftError.set(null);
+
+    const req$ = existing
+      ? this.service.updateProduct(storeId, existing.id, payload)
+      : this.service.createProduct(storeId, payload);
+
+    req$.subscribe({
       next: product => {
         this.draftProduct.set(product);
         this.creatingDraft.set(false);
         this.step.set(2);
       },
       error: err => {
-        this.draftError.set(err.error?.message ?? err.message ?? 'Error al crear el producto');
+        this.draftError.set(err.error?.message ?? err.message ?? 'Error al guardar el producto');
         this.creatingDraft.set(false);
       },
+    });
+  }
+
+  keepAsDraft() {
+    this.router.navigate(['/seller/products']);
+  }
+
+  discarding = signal(false);
+
+  cancelDraft() {
+    const storeId = this.storeId();
+    const product = this.draftProduct();
+    if (!product || !storeId) { this.router.navigate(['/seller/products']); return; }
+    this.discarding.set(true);
+    this.service.deleteProduct(storeId, product.id).subscribe({
+      next:  () => this.router.navigate(['/seller/products']),
+      error: () => this.router.navigate(['/seller/products']),
     });
   }
 
