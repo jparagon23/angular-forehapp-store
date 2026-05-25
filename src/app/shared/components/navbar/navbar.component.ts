@@ -1,4 +1,4 @@
-import { Component, DestroyRef, HostListener, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, HostListener, inject, signal } from '@angular/core';
 import { Router, RouterLink, NavigationEnd } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { AsyncPipe, NgFor, NgIf, TitleCasePipe, UpperCasePipe } from '@angular/common';
@@ -50,7 +50,12 @@ export class NavbarComponent {
   addresses$        = this.store.select(selectAllAddresses);
   defaultAddress$   = this.store.select(selectDefaultAddress);
   addressesLoading$ = this.store.select(selectAddressesLoading);
-  categories$       = this.store.select(selectAllCategories);
+
+  private categoriesSig = toSignal(this.store.select(selectAllCategories), { initialValue: [] as Category[] });
+  visibleCats = computed(() => this.categoriesSig().slice(0, 5));
+  moreCats    = computed(() => this.categoriesSig().slice(5));
+
+  moreOpen = false;
 
   activeCategory = toSignal(
     this.router.events.pipe(
@@ -141,10 +146,13 @@ export class NavbarComponent {
     this.router.navigate(['/'], { queryParams: cat ? { cat: cat.name } : {} });
   }
 
+  toggleMore(e: Event) { e.stopPropagation(); this.moreOpen = !this.moreOpen; }
+
   @HostListener('document:click')
   onDocumentClick() {
     this.accountOpen = false;
     this.locationOpen = false;
+    this.moreOpen = false;
   }
 
   toggleAccount(e: Event) {
