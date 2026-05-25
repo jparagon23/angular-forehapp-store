@@ -134,9 +134,15 @@
   display: flex; align-items: center; gap: 14px;
 }
 .oi-thumb {
-  font-size: 2rem; width: 48px; height: 48px; flex-shrink: 0;
-  background: #f0faf0; border: 1px solid #ddeedd;
-  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  width: 48px; height: 48px; flex-shrink: 0;
+  border-radius: 10px;
+  object-fit: cover;
+  display: block;
+  &--placeholder {
+    font-size: 2rem;
+    background: #f0faf0; border: 1px solid #ddeedd;
+    display: flex; align-items: center; justify-content: center;
+  }
 }
 .oi-info { flex: 1; min-width: 0; }
 .oi-name { font-weight: 700; font-size: .92rem; color: var(--dark); }
