@@ -1,9 +1,9 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { AsyncPipe, DatePipe, NgFor, NgIf, TitleCasePipe } from '@angular/common';
 import { Observable, combineLatest, map, take } from 'rxjs';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { clearSelectedProduct, loadProduct, loadProducts } from '../../store/products/products.actions';
 import { selectSelectedProduct, selectSelectedProductLoading, selectAllProducts } from '../../store/products/products.selectors';
 import { addCartItem, openCart } from '../../store/cart/cart.actions';
@@ -34,10 +34,18 @@ export class ProductDetailComponent implements OnInit {
   private store         = inject(Store);
   private route         = inject(ActivatedRoute);
   private reviewService = inject(ReviewService);
+  private destroyRef    = inject(DestroyRef);
 
   product$          = this.store.select(selectSelectedProduct);
   selectedLoading$  = this.store.select(selectSelectedProductLoading);
-  relatedProducts$!: Observable<Product[]>;
+  relatedProducts$: Observable<Product[]> = combineLatest([
+    this.store.select(selectAllProducts),
+    this.product$,
+  ]).pipe(
+    map(([all, product]) =>
+      product ? all.filter(p => p.cat === product.cat && p.id !== product.id).slice(0, 4) : []
+    )
+  );
 
   isLoggedIn        = toSignal(this.store.select(selectIsLoggedIn), { initialValue: false });
 
@@ -99,30 +107,31 @@ export class ProductDetailComponent implements OnInit {
   );
 
   ngOnInit() {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.currentProductId = id;
+    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
+      const id = Number(params.get('id'));
+      this.currentProductId = id;
 
-    this.store.dispatch(clearSelectedProduct());
-    this.store.dispatch(loadProducts({}));
-    this.store.dispatch(loadProduct({ id }));
-    this.currentSlide.set(0);
-    this.qty.set(1);
-    this.selectedAttributes.set({});
+      this.store.dispatch(clearSelectedProduct());
+      this.store.dispatch(loadProducts({}));
+      this.store.dispatch(loadProduct({ id }));
+      this.currentSlide.set(0);
+      this.qty.set(1);
+      this.selectedAttributes.set({});
+      this.reviews.set([]);
+      this.reviewSummary.set(null);
+      this.reviewsPage.set(0);
+      this.myReview.set(null);
+      this.formVisible.set(false);
+      this.rvRating.set(0);
+      this.rvTitle.set('');
+      this.rvComment.set('');
 
-    this.loadReviews(id, 0);
+      this.loadReviews(id, 0);
 
-    this.store.select(selectIsLoggedIn).pipe(take(1)).subscribe(loggedIn => {
-      if (loggedIn) this.loadMyReview();
+      this.store.select(selectIsLoggedIn).pipe(take(1)).subscribe(loggedIn => {
+        if (loggedIn) this.loadMyReview();
+      });
     });
-
-    this.relatedProducts$ = combineLatest([
-      this.store.select(selectAllProducts),
-      this.product$,
-    ]).pipe(
-      map(([all, product]) =>
-        product ? all.filter(p => p.cat === product.cat && p.id !== product.id).slice(0, 4) : []
-      )
-    );
   }
 
   loadReviews(productId: number, page: number) {
