@@ -2,133 +2,363 @@
 
 <div class="content">
 
-  <!-- ── Categorías ─────────────────────────────────────────── -->
-  <div class="row-two">
+  <div class="loading-block" *ngIf="loading">Cargando catálogo…</div>
 
-    <!-- Lista de categorías -->
-    <div class="panel">
-      <div class="panel-header">
-        <h2>Categorías existentes</h2>
-        <span class="count-chip">{{ categories.length }}</span>
-      </div>
-      <div class="panel-body">
-        <p class="empty-hint" *ngIf="!loading && categories.length === 0">Sin categorías registradas aún.</p>
-        <div class="brand-chips" *ngIf="categories.length > 0">
-          <span class="brand-chip" *ngFor="let c of categories">
-            <span class="chip-id">#{{ c.id }}</span> {{ c.name }}
-          </span>
+  <ng-container *ngIf="!loading">
+
+    <!-- ── Categorías & Brands ──────────────────────────────── -->
+    <div class="row-two">
+
+      <!-- Categorías -->
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Categorías</h2>
+          <span class="count-chip">{{ categories.length }}</span>
+        </div>
+        <div class="panel-body">
+          <p class="empty-hint" *ngIf="categories.length === 0">Sin categorías registradas.</p>
+
+          <div class="item-list" *ngIf="categories.length > 0">
+            <ng-container *ngFor="let c of categories">
+              <div class="item-row">
+                <ng-container *ngIf="editCatId === c.id">
+                  <input class="inline-input" [(ngModel)]="editCatName"
+                         (keyup.enter)="saveEditCat(c.id)" maxlength="100" />
+                  <div class="item-actions">
+                    <button class="icon-btn icon-ok" [disabled]="catSaving" (click)="saveEditCat(c.id)">✓</button>
+                    <button class="icon-btn" (click)="cancelEditCat()">✕</button>
+                  </div>
+                </ng-container>
+                <ng-container *ngIf="editCatId !== c.id">
+                  <span class="item-meta">#{{ c.id }}</span>
+                  <span class="item-name">{{ c.name }}</span>
+                  <div class="item-actions">
+                    <button class="icon-btn" (click)="startEditCat(c)" title="Editar">✏️</button>
+                    <button class="icon-btn icon-del" (click)="deleteCat(c.id)" title="Eliminar">🗑</button>
+                  </div>
+                </ng-container>
+              </div>
+              <p class="item-error" *ngIf="catErrors[c.id]">{{ catErrors[c.id] }}</p>
+            </ng-container>
+          </div>
+
+          <div class="divider"></div>
+          <div class="success-bar" *ngIf="catCreated">✅ <strong>{{ catCreated.name }}</strong> creada (ID {{ catCreated.id }})</div>
+          <div class="create-row">
+            <input [(ngModel)]="catName" placeholder="Nueva categoría…" maxlength="100"
+                   (keyup.enter)="createCategory()" />
+            <button class="btn btn-green btn-sm" [disabled]="!catName.trim() || catLoading" (click)="createCategory()">
+              {{ catLoading ? '…' : 'Agregar' }}
+            </button>
+          </div>
+          <p class="err-msg" *ngIf="catError">{{ catError }}</p>
         </div>
       </div>
+
+      <!-- Brands -->
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Brands</h2>
+          <span class="count-chip">{{ brands.length }}</span>
+        </div>
+        <div class="panel-body">
+          <p class="empty-hint" *ngIf="brands.length === 0">Sin brands registradas.</p>
+
+          <div class="item-list" *ngIf="brands.length > 0">
+            <ng-container *ngFor="let b of brands">
+              <div class="item-row">
+                <ng-container *ngIf="editBrandId === b.id">
+                  <input class="inline-input" [(ngModel)]="editBrandName"
+                         (keyup.enter)="saveEditBrand(b.id)" maxlength="100" />
+                  <div class="item-actions">
+                    <button class="icon-btn icon-ok" [disabled]="brandSaving" (click)="saveEditBrand(b.id)">✓</button>
+                    <button class="icon-btn" (click)="cancelEditBrand()">✕</button>
+                  </div>
+                </ng-container>
+                <ng-container *ngIf="editBrandId !== b.id">
+                  <span class="item-meta">#{{ b.id }}</span>
+                  <span class="item-name">{{ b.name }}</span>
+                  <div class="item-actions">
+                    <button class="icon-btn" (click)="startEditBrand(b)" title="Editar">✏️</button>
+                    <button class="icon-btn icon-del" (click)="deleteBrand(b.id)" title="Eliminar">🗑</button>
+                  </div>
+                </ng-container>
+              </div>
+              <p class="item-error" *ngIf="brandErrors[b.id]">{{ brandErrors[b.id] }}</p>
+            </ng-container>
+          </div>
+
+          <div class="divider"></div>
+          <div class="success-bar" *ngIf="brandCreated">✅ <strong>{{ brandCreated.name }}</strong> creada (ID {{ brandCreated.id }})</div>
+          <div class="create-row">
+            <input [(ngModel)]="brandName" placeholder="Nueva brand…" maxlength="100"
+                   (keyup.enter)="createBrand()" />
+            <button class="btn btn-green btn-sm" [disabled]="!brandName.trim() || brandLoading" (click)="createBrand()">
+              {{ brandLoading ? '…' : 'Agregar' }}
+            </button>
+          </div>
+          <p class="err-msg" *ngIf="brandError">{{ brandError }}</p>
+        </div>
+      </div>
+
     </div>
 
-    <!-- Crear categoría -->
-    <div class="panel">
-      <div class="panel-header"><h2>Nueva categoría</h2></div>
-      <div class="panel-body">
-        <div class="success-bar" *ngIf="catCreated">
-          ✅ Categoría <strong>{{ catCreated.name }}</strong> creada (ID {{ catCreated.id }})
-        </div>
-        <div class="form-group">
-          <label>Nombre <span class="req">*</span></label>
-          <input [(ngModel)]="catName" placeholder="Ej. Raquetas" maxlength="100"
-                 (keyup.enter)="createCategory()" />
-        </div>
-        <p class="err-msg" *ngIf="catError">{{ catError }}</p>
-        <div class="form-actions">
-          <button class="btn btn-green" [disabled]="!catName.trim() || catLoading" (click)="createCategory()">
-            {{ catLoading ? 'Creando…' : 'Crear categoría' }}
-          </button>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ── Brands ──────────────────────────────────────────────── -->
-  <div class="row-two">
-
-    <!-- Lista de brands -->
-    <div class="panel">
-      <div class="panel-header">
-        <h2>Brands existentes</h2>
-        <span class="count-chip">{{ brands.length }}</span>
-      </div>
-      <div class="panel-body">
-        <p class="empty-hint" *ngIf="!loading && brands.length === 0">Sin brands registradas aún.</p>
-        <div class="brand-chips" *ngIf="brands.length > 0">
-          <span class="brand-chip" *ngFor="let b of brands">
-            <span class="chip-id">#{{ b.id }}</span> {{ b.name }}
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Crear brand -->
-    <div class="panel">
-      <div class="panel-header"><h2>Nueva brand</h2></div>
+    <!-- ── Lines ──────────────────────────────────────────────── -->
+    <div class="panel mb">
+      <div class="panel-header"><h2>Lines</h2></div>
       <div class="panel-body">
 
-        <div class="success-bar" *ngIf="brandCreated">
-          ✅ Brand <strong>{{ brandCreated.name }}</strong> creada (ID {{ brandCreated.id }})
-        </div>
-
-        <div class="form-group">
-          <label>Nombre <span class="req">*</span></label>
-          <input [(ngModel)]="brandName" placeholder="Ej. Wilson" maxlength="100"
-                 (keyup.enter)="createBrand()" />
-        </div>
-        <p class="err-msg" *ngIf="brandError">{{ brandError }}</p>
-        <div class="form-actions">
-          <button class="btn btn-green" [disabled]="!brandName.trim() || brandLoading" (click)="createBrand()">
-            {{ brandLoading ? 'Creando…' : 'Crear brand' }}
-          </button>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ── Lines ───────────────────────────────────────────────── -->
-  <div class="panel">
-    <div class="panel-header"><h2>Nueva line</h2></div>
-    <div class="panel-body">
-
-      <div class="success-bar" *ngIf="lineCreated">
-        ✅ Line <strong>{{ lineCreated.name }}</strong> creada (ID {{ lineCreated.id }}) —
-        categoría: {{ categoryName(lineCreated.categoryId) }}
-      </div>
-
-      <div class="line-row">
-        <div class="form-group">
-          <label>Brand <span class="req">*</span></label>
-          <select [(ngModel)]="lineSelectedBrandId">
+        <!-- Browse lines by brand -->
+        <div class="filter-row">
+          <label class="filter-label">Ver lines de:</label>
+          <select [(ngModel)]="linesBrandId" (ngModelChange)="onLinesBrandChange($event)">
             <option [ngValue]="null" disabled>Selecciona una brand</option>
             <option *ngFor="let b of brands" [ngValue]="b.id">{{ b.name }}</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>Categoría <span class="req">*</span></label>
-          <select [(ngModel)]="lineCategoryId">
+
+        <ng-container *ngIf="linesBrandId; let bid">
+          <p class="loading-hint" *ngIf="linesLoading">Cargando lines…</p>
+          <p class="empty-hint" *ngIf="!linesLoading && lines.length === 0">Sin lines para esta brand.</p>
+          <div class="item-list" *ngIf="!linesLoading && lines.length > 0">
+            <ng-container *ngFor="let l of lines">
+              <div class="item-row">
+                <ng-container *ngIf="editLineId === l.id">
+                  <input class="inline-input" [(ngModel)]="editLineName"
+                         (keyup.enter)="saveEditLine(bid, l.id)" maxlength="100" />
+                  <div class="item-actions">
+                    <button class="icon-btn icon-ok" [disabled]="lineSaving" (click)="saveEditLine(bid, l.id)">✓</button>
+                    <button class="icon-btn" (click)="cancelEditLine()">✕</button>
+                  </div>
+                </ng-container>
+                <ng-container *ngIf="editLineId !== l.id">
+                  <span class="item-meta">#{{ l.id }}</span>
+                  <span class="item-name">{{ l.name }}</span>
+                  <span class="item-tag">{{ categoryName(l.categoryId) }}</span>
+                  <div class="item-actions">
+                    <button class="icon-btn" (click)="startEditLine(l)" title="Editar">✏️</button>
+                    <button class="icon-btn icon-del" (click)="deleteLine(bid, l.id)" title="Eliminar">🗑</button>
+                  </div>
+                </ng-container>
+              </div>
+              <p class="item-error" *ngIf="lineErrors[l.id]">{{ lineErrors[l.id] }}</p>
+            </ng-container>
+          </div>
+        </ng-container>
+
+        <div class="divider"></div>
+
+        <!-- Create line form -->
+        <h3 class="subsection-title">Nueva Line</h3>
+        <div class="success-bar" *ngIf="lineCreated">
+          ✅ <strong>{{ lineCreated.name }}</strong> creada (ID {{ lineCreated.id }}) — {{ categoryName(lineCreated.categoryId) }}
+        </div>
+        <div class="line-row">
+          <div class="form-group">
+            <label>Brand <span class="req">*</span></label>
+            <select [(ngModel)]="lineSelectedBrandId">
+              <option [ngValue]="null" disabled>Brand</option>
+              <option *ngFor="let b of brands" [ngValue]="b.id">{{ b.name }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Categoría <span class="req">*</span></label>
+            <select [(ngModel)]="lineCategoryId">
+              <option [ngValue]="null" disabled>Categoría</option>
+              <option *ngFor="let c of categories" [ngValue]="c.id">{{ c.name }}</option>
+            </select>
+          </div>
+          <div class="form-group flex1">
+            <label>Nombre <span class="req">*</span></label>
+            <input [(ngModel)]="lineName" placeholder="Ej. Pro Staff" maxlength="100"
+                   (keyup.enter)="createLine()" />
+          </div>
+          <div class="form-group align-end">
+            <button class="btn btn-green"
+                    [disabled]="!lineName.trim() || !lineSelectedBrandId || !lineCategoryId || lineLoading"
+                    (click)="createLine()">
+              {{ lineLoading ? 'Creando…' : 'Agregar' }}
+            </button>
+          </div>
+        </div>
+        <p class="err-msg" *ngIf="lineError">{{ lineError }}</p>
+
+      </div>
+    </div>
+
+    <!-- ── Atributos ───────────────────────────────────────────── -->
+    <div class="panel mb">
+      <div class="panel-header">
+        <h2>Atributos</h2>
+        <span class="count-chip">{{ attributes.length }}</span>
+      </div>
+      <div class="panel-body">
+        <p class="empty-hint" *ngIf="attributes.length === 0">Sin atributos registrados.</p>
+
+        <div class="item-list" *ngIf="attributes.length > 0">
+          <ng-container *ngFor="let a of attributes">
+
+            <!-- Attribute row -->
+            <div class="item-row attr-row">
+              <button class="expand-btn" (click)="toggleExpand(a.id)"
+                      [class.expanded]="expandedAttrId === a.id">
+                {{ expandedAttrId === a.id ? '▾' : '▸' }}
+              </button>
+              <ng-container *ngIf="editAttrId === a.id">
+                <input class="inline-input" [(ngModel)]="editAttrName"
+                       (keyup.enter)="saveEditAttr(a.id)" maxlength="100" />
+                <div class="item-actions">
+                  <button class="icon-btn icon-ok" [disabled]="attrSaving" (click)="saveEditAttr(a.id)">✓</button>
+                  <button class="icon-btn" (click)="cancelEditAttr()">✕</button>
+                </div>
+              </ng-container>
+              <ng-container *ngIf="editAttrId !== a.id">
+                <span class="item-meta">#{{ a.id }}</span>
+                <span class="item-name">{{ a.name }}</span>
+                <div class="item-actions">
+                  <button class="icon-btn" (click)="startEditAttr(a)" title="Editar">✏️</button>
+                  <button class="icon-btn icon-del" (click)="deleteAttr(a.id)" title="Eliminar">🗑</button>
+                </div>
+              </ng-container>
+            </div>
+            <p class="item-error" *ngIf="attrErrors[a.id]">{{ attrErrors[a.id] }}</p>
+
+            <!-- Attribute values (expanded) -->
+            <div class="sub-list" *ngIf="expandedAttrId === a.id">
+              <p class="loading-hint" *ngIf="!attrValues[a.id]">Cargando valores…</p>
+
+              <ng-container *ngIf="attrValues[a.id] as vals">
+                <p class="empty-hint sub-empty" *ngIf="vals.length === 0">Sin valores.</p>
+
+                <ng-container *ngFor="let v of vals">
+                  <div class="sub-row">
+                    <ng-container *ngIf="editValueKey === vKey(a.id, v.id)">
+                      <input class="inline-input" [(ngModel)]="editValueDesc"
+                             (keyup.enter)="saveEditValue(a.id, v.id)" maxlength="100" />
+                      <div class="item-actions">
+                        <button class="icon-btn icon-ok" [disabled]="valueSaving" (click)="saveEditValue(a.id, v.id)">✓</button>
+                        <button class="icon-btn" (click)="cancelEditValue()">✕</button>
+                      </div>
+                    </ng-container>
+                    <ng-container *ngIf="editValueKey !== vKey(a.id, v.id)">
+                      <span class="item-meta">#{{ v.id }}</span>
+                      <span class="item-name">{{ v.description }}</span>
+                      <div class="item-actions">
+                        <button class="icon-btn" (click)="startEditValue(a.id, v)" title="Editar">✏️</button>
+                        <button class="icon-btn icon-del" (click)="deleteValue(a.id, v.id)" title="Eliminar">🗑</button>
+                      </div>
+                    </ng-container>
+                  </div>
+                  <p class="item-error" *ngIf="valueErrors[vKey(a.id, v.id)]">{{ valueErrors[vKey(a.id, v.id)] }}</p>
+                </ng-container>
+
+                <!-- Add value form -->
+                <ng-container *ngIf="newValueAttrId === a.id; else addValueBtn">
+                  <div class="sub-row">
+                    <input class="inline-input" [(ngModel)]="newValueDesc"
+                           placeholder="Descripción del valor…" maxlength="100"
+                           (keyup.enter)="createValue(a.id)" />
+                    <div class="item-actions">
+                      <button class="icon-btn icon-ok" [disabled]="newValueLoading" (click)="createValue(a.id)">✓</button>
+                      <button class="icon-btn" (click)="cancelNewValue()">✕</button>
+                    </div>
+                  </div>
+                  <p class="item-error" *ngIf="newValueError">{{ newValueError }}</p>
+                </ng-container>
+                <ng-template #addValueBtn>
+                  <button class="add-value-btn" (click)="showNewValueForm(a.id)">+ Agregar valor</button>
+                </ng-template>
+              </ng-container>
+            </div>
+
+          </ng-container>
+        </div>
+
+        <div class="divider"></div>
+        <div class="success-bar" *ngIf="attrCreated">✅ <strong>{{ attrCreated.name }}</strong> creado (ID {{ attrCreated.id }})</div>
+        <div class="create-row">
+          <input [(ngModel)]="attrName" placeholder="Nuevo atributo…" maxlength="100"
+                 (keyup.enter)="createAttribute()" />
+          <button class="btn btn-green btn-sm" [disabled]="!attrName.trim() || attrLoading" (click)="createAttribute()">
+            {{ attrLoading ? '…' : 'Agregar' }}
+          </button>
+        </div>
+        <p class="err-msg" *ngIf="attrError">{{ attrError }}</p>
+      </div>
+    </div>
+
+    <!-- ── Vínculos Categoría-Atributo ────────────────────────── -->
+    <div class="panel mb">
+      <div class="panel-header"><h2>Vínculos Categoría → Atributo</h2></div>
+      <div class="panel-body">
+
+        <div class="filter-row">
+          <label class="filter-label">Categoría:</label>
+          <select [(ngModel)]="linksCatId" (ngModelChange)="onLinksCatChange($event)">
             <option [ngValue]="null" disabled>Selecciona una categoría</option>
             <option *ngFor="let c of categories" [ngValue]="c.id">{{ c.name }}</option>
           </select>
         </div>
-        <div class="form-group flex1">
-          <label>Nombre <span class="req">*</span></label>
-          <input [(ngModel)]="lineName" placeholder="Ej. Pro Staff" maxlength="100"
-                 (keyup.enter)="createLine()" />
-        </div>
-      </div>
 
-      <p class="err-msg" *ngIf="lineError">{{ lineError }}</p>
-      <div class="form-actions">
-        <button class="btn btn-green"
-                [disabled]="!lineName.trim() || !lineSelectedBrandId || !lineCategoryId || lineLoading"
-                (click)="createLine()">
-          {{ lineLoading ? 'Creando…' : 'Crear line' }}
-        </button>
+        <ng-container *ngIf="linksCatId; let cid">
+          <p class="loading-hint" *ngIf="catLinksLoading">Cargando vínculos…</p>
+
+          <ng-container *ngIf="!catLinksLoading">
+            <p class="empty-hint" *ngIf="catLinks.length === 0">Sin atributos vinculados a esta categoría.</p>
+
+            <table class="link-table" *ngIf="catLinks.length > 0">
+              <thead>
+                <tr>
+                  <th>Atributo</th>
+                  <th>Obligatorio</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let lnk of catLinks">
+                  <td>{{ lnk.name }}</td>
+                  <td>
+                    <button class="toggle-btn" [class.on]="lnk.required"
+                            (click)="toggleRequired(cid, lnk.attributeId, lnk.required)">
+                      {{ lnk.required ? 'Sí' : 'No' }}
+                    </button>
+                  </td>
+                  <td>
+                    <button class="icon-btn icon-del" (click)="unlinkAttribute(cid, lnk.attributeId)"
+                            title="Desvincular">🗑</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="divider"></div>
+
+            <h3 class="subsection-title">Vincular atributo</h3>
+            <div class="link-create-row">
+              <select [(ngModel)]="linkAttrId" class="link-select">
+                <option [ngValue]="null" disabled>Selecciona atributo</option>
+                <option *ngFor="let a of attributes"
+                        [ngValue]="a.id"
+                        [disabled]="linkedAttrIds().has(a.id)">
+                  {{ a.name }}{{ linkedAttrIds().has(a.id) ? ' (ya vinculado)' : '' }}
+                </option>
+              </select>
+              <label class="toggle-label">
+                <input type="checkbox" [(ngModel)]="linkRequired" /> Obligatorio
+              </label>
+              <button class="btn btn-green btn-sm"
+                      [disabled]="!linkAttrId || linkLoading"
+                      (click)="linkAttribute()">
+                {{ linkLoading ? '…' : 'Vincular' }}
+              </button>
+            </div>
+            <p class="err-msg" *ngIf="linkError">{{ linkError }}</p>
+          </ng-container>
+        </ng-container>
+
       </div>
     </div>
-  </div>
+
+  </ng-container>
 
 </div>

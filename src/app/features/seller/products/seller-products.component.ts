@@ -48,6 +48,8 @@ export class SellerProductsComponent implements OnInit {
 
   togglingVariantId  = signal<number | null>(null);
   variantToggleError = signal<string | null>(null);
+  deletingVariantId  = signal<number | null>(null);
+  variantHasOrders   = signal<Set<number>>(new Set());
 
   searchQuery  = signal('');
   statusFilter = signal<ProductStatus | null>(null);
@@ -239,6 +241,43 @@ export class SellerProductsComponent implements OnInit {
         this.toastType.set('error');
         this.toastMsg.set(msg);
         this.togglingVariantId.set(null);
+      },
+    });
+  }
+
+  deleteVariant(p: SellerProduct, v: ProductVariant, e: Event) {
+    e.stopPropagation();
+    const storeId = this.storeId();
+    if (!storeId || this.deletingVariantId() !== null) return;
+    if (!confirm('¿Seguro que quieres eliminar esta variante?')) return;
+
+    this.deletingVariantId.set(v.id);
+    this.sellerService.deleteVariant(storeId, p.id, v.id).subscribe({
+      next: () => {
+        this.deletingVariantId.set(null);
+        this.toastType.set('success');
+        this.toastMsg.set('Variante eliminada correctamente');
+        this.store.dispatch(loadSellerProducts());
+      },
+      error: err => {
+        this.deletingVariantId.set(null);
+        const code: string = err.error?.errorCode ?? '';
+
+        if (err.status === 409 && code === 'PRODUCT_VARIANT_HAS_ORDERS') {
+          this.variantHasOrders.update(s => new Set([...s, v.id]));
+        } else if (err.status === 400 && code === 'PRODUCT_LAST_VARIANT') {
+          this.toastType.set('error');
+          this.toastMsg.set('No puedes eliminar la única variante. Elimina el producto completo.');
+        } else if (err.status === 403) {
+          this.toastType.set('error');
+          this.toastMsg.set('No tienes permiso para gestionar este producto.');
+        } else if (err.status === 404) {
+          this.toastType.set('error');
+          this.toastMsg.set('La variante no existe.');
+        } else {
+          this.toastType.set('error');
+          this.toastMsg.set(err.error?.message ?? 'Error al eliminar la variante.');
+        }
       },
     });
   }
