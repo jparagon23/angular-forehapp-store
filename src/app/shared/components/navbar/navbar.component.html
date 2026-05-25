@@ -299,15 +299,15 @@
 
     <!-- "Más" dropdown for overflow categories -->
     <div class="nb-more-wrap" *ngIf="moreCats().length > 0" (click)="$event.stopPropagation()">
-      <button class="nb-cat nb-more-btn" [class.open]="moreOpen" (click)="toggleMore($event)">
+      <button class="nb-cat nb-more-btn" [class.open]="moreOpen()" (click)="toggleMore($event)">
         Más ▾
       </button>
-      <div class="nb-more-drop" [class.open]="moreOpen">
+      <div class="nb-more-drop" [class.open]="moreOpen()">
         <button
           *ngFor="let cat of moreCats()"
           class="nb-more-item"
           [class.active]="activeCategory() === cat.name"
-          (click)="goToCategory(cat); moreOpen = false">
+          (click)="goToCategory(cat); moreOpen.set(false)">
           {{ cat.name }}
         </button>
       </div>

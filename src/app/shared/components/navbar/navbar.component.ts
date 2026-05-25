@@ -55,7 +55,7 @@ export class NavbarComponent {
   visibleCats = computed(() => this.categoriesSig().slice(0, 5));
   moreCats    = computed(() => this.categoriesSig().slice(5));
 
-  moreOpen = false;
+  moreOpen = signal(false);
 
   activeCategory = toSignal(
     this.router.events.pipe(
@@ -146,13 +146,13 @@ export class NavbarComponent {
     this.router.navigate(['/'], { queryParams: cat ? { cat: cat.name } : {} });
   }
 
-  toggleMore(e: Event) { e.stopPropagation(); this.moreOpen = !this.moreOpen; }
+  toggleMore(e: Event) { e.stopPropagation(); this.moreOpen.update(v => !v); }
 
   @HostListener('document:click')
   onDocumentClick() {
     this.accountOpen = false;
     this.locationOpen = false;
-    this.moreOpen = false;
+    this.moreOpen.set(false);
   }
 
   toggleAccount(e: Event) {
