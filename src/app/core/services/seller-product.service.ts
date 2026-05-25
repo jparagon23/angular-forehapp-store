@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
-  Brand, BrandLine, Category, CategoryAttribute,
+  Attribute, AttributeValue, Brand, BrandLine, Category, CategoryAttribute,
   CreateProductRequest, CreateVariantRequest,
   InventoryRequest, MovementReason, MovementsPage,
   ProductImage, ProductVariant, SellerProduct,
@@ -25,16 +25,76 @@ export class SellerProductService {
     return this.http.get<BrandLine[]>(`${this.BASE}/brands/${brandId}/lines`, { params });
   }
 
+  // ── Categories CRUD ──────────────────────────────────────────────────────
   createCategory(name: string): Observable<Category> {
     return this.http.post<Category>(`${this.BASE}/admin/categories`, { name });
   }
+  updateCategory(id: number, name: string): Observable<Category> {
+    return this.http.patch<Category>(`${this.BASE}/admin/categories/${id}`, { name });
+  }
+  deleteCategory(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.BASE}/admin/categories/${id}`);
+  }
 
+  // ── Brands CRUD ───────────────────────────────────────────────────────────
   createBrand(name: string): Observable<Brand> {
     return this.http.post<Brand>(`${this.BASE}/admin/brands`, { name });
   }
+  updateBrand(id: number, name: string): Observable<Brand> {
+    return this.http.patch<Brand>(`${this.BASE}/admin/brands/${id}`, { name });
+  }
+  deleteBrand(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.BASE}/admin/brands/${id}`);
+  }
 
+  // ── Lines CRUD ────────────────────────────────────────────────────────────
   createBrandLine(brandId: number, name: string, categoryId: number): Observable<BrandLine> {
     return this.http.post<BrandLine>(`${this.BASE}/admin/brands/${brandId}/lines`, { name, categoryId });
+  }
+  updateLine(brandId: number, lineId: number, name: string): Observable<BrandLine> {
+    return this.http.patch<BrandLine>(`${this.BASE}/admin/brands/${brandId}/lines/${lineId}`, { name });
+  }
+  deleteLine(brandId: number, lineId: number): Observable<void> {
+    return this.http.delete<void>(`${this.BASE}/admin/brands/${brandId}/lines/${lineId}`);
+  }
+
+  // ── Attributes CRUD ───────────────────────────────────────────────────────
+  getAttributes(): Observable<Attribute[]> {
+    return this.http.get<Attribute[]>(`${this.BASE}/attributes`);
+  }
+  getAttributeValues(attrId: number): Observable<AttributeValue[]> {
+    return this.http.get<AttributeValue[]>(`${this.BASE}/attributes/${attrId}/values`);
+  }
+  createAttribute(name: string): Observable<Attribute> {
+    return this.http.post<Attribute>(`${this.BASE}/admin/attributes`, { name });
+  }
+  updateAttribute(id: number, name: string): Observable<Attribute> {
+    return this.http.patch<Attribute>(`${this.BASE}/admin/attributes/${id}`, { name });
+  }
+  deleteAttribute(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.BASE}/admin/attributes/${id}`);
+  }
+
+  // ── Attribute Values CRUD ─────────────────────────────────────────────────
+  createAttributeValue(attrId: number, description: string): Observable<AttributeValue> {
+    return this.http.post<AttributeValue>(`${this.BASE}/admin/attributes/${attrId}/values`, { description });
+  }
+  updateAttributeValue(attrId: number, valueId: number, description: string): Observable<AttributeValue> {
+    return this.http.patch<AttributeValue>(`${this.BASE}/admin/attributes/${attrId}/values/${valueId}`, { description });
+  }
+  deleteAttributeValue(attrId: number, valueId: number): Observable<void> {
+    return this.http.delete<void>(`${this.BASE}/admin/attributes/${attrId}/values/${valueId}`);
+  }
+
+  // ── Category-Attribute Links ───────────────────────────────────────────────
+  linkAttribute(catId: number, attrId: number, required: boolean): Observable<CategoryAttribute> {
+    return this.http.post<CategoryAttribute>(`${this.BASE}/admin/categories/${catId}/attributes`, { attributeId: attrId, required });
+  }
+  updateAttributeLink(catId: number, attrId: number, required: boolean): Observable<CategoryAttribute> {
+    return this.http.patch<CategoryAttribute>(`${this.BASE}/admin/categories/${catId}/attributes/${attrId}`, { required });
+  }
+  unlinkAttribute(catId: number, attrId: number): Observable<void> {
+    return this.http.delete<void>(`${this.BASE}/admin/categories/${catId}/attributes/${attrId}`);
   }
 
   getCategories(): Observable<Category[]> {
