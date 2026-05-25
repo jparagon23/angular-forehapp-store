@@ -29,7 +29,8 @@
         <!-- Items -->
         <div class="items-list">
           <div class="order-item" *ngFor="let item of group.items">
-            <div class="oi-thumb">📦</div>
+            <img *ngIf="item.thumbnailUrl" class="oi-thumb" [src]="item.thumbnailUrl" [alt]="item.productTitle" />
+            <div *ngIf="!item.thumbnailUrl" class="oi-thumb oi-thumb--placeholder">📦</div>
             <div class="oi-info">
               <p class="oi-name">{{ item.productTitle }}</p>
               <p class="oi-variant" *ngIf="item.sku">{{ item.sku }}</p>
