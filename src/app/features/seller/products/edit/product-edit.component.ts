@@ -60,6 +60,9 @@ export class ProductEditComponent implements OnInit {
   variantError       = signal<string | null>(null);
   togglingVariantId  = signal<number | null>(null);
   variantToggleError = signal<string | null>(null);
+  deletingVariantId  = signal<number | null>(null);
+  variantHasOrders   = signal<Set<number>>(new Set());
+  variantDeleteError = signal<string | null>(null);
 
   // ── Inventario modal ─────────────────────────────────────────
   invOpen      = signal(false);
@@ -260,11 +263,32 @@ export class ProductEditComponent implements OnInit {
     });
   }
 
-  removeVariant(variantId: number) {
+  removeVariant(v: ProductVariant) {
     const storeId = this.storeId();
-    if (!storeId) return;
-    this.service.deleteVariant(storeId, this.productId, variantId).subscribe({
-      next: () => this.variants.update(v => v.filter(x => x.id !== variantId)),
+    if (!storeId || this.deletingVariantId() !== null) return;
+    if (!confirm('¿Seguro que quieres eliminar esta variante?')) return;
+    this.deletingVariantId.set(v.id);
+    this.variantDeleteError.set(null);
+    this.service.deleteVariant(storeId, this.productId, v.id).subscribe({
+      next: () => {
+        this.variants.update(vs => vs.filter(x => x.id !== v.id));
+        this.deletingVariantId.set(null);
+      },
+      error: err => {
+        this.deletingVariantId.set(null);
+        const code: string = err.error?.errorCode ?? '';
+        if (err.status === 409 && code === 'PRODUCT_VARIANT_HAS_ORDERS') {
+          this.variantHasOrders.update(s => new Set([...s, v.id]));
+        } else if (err.status === 400 && code === 'PRODUCT_LAST_VARIANT') {
+          this.variantDeleteError.set('No puedes eliminar la única variante. Elimina el producto completo.');
+        } else if (err.status === 403) {
+          this.variantDeleteError.set('No tienes permiso para gestionar este producto.');
+        } else if (err.status === 404) {
+          this.variantDeleteError.set('La variante no existe.');
+        } else {
+          this.variantDeleteError.set(err.error?.message ?? 'Error al eliminar la variante.');
+        }
+      },
     });
   }
 

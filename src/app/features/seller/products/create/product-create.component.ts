@@ -247,8 +247,17 @@ export class ProductCreateComponent implements OnInit {
     const storeId = this.storeId();
     if (!storeId) return;
     const productId = this.draftProduct()!.id;
+    this.variantError.set(null);
     this.service.deleteVariant(storeId, productId, variantId).subscribe({
       next: () => this.variants.update(v => v.filter(x => x.id !== variantId)),
+      error: err => {
+        const code: string = err.error?.errorCode ?? '';
+        if (err.status === 400 && code === 'PRODUCT_LAST_VARIANT') {
+          this.variantError.set('No puedes eliminar la única variante.');
+        } else {
+          this.variantError.set(err.error?.message ?? 'Error al eliminar la variante.');
+        }
+      },
     });
   }
 

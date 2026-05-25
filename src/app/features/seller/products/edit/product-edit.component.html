@@ -160,19 +160,30 @@
         <button class="btn-action btn-inv"  (click)="openInvModal(v)"    [disabled]="!v.active">Ajustar</button>
         <button class="btn-action btn-hist" (click)="openMovements(v)">Historial</button>
         <button class="btn-action"
-                [class.btn-deactivate]="v.active"
+                [class.btn-deactivate]="v.active && !variantHasOrders().has(v.id)"
+                [class.btn-deactivate-cta]="v.active && variantHasOrders().has(v.id)"
                 [class.btn-activate]="!v.active"
                 (click)="toggleVariant(v)"
                 [disabled]="togglingVariantId() !== null"
                 [title]="v.active ? 'Ocultar esta variante a los compradores' : 'Volver a mostrar esta variante'">
           {{ togglingVariantId() === v.id ? '…' : (v.active ? 'Desactivar' : 'Activar') }}
         </button>
-        <button class="btn-remove" (click)="removeVariant(v.id)" title="Eliminar variante">✕</button>
+        <button *ngIf="!variantHasOrders().has(v.id)"
+                class="btn-remove"
+                (click)="removeVariant(v)"
+                [disabled]="deletingVariantId() !== null"
+                [title]="deletingVariantId() === v.id ? 'Eliminando…' : 'Eliminar variante'">
+          {{ deletingVariantId() === v.id ? '…' : '✕' }}
+        </button>
       </div>
+      <p class="variant-orders-hint" *ngIf="variantHasOrders().has(v.id)">
+        Tiene compras asociadas. Desactívala para ocultarla del catálogo.
+      </p>
     </div>
   </div>
 
   <div class="form-error form-error--global" *ngIf="variantToggleError()">{{ variantToggleError() }}</div>
+  <div class="form-error form-error--global" *ngIf="variantDeleteError()">{{ variantDeleteError() }}</div>
 
   <div class="variant-empty" *ngIf="!variants().length">
     Sin variantes. Agrega al menos una para poder publicar el producto.
@@ -270,12 +281,13 @@
   <div class="save-ok" *ngIf="saveOk()">Cambios guardados correctamente.</div>
   <div class="save-ok" *ngIf="publishOk()">Producto guardado y publicado.</div>
   <div class="edit-actions edit-actions--final">
-    <button type="button" class="btn-primary" (click)="saveInfo()" [disabled]="saving() || publishing()">
-      {{ saving() ? 'Guardando…' : 'Guardar cambios' }}
+    <button type="button" class="btn-primary" (click)="saveInfo()"
+            [disabled]="saving() || publishing() || deletingVariantId() !== null">
+      {{ saving() ? 'Guardando…' : deletingVariantId() !== null ? 'Eliminando variante…' : 'Guardar cambios' }}
     </button>
     <button type="button" class="btn-publish" (click)="saveAndPublish()"
             *ngIf="product()?.status === 'DRAFT'"
-            [disabled]="saving() || publishing()">
+            [disabled]="saving() || publishing() || deletingVariantId() !== null">
       {{ publishing() ? 'Publicando…' : 'Guardar y publicar' }}
     </button>
   </div>
