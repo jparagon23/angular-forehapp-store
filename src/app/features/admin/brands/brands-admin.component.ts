@@ -41,7 +41,7 @@ export class BrandsAdminComponent implements OnInit {
   // ── Attributes ────────────────────────────────────────────────
   attributes: Attribute[] = [];
   attrValues: Record<number, AttributeValue[]> = {};
-  expandedAttrId: number | null = null;
+  selectedAttrId: number | null = null;
   attrName = ''; attrLoading = false; attrError = ''; attrCreated: Attribute | null = null;
   editAttrId: number | null = null; editAttrName = ''; attrSaving = false;
   attrErrors: Record<number, string> = {};
@@ -171,13 +171,18 @@ export class BrandsAdminComponent implements OnInit {
   }
 
   categoryName(id: number): string { return this.categories.find(c => c.id === id)?.name ?? String(id); }
+  attrDisplayName(id: number | null): string { return id ? (this.attributes.find(a => a.id === id)?.name ?? '') : ''; }
 
   // ── Attributes ────────────────────────────────────────────────
   createAttribute() {
     if (!this.attrName.trim()) return;
     this.attrLoading = true; this.attrError = ''; this.attrCreated = null;
     this.svc.createAttribute(this.attrName.trim()).subscribe({
-      next: a => { this.attrCreated = a; this.attributes = [...this.attributes, a]; this.attrName = ''; this.attrLoading = false; },
+      next: a => {
+        this.attrCreated = a; this.attributes = [...this.attributes, a]; this.attrName = ''; this.attrLoading = false;
+        this.attrValues = { ...this.attrValues, [a.id]: [] };
+        this.selectedAttrId = a.id;
+      },
       error: err => { this.attrError = err.error?.message ?? 'Error al crear.'; this.attrLoading = false; },
     });
   }
@@ -197,14 +202,20 @@ export class BrandsAdminComponent implements OnInit {
   deleteAttr(id: number) {
     if (!confirm('¿Eliminar este atributo?')) return;
     this.svc.deleteAttribute(id).subscribe({
-      next: () => { this.attributes = this.attributes.filter(a => a.id !== id); delete this.attrValues[id]; if (this.expandedAttrId === id) this.expandedAttrId = null; },
+      next: () => {
+        this.attributes = this.attributes.filter(a => a.id !== id);
+        delete this.attrValues[id];
+        if (this.selectedAttrId === id) { this.selectedAttrId = null; this.newValueAttrId = null; this.editValueKey = null; }
+      },
       error: err => { this.attrErrors[id] = err.status === 409 ? 'Tiene valores asociados. Elimínalos primero.' : (err.error?.message ?? 'Error al eliminar.'); },
     });
   }
 
-  toggleExpand(attrId: number) {
-    if (this.expandedAttrId === attrId) { this.expandedAttrId = null; return; }
-    this.expandedAttrId = attrId;
+  selectAttr(attrId: number) {
+    if (this.selectedAttrId === attrId) return;
+    this.selectedAttrId = attrId;
+    this.newValueAttrId = null;
+    this.editValueKey = null;
     if (!this.attrValues[attrId]) {
       this.svc.getAttributeValues(attrId).subscribe({ next: v => { this.attrValues = { ...this.attrValues, [attrId]: v }; } });
     }
