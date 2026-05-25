@@ -381,8 +381,7 @@ $green-h: #4fc217;
 .nb-bottom {
   background: $dark2; display: flex; align-items: center;
   padding: 0 12px; border-top: 1px solid rgba(255,255,255,.06);
-  overflow-x: auto; scrollbar-width: none;
-  &::-webkit-scrollbar { display: none; }
+  overflow: visible;
 }
 
 .nb-all {
