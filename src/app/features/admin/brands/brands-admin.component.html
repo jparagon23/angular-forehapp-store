@@ -187,104 +187,134 @@
     </div>
 
     <!-- ── Atributos ───────────────────────────────────────────── -->
-    <div class="panel mb">
-      <div class="panel-header">
-        <h2>Atributos</h2>
-        <span class="count-chip">{{ attributes.length }}</span>
+    <div class="row-two mb">
+
+      <!-- Panel izquierdo: lista de atributos -->
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Atributos</h2>
+          <span class="count-chip">{{ attributes.length }}</span>
+        </div>
+        <div class="panel-body">
+          <p class="empty-hint" *ngIf="attributes.length === 0">Sin atributos registrados.</p>
+
+          <div class="item-list" *ngIf="attributes.length > 0">
+            <ng-container *ngFor="let a of attributes">
+              <div class="item-row" [class.item-row--selected]="selectedAttrId === a.id"
+                   (click)="selectAttr(a.id)">
+                <ng-container *ngIf="editAttrId === a.id">
+                  <input class="inline-input" [(ngModel)]="editAttrName"
+                         (keyup.enter)="saveEditAttr(a.id)" maxlength="100"
+                         (click)="$event.stopPropagation()" />
+                  <div class="item-actions" (click)="$event.stopPropagation()">
+                    <button class="icon-btn icon-ok" [disabled]="attrSaving" (click)="saveEditAttr(a.id)">✓</button>
+                    <button class="icon-btn" (click)="cancelEditAttr()">✕</button>
+                  </div>
+                </ng-container>
+                <ng-container *ngIf="editAttrId !== a.id">
+                  <span class="item-meta">#{{ a.id }}</span>
+                  <span class="item-name">{{ a.name }}</span>
+                  <span class="val-count-chip" *ngIf="attrValues[a.id]">
+                    {{ attrValues[a.id].length }} valor{{ attrValues[a.id].length !== 1 ? 'es' : '' }}
+                  </span>
+                  <div class="item-actions" (click)="$event.stopPropagation()">
+                    <button class="icon-btn" (click)="startEditAttr(a)" title="Editar">✏️</button>
+                    <button class="icon-btn icon-del" (click)="deleteAttr(a.id)" title="Eliminar">🗑</button>
+                  </div>
+                </ng-container>
+              </div>
+              <p class="item-error" *ngIf="attrErrors[a.id]">{{ attrErrors[a.id] }}</p>
+            </ng-container>
+          </div>
+
+          <div class="divider"></div>
+          <div class="success-bar" *ngIf="attrCreated">✅ <strong>{{ attrCreated.name }}</strong> creado</div>
+          <div class="create-row">
+            <input [(ngModel)]="attrName" placeholder="Nuevo atributo…" maxlength="100"
+                   (keyup.enter)="createAttribute()" />
+            <button class="btn btn-green btn-sm" [disabled]="!attrName.trim() || attrLoading" (click)="createAttribute()">
+              {{ attrLoading ? '…' : 'Agregar' }}
+            </button>
+          </div>
+          <p class="err-msg" *ngIf="attrError">{{ attrError }}</p>
+        </div>
       </div>
-      <div class="panel-body">
-        <p class="empty-hint" *ngIf="attributes.length === 0">Sin atributos registrados.</p>
 
-        <div class="item-list" *ngIf="attributes.length > 0">
-          <ng-container *ngFor="let a of attributes">
+      <!-- Panel derecho: valores del atributo seleccionado -->
+      <div class="panel">
+        <div class="panel-header">
+          <h2>
+            Valores
+            <span class="attr-name-tag" *ngIf="selectedAttrId">
+              · {{ attrDisplayName(selectedAttrId) }}
+            </span>
+          </h2>
+          <span class="count-chip" *ngIf="selectedAttrId && attrValues[selectedAttrId]">
+            {{ attrValues[selectedAttrId].length }}
+          </span>
+        </div>
+        <div class="panel-body">
 
-            <!-- Attribute row -->
-            <div class="item-row attr-row">
-              <button class="expand-btn" (click)="toggleExpand(a.id)"
-                      [class.expanded]="expandedAttrId === a.id">
-                {{ expandedAttrId === a.id ? '▾' : '▸' }}
-              </button>
-              <ng-container *ngIf="editAttrId === a.id">
-                <input class="inline-input" [(ngModel)]="editAttrName"
-                       (keyup.enter)="saveEditAttr(a.id)" maxlength="100" />
-                <div class="item-actions">
-                  <button class="icon-btn icon-ok" [disabled]="attrSaving" (click)="saveEditAttr(a.id)">✓</button>
-                  <button class="icon-btn" (click)="cancelEditAttr()">✕</button>
-                </div>
-              </ng-container>
-              <ng-container *ngIf="editAttrId !== a.id">
-                <span class="item-meta">#{{ a.id }}</span>
-                <span class="item-name">{{ a.name }}</span>
-                <div class="item-actions">
-                  <button class="icon-btn" (click)="startEditAttr(a)" title="Editar">✏️</button>
-                  <button class="icon-btn icon-del" (click)="deleteAttr(a.id)" title="Eliminar">🗑</button>
-                </div>
-              </ng-container>
-            </div>
-            <p class="item-error" *ngIf="attrErrors[a.id]">{{ attrErrors[a.id] }}</p>
+          <!-- Sin selección -->
+          <div class="values-placeholder" *ngIf="!selectedAttrId">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5" stroke-linecap="round">
+              <path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
+              <circle cx="12" cy="12" r="1"/>
+            </svg>
+            <p>Selecciona un atributo para ver y gestionar sus valores</p>
+          </div>
 
-            <!-- Attribute values (expanded) -->
-            <div class="sub-list" *ngIf="expandedAttrId === a.id">
-              <p class="loading-hint" *ngIf="!attrValues[a.id]">Cargando valores…</p>
+          <ng-container *ngIf="selectedAttrId as sid">
+            <p class="loading-hint" *ngIf="!attrValues[sid]">Cargando valores…</p>
 
-              <ng-container *ngIf="attrValues[a.id] as vals">
-                <p class="empty-hint sub-empty" *ngIf="vals.length === 0">Sin valores.</p>
+            <ng-container *ngIf="attrValues[sid] as vals">
+              <p class="empty-hint" *ngIf="vals.length === 0">Sin valores aún. Agrega el primero.</p>
 
+              <div class="item-list" *ngIf="vals.length > 0">
                 <ng-container *ngFor="let v of vals">
-                  <div class="sub-row">
-                    <ng-container *ngIf="editValueKey === vKey(a.id, v.id)">
+                  <div class="item-row">
+                    <ng-container *ngIf="editValueKey === vKey(sid, v.id)">
                       <input class="inline-input" [(ngModel)]="editValueDesc"
-                             (keyup.enter)="saveEditValue(a.id, v.id)" maxlength="100" />
+                             (keyup.enter)="saveEditValue(sid, v.id)" maxlength="100" />
                       <div class="item-actions">
-                        <button class="icon-btn icon-ok" [disabled]="valueSaving" (click)="saveEditValue(a.id, v.id)">✓</button>
+                        <button class="icon-btn icon-ok" [disabled]="valueSaving" (click)="saveEditValue(sid, v.id)">✓</button>
                         <button class="icon-btn" (click)="cancelEditValue()">✕</button>
                       </div>
                     </ng-container>
-                    <ng-container *ngIf="editValueKey !== vKey(a.id, v.id)">
+                    <ng-container *ngIf="editValueKey !== vKey(sid, v.id)">
                       <span class="item-meta">#{{ v.id }}</span>
                       <span class="item-name">{{ v.description }}</span>
                       <div class="item-actions">
-                        <button class="icon-btn" (click)="startEditValue(a.id, v)" title="Editar">✏️</button>
-                        <button class="icon-btn icon-del" (click)="deleteValue(a.id, v.id)" title="Eliminar">🗑</button>
+                        <button class="icon-btn" (click)="startEditValue(sid, v)" title="Editar">✏️</button>
+                        <button class="icon-btn icon-del" (click)="deleteValue(sid, v.id)" title="Eliminar">🗑</button>
                       </div>
                     </ng-container>
                   </div>
-                  <p class="item-error" *ngIf="valueErrors[vKey(a.id, v.id)]">{{ valueErrors[vKey(a.id, v.id)] }}</p>
+                  <p class="item-error" *ngIf="valueErrors[vKey(sid, v.id)]">{{ valueErrors[vKey(sid, v.id)] }}</p>
                 </ng-container>
+              </div>
 
-                <!-- Add value form -->
-                <ng-container *ngIf="newValueAttrId === a.id; else addValueBtn">
-                  <div class="sub-row">
-                    <input class="inline-input" [(ngModel)]="newValueDesc"
-                           placeholder="Descripción del valor…" maxlength="100"
-                           (keyup.enter)="createValue(a.id)" />
-                    <div class="item-actions">
-                      <button class="icon-btn icon-ok" [disabled]="newValueLoading" (click)="createValue(a.id)">✓</button>
-                      <button class="icon-btn" (click)="cancelNewValue()">✕</button>
-                    </div>
-                  </div>
-                  <p class="item-error" *ngIf="newValueError">{{ newValueError }}</p>
-                </ng-container>
-                <ng-template #addValueBtn>
-                  <button class="add-value-btn" (click)="showNewValueForm(a.id)">+ Agregar valor</button>
-                </ng-template>
+              <div class="divider"></div>
+
+              <ng-container *ngIf="newValueAttrId === sid; else addValueBtn">
+                <div class="create-row">
+                  <input class="inline-input" [(ngModel)]="newValueDesc"
+                         placeholder="Descripción del valor…" maxlength="100"
+                         (keyup.enter)="createValue(sid)" />
+                  <button class="icon-btn icon-ok" [disabled]="newValueLoading" (click)="createValue(sid)">✓</button>
+                  <button class="icon-btn" (click)="cancelNewValue()">✕</button>
+                </div>
+                <p class="err-msg" *ngIf="newValueError">{{ newValueError }}</p>
               </ng-container>
-            </div>
-
+              <ng-template #addValueBtn>
+                <button class="btn btn-green btn-sm" (click)="showNewValueForm(sid)">+ Agregar valor</button>
+              </ng-template>
+            </ng-container>
           </ng-container>
-        </div>
 
-        <div class="divider"></div>
-        <div class="success-bar" *ngIf="attrCreated">✅ <strong>{{ attrCreated.name }}</strong> creado (ID {{ attrCreated.id }})</div>
-        <div class="create-row">
-          <input [(ngModel)]="attrName" placeholder="Nuevo atributo…" maxlength="100"
-                 (keyup.enter)="createAttribute()" />
-          <button class="btn btn-green btn-sm" [disabled]="!attrName.trim() || attrLoading" (click)="createAttribute()">
-            {{ attrLoading ? '…' : 'Agregar' }}
-          </button>
         </div>
-        <p class="err-msg" *ngIf="attrError">{{ attrError }}</p>
       </div>
+
     </div>
 
     <!-- ── Vínculos Categoría-Atributo ────────────────────────── -->

@@ -273,16 +273,6 @@
         <p class="pm-section-label">Método de pago</p>
         <div class="pm-options">
 
-          <button class="pm-opt" [class.active]="selectedPaymentMethod === 'MERCADO_PAGO'"
-                  (click)="selectedPaymentMethod = 'MERCADO_PAGO'">
-            <span class="pm-opt-icon">💳</span>
-            <div class="pm-opt-body">
-              <span class="pm-opt-name">MercadoPago</span>
-              <span class="pm-opt-desc">Tarjeta, PSE, efectivo online</span>
-            </div>
-          </button>
-
-
           <button class="pm-opt"
                   [class.active]="selectedPaymentMethod === 'CASH_ON_DELIVERY'"
                   [class.pm-disabled]="!isSelectedAddressCali(addrs)"

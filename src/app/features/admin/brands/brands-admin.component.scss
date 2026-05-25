@@ -143,60 +143,44 @@
   &:hover { background: #fff5f5; border-color: #e53e3e; }
 }
 
-// ── Expand button (attributes) ────────────────────────────────
-.expand-btn {
-  width: 22px; height: 22px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-size: .8rem;
-  color: var(--muted);
-  flex-shrink: 0;
-  padding: 0;
-  transition: color .15s;
+// ── Attribute row: selected state ────────────────────────────
+.item-row--selected {
+  background: #f0faf0;
+  border-left: 3px solid var(--green, #38a169);
+  padding-left: 5px;
 
-  &:hover, &.expanded { color: var(--green, #38a169); }
+  .item-name { color: var(--green, #38a169); font-weight: 700; }
 }
 
-// ── Sub-list (attribute values) ───────────────────────────────
-.sub-list {
-  margin: 0 0 8px 38px;
-  border-left: 2px solid #e2e8e2;
-  padding-left: 14px;
+// ── Value count chip on attribute row ─────────────────────────
+.val-count-chip {
+  font-size: .72rem;
+  color: #276749;
+  background: #e8f5e9;
+  border-radius: 10px;
+  padding: 1px 7px;
+  flex-shrink: 0;
+  font-weight: 600;
+}
+
+// ── Values placeholder (no selection) ────────────────────────
+.values-placeholder {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-}
-
-.sub-row {
-  display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 5px 6px;
-  border-radius: 7px;
-  min-height: 34px;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+  color: #bbb;
+  text-align: center;
 
-  &:hover { background: #f9fbf9; }
+  p { font-size: .85rem; margin: 0; line-height: 1.5; }
 }
 
-.sub-empty {
-  margin: 4px 0;
-  font-size: .82rem;
-}
-
-.add-value-btn {
-  border: none;
-  background: transparent;
+// ── Attr name in panel header ─────────────────────────────────
+.attr-name-tag {
+  font-weight: 700;
   color: var(--green, #38a169);
-  font-size: .8rem;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 6px;
-  text-align: left;
-  margin-top: 2px;
-
-  &:hover { background: #f0faf0; }
 }
 
 // ── Create row ────────────────────────────────────────────────

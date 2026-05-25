@@ -53,7 +53,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   createdOrder$     = this.store.select(selectCreatedOrder);
 
   selectedAddressId: number | null = null;
-  selectedPaymentMethod: PaymentMethod = 'MERCADO_PAGO';
+  selectedPaymentMethod: PaymentMethod = 'TRANSFER';
   showAddressPicker = false;
   showAddressForm   = false;
 
