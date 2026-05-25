@@ -17,8 +17,9 @@ import { TokenStore } from '../../../core/services/token-store.service';
 import { ProductService } from '../../../core/services/product.service';
 import { Product } from '../../../core/models/product.model';
 import { CurrencyCopPipe } from '../../pipes/currency-cop.pipe';
-
-const CATEGORIES = ['Raquetas', 'Zapatillas', 'Ropa', 'Pelotas', 'Accesorios'];
+import { loadCategories } from '../../../store/categories/categories.actions';
+import { selectAllCategories } from '../../../store/categories/categories.selectors';
+import { Category } from '../../../core/models/seller-product.model';
 
 @Component({
   selector: 'app-navbar',
@@ -49,8 +50,7 @@ export class NavbarComponent {
   addresses$        = this.store.select(selectAllAddresses);
   defaultAddress$   = this.store.select(selectDefaultAddress);
   addressesLoading$ = this.store.select(selectAddressesLoading);
-
-  readonly categories = CATEGORIES;
+  categories$       = this.store.select(selectAllCategories);
 
   activeCategory = toSignal(
     this.router.events.pipe(
@@ -69,6 +69,8 @@ export class NavbarComponent {
   highlightIdx = signal(-1);
 
   constructor() {
+    this.store.dispatch(loadCategories());
+
     this.searchSubject.pipe(
       debounceTime(280),
       distinctUntilChanged(),
@@ -135,8 +137,8 @@ export class NavbarComponent {
     this.router.navigate(['/'], { queryParams: q ? { q } : {} });
   }
 
-  goToCategory(cat: string | null) {
-    this.router.navigate(['/'], { queryParams: cat ? { cat } : {} });
+  goToCategory(cat: Category | null) {
+    this.router.navigate(['/'], { queryParams: cat ? { cat: cat.name } : {} });
   }
 
   @HostListener('document:click')
