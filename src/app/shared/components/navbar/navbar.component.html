@@ -290,12 +290,28 @@
     <div class="nb-divider"></div>
 
     <button
-      *ngFor="let cat of (categories$ | async)"
+      *ngFor="let cat of visibleCats()"
       class="nb-cat"
       [class.active]="activeCategory() === cat.name"
       (click)="goToCategory(cat)">
       {{ cat.name }}
     </button>
+
+    <!-- "Más" dropdown for overflow categories -->
+    <div class="nb-more-wrap" *ngIf="moreCats().length > 0" (click)="$event.stopPropagation()">
+      <button class="nb-cat nb-more-btn" [class.open]="moreOpen" (click)="toggleMore($event)">
+        Más ▾
+      </button>
+      <div class="nb-more-drop" [class.open]="moreOpen">
+        <button
+          *ngFor="let cat of moreCats()"
+          class="nb-more-item"
+          [class.active]="activeCategory() === cat.name"
+          (click)="goToCategory(cat); moreOpen = false">
+          {{ cat.name }}
+        </button>
+      </div>
+    </div>
 
     <div class="nb-sep"></div>
 

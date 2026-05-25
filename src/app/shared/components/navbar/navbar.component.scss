@@ -408,6 +408,38 @@ $green-h: #4fc217;
 
 .nb-sep { flex: 1; min-width: 12px; }
 
+// ── "Más" overflow dropdown ───────────────────────────────
+.nb-more-wrap {
+  position: relative; flex-shrink: 0;
+}
+
+.nb-more-btn {
+  &.open { border-color: rgba(255,255,255,.5) !important; color: #fff; }
+}
+
+.nb-more-drop {
+  display: none;
+  position: absolute; top: calc(100% + 4px); left: 0;
+  min-width: 160px;
+  background: $dark2;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.5);
+  z-index: 300;
+  overflow: hidden;
+  &.open { display: block; }
+}
+
+.nb-more-item {
+  display: block; width: 100%;
+  padding: 10px 16px; text-align: left;
+  background: none; border: none; cursor: pointer;
+  color: #e8e8e8; font-size: .87rem; white-space: nowrap;
+  transition: background .1s, color .1s;
+  &:hover { background: rgba(255,255,255,.07); color: #fff; }
+  &.active { color: #fff; font-weight: 600; background: rgba(255,255,255,.05); }
+}
+
 .nb-promo {
   color: #ffd766 !important; font-weight: 600;
 }
