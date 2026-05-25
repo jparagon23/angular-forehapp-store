@@ -150,7 +150,8 @@
             [class.nb-drop-item-hl]="highlightIdx() === i"
             (mousedown)="$event.preventDefault()"
             (click)="selectSuggestion(p)">
-            <span class="nb-drop-emoji">{{ p.emoji }}</span>
+            <img *ngIf="p.image" class="nb-drop-thumb" [src]="p.image" [alt]="p.name" />
+            <span *ngIf="!p.image" class="nb-drop-emoji">{{ p.emoji }}</span>
             <div class="nb-drop-info">
               <span class="nb-drop-name">{{ p.name }}</span>
               <span class="nb-drop-brand">{{ p.brand }}</span>
