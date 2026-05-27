@@ -25,7 +25,7 @@ interface PageResponse<T> {
   content: T[];
   totalElements: number;
   totalPages: number;
-  number: number;
+  page: number;
   size: number;
   hasNext: boolean;
 }
@@ -79,7 +79,7 @@ export class ProductService {
       map(res => ({
         items:   res.content.map(p => this.mapProduct(p)),
         hasNext: res.hasNext,
-        page:    res.number,
+        page:    res.page,
       }))
     );
   }
