@@ -118,6 +118,11 @@
   display: flex; align-items: center; gap: 5px;
   svg { color: #aaa; flex-shrink: 0; }
 }
+.so-buyer-contact {
+  display: flex; align-items: center; gap: 5px;
+  svg { color: #aaa; flex-shrink: 0; }
+  a { color: #555; text-decoration: none; &:hover { color: var(--green, #42AA14); } }
+}
 .so-tracking-tag {
   display: flex; align-items: center; gap: 5px;
   background: #e3f2fd; color: #1565c0; padding: 3px 10px;
