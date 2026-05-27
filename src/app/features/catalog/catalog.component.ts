@@ -84,7 +84,8 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
         const categoryId = catName
           ? (categories as Category[]).find(c => c.name === catName)?.id
           : undefined;
-        this.activeFilters = { search, categoryId };
+        const sortBy = search || categoryId ? 'NEWEST' : 'DISCOVERY';
+        this.activeFilters = { search, categoryId, sortBy };
         if (params['q']) {
           this.seo.set({ title: `Resultados para "${params['q']}"` });
         } else if (catName) {

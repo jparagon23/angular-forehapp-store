@@ -34,6 +34,7 @@ export interface ProductFilters {
   search?: string;
   categoryId?: number;
   brandId?: number;
+  sortBy?: 'NEWEST' | 'DISCOVERY';
 }
 
 export interface PagedProducts {
@@ -74,6 +75,7 @@ export class ProductService {
     if (filters?.search)     params['search']     = filters.search;
     if (filters?.categoryId) params['categoryId'] = String(filters.categoryId);
     if (filters?.brandId)    params['brandId']    = String(filters.brandId);
+    params['sortBy'] = filters?.sortBy ?? 'NEWEST';
 
     return this.http.get<PageResponse<ApiProductSummary>>(`${this.BASE}/products/public`, { params }).pipe(
       map(res => ({
