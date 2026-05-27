@@ -11,6 +11,7 @@ import { OrderResponse, OrderSellerGroup, OrderSummaryDto, PaymentMethod, Seller
 import { apiCode } from '../../core/models/api-error.model';
 import { ReturnService } from '../../core/services/return.service';
 import { CreateReturnRequest, ReturnType } from '../../core/models/return.model';
+import { SeoService } from '../../core/services/seo.service';
 
 interface ReturnFormItem {
   orderItemId: number;
@@ -34,6 +35,7 @@ export class OrdersComponent implements OnInit {
   private router        = inject(Router);
   private orderService  = inject(OrderService);
   private returnService = inject(ReturnService);
+  private seo           = inject(SeoService);
 
   authUser$   = this.store.select(selectAuthUser);
   isLoggedIn$ = this.store.select(selectIsLoggedIn);
@@ -63,6 +65,7 @@ export class OrdersComponent implements OnInit {
   );
 
   ngOnInit() {
+    this.seo.set({ title: 'Mis Pedidos' });
     this.isLoggedIn$.pipe(take(1)).subscribe(loggedIn => {
       if (!loggedIn) {
         this.router.navigate(['/login'], { queryParams: { redirect: '/orders' } });

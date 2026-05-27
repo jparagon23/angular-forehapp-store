@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin
+Disallow: /seller
+Disallow: /checkout
+Disallow: /orders
+Disallow: /wishlist
+Disallow: /account
+Disallow: /verify-code
+
+Sitemap: https://forehapp.store/sitemap.xml

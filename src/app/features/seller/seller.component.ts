@@ -10,6 +10,7 @@ import { selectActiveSellerStoreId, selectActiveSellerStoreName } from '../../st
 import { setActiveSellerStore } from '../../store/seller/seller.actions';
 import { StoreService } from '../../core/services/store.service';
 import { MyStore } from '../../core/models/store.model';
+import { SeoService } from '../../core/services/seo.service';
 
 @Component({
   selector: 'app-seller',
@@ -19,8 +20,9 @@ import { MyStore } from '../../core/models/store.model';
   styleUrl: './seller.component.scss',
 })
 export class SellerComponent implements OnInit {
-  private ngrx        = inject(Store);
+  private ngrx         = inject(Store);
   private storeService = inject(StoreService);
+  private seo          = inject(SeoService);
 
   hasAdmin$         = this.ngrx.select(selectHasAdmin);
   activeStoreId$    = this.ngrx.select(selectActiveSellerStoreId);
@@ -30,6 +32,7 @@ export class SellerComponent implements OnInit {
   storesError = '';
 
   ngOnInit(): void {
+    this.seo.set({ title: 'Panel de Vendedor' });
     this.storeService.getMyStores().subscribe({
       next: stores => {
         this.myStores = stores;

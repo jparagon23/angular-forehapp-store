@@ -1,10 +1,11 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, ValidationErrors, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { NgIf } from '@angular/common';
 import { AuthApiService } from '../../../core/services/auth-api.service';
 import Swal from 'sweetalert2';
 import { apiCode } from '../../../core/models/api-error.model';
+import { SeoService } from '../../../core/services/seo.service';
 
 function passwordsMatch(ctrl: AbstractControl): ValidationErrors | null {
   const pass    = ctrl.get('password')?.value;
@@ -19,10 +20,13 @@ function passwordsMatch(ctrl: AbstractControl): ValidationErrors | null {
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss',
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnInit {
   private fb          = inject(FormBuilder);
   private router      = inject(Router);
   private authService = inject(AuthApiService);
+  private seo         = inject(SeoService);
+
+  ngOnInit() { this.seo.set({ title: 'Crear Cuenta' }); }
 
   form = this.fb.group({
     name:     ['', [Validators.required, Validators.minLength(2)]],

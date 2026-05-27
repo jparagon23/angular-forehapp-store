@@ -27,6 +27,7 @@ import { TokenStore } from '../../core/services/token-store.service';
 import { updateUser } from '../../store/auth/auth.actions';
 import { apiCode } from '../../core/models/api-error.model';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { SeoService } from '../../core/services/seo.service';
 
 @Component({
   selector: 'app-checkout',
@@ -44,6 +45,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private cartService     = inject(CartService);
   private authApi         = inject(AuthApiService);
   private tokenStore      = inject(TokenStore);
+  private seo             = inject(SeoService);
 
   sellerGroups$ = this.store.select(selectSellerGroups);
   total$        = this.store.select(selectCartTotal);
@@ -106,6 +108,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private sub = new Subscription();
 
   ngOnInit() {
+    this.seo.set({ title: 'Finalizar Compra' });
     this.store.dispatch(resetCreateOrder());
 
     this.isLoggedIn$.pipe(take(1)).subscribe(loggedIn => {

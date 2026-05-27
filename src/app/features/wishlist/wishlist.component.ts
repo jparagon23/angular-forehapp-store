@@ -10,6 +10,7 @@ import { WishlistItemDto } from '../../core/models/wishlist-item.model';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { CartDrawerComponent } from '../cart/cart-drawer.component';
 import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
+import { SeoService } from '../../core/services/seo.service';
 
 @Component({
   selector: 'app-wishlist',
@@ -21,6 +22,7 @@ import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
 export class WishlistComponent implements OnInit {
   private store  = inject(Store);
   private router = inject(Router);
+  private seo    = inject(SeoService);
 
   items$         = this.store.select(selectWishlistItems);
   count$         = this.store.select(selectWishlistCount);
@@ -29,6 +31,7 @@ export class WishlistComponent implements OnInit {
   isLoggedIn$    = this.store.select(selectIsLoggedIn);
 
   ngOnInit() {
+    this.seo.set({ title: 'Lista de Deseos' });
     this.isLoggedIn$.pipe(take(1)).subscribe(loggedIn => {
       if (!loggedIn) this.router.navigate(['/login'], { queryParams: { redirect: '/wishlist' } });
     });
