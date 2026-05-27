@@ -63,6 +63,8 @@ export interface SellerOrderGroupDetail {
   groupId: number;
   orderId: number;
   buyerName: string;
+  buyerPhone: string | null;
+  buyerEmail: string;
   shippingAddress: string;
   shippingCity: string;
   shippingCountry: string;

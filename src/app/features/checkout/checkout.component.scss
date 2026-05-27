@@ -432,6 +432,23 @@
   &:disabled { opacity: .5; cursor: not-allowed; }
 }
 
+// ── Phone modal ───────────────────────────────────────────
+.phone-modal-desc {
+  padding: 14px 28px 0;
+  font-size: .88rem; color: #666; line-height: 1.5;
+}
+.phone-input {
+  height: 42px; padding: 0 13px;
+  border: 1.5px solid #dde; border-radius: 8px;
+  font-size: .9rem; color: var(--dark); background: #fafafa;
+  transition: border-color .15s;
+  &:focus { outline: none; border-color: var(--green); background: #fff; }
+  &.invalid { border-color: #e74c3c; }
+}
+.addr-form .phone-input { width: 100%; }
+.addr-modal .field { padding: 4px 28px 0; }
+.addr-modal .modal-footer { padding: 16px 28px 24px; }
+
 // ── Payment method selector ───────────────────────────────
 .pm-section { margin-bottom: 16px; }
 .pm-section-label {

@@ -21,6 +21,10 @@ export class TokenStore {
     if (user) localStorage.setItem(KEY_USER, JSON.stringify(user));
   }
 
+  updateStoredUser(user: AuthUser): void {
+    localStorage.setItem(KEY_USER, JSON.stringify(user));
+  }
+
   clearTokens(): void {
     localStorage.removeItem(KEY_ACCESS);
     localStorage.removeItem(KEY_REFRESH);

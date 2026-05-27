@@ -28,3 +28,11 @@ export interface TokenResponse {
   access_token: string;
   refresh_token: string;
 }
+
+export interface UserProfileResponse {
+  id: number;
+  email: string;
+  name: string;
+  lastname: string;
+  phone: string | null;
+}

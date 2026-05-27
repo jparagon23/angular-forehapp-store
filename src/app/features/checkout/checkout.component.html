@@ -326,6 +326,51 @@
   </div>
 </div>
 
+<!-- ── Phone modal ─────────────────────────────────────────── -->
+<div class="modal-overlay" *ngIf="phoneModal()" (click)="phoneModal.set(false)">
+  <div class="addr-modal" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h3>Teléfono de contacto</h3>
+      <button class="modal-close" (click)="phoneModal.set(false)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <p class="phone-modal-desc">
+      El vendedor necesita tu teléfono para coordinar la entrega.
+    </p>
+
+    <div class="field">
+      <label>Número de teléfono <span class="req">*</span></label>
+      <input
+        type="tel"
+        class="phone-input"
+        placeholder="+57 300 123 4567"
+        [value]="phoneInput()"
+        (input)="phoneInput.set($any($event.target).value)"
+        (keydown.enter)="savePhone()"
+        [class.invalid]="phoneError()"
+        maxlength="20"
+        autofocus
+      />
+      <span class="err" *ngIf="phoneError()">{{ phoneError() }}</span>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-confirm" style="width:100%"
+              [disabled]="!phoneInput().trim() || savingPhone()"
+              (click)="savePhone()">
+        <span class="btn-spinner" *ngIf="savingPhone()"></span>
+        <ng-container *ngIf="!savingPhone()">Guardar y continuar →</ng-container>
+      </button>
+    </div>
+
+  </div>
+</div>
+
 <!-- ── Add address modal ───────────────────────────────────── -->
 <div class="modal-overlay" *ngIf="showAddressForm" (click)="closeAddressForm()">
   <div class="addr-modal" (click)="$event.stopPropagation()">

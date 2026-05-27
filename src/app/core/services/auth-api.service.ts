@@ -9,6 +9,7 @@ import {
   RegisterResponse,
   TokenResponse,
   VerifyCodeRequest,
+  UserProfileResponse,
 } from '../models/auth.model';
 
 @Injectable({ providedIn: 'root' })
@@ -43,5 +44,13 @@ export class AuthApiService {
 
   refreshToken(refreshToken: string): Observable<TokenResponse> {
     return this.http.post<TokenResponse>(`${this.BASE}/auth/refresh-token`, { refreshToken });
+  }
+
+  getMe(): Observable<UserProfileResponse> {
+    return this.http.get<UserProfileResponse>(`${this.BASE}/users/me`);
+  }
+
+  updatePhone(phone: string): Observable<UserProfileResponse> {
+    return this.http.patch<UserProfileResponse>(`${this.BASE}/users/me/phone`, { phone });
   }
 }

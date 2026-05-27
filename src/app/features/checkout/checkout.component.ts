@@ -22,6 +22,11 @@ import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
 import { CouponService } from '../../core/services/coupon.service';
 import { AppliedCoupon, CouponValidationResponse } from '../../core/models/coupon.model';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
+import { AuthApiService } from '../../core/services/auth-api.service';
+import { TokenStore } from '../../core/services/token-store.service';
+import { updateUser } from '../../store/auth/auth.actions';
+import { apiCode } from '../../core/models/api-error.model';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-checkout',
@@ -37,12 +42,21 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private couponService   = inject(CouponService);
   private locationService = inject(LocationService);
   private cartService     = inject(CartService);
+  private authApi         = inject(AuthApiService);
+  private tokenStore      = inject(TokenStore);
 
   sellerGroups$ = this.store.select(selectSellerGroups);
   total$        = this.store.select(selectCartTotal);
   count$        = this.store.select(selectCartCount);
   authUser$     = this.store.select(selectAuthUser);
   isLoggedIn$   = this.store.select(selectIsLoggedIn);
+  authUser      = toSignal(this.store.select(selectAuthUser), { initialValue: null });
+
+  // Phone modal
+  phoneModal   = signal(false);
+  phoneInput   = signal('');
+  savingPhone  = signal(false);
+  phoneError   = signal('');
 
   addresses$        = this.store.select(selectAllAddresses);
   addressesLoading$ = this.store.select(selectAddressesLoading);
@@ -89,6 +103,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private addrSub?:  Subscription;
   private orderSub?: Subscription;
   private totalSub?: Subscription;
+  private sub = new Subscription();
 
   ngOnInit() {
     this.store.dispatch(resetCreateOrder());
@@ -128,12 +143,24 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         }
       });
     });
+
+    // Fallback: si el back rechaza por ORDER_BUYER_PHONE_REQUIRED, mostrar modal
+    this.sub.add(
+      this.store.select(selectCreateOrderError).pipe(
+        filter(err => !!err),
+      ).subscribe(() => {
+        if (!this.authUser()?.phone) {
+          this.phoneModal.set(true);
+        }
+      })
+    );
   }
 
   ngOnDestroy() {
     this.addrSub?.unsubscribe();
     this.orderSub?.unsubscribe();
     this.totalSub?.unsubscribe();
+    this.sub.unsubscribe();
   }
 
   getSelected(addresses: Address[]): Address | null {
@@ -322,6 +349,36 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   confirm() {
     if (!this.selectedAddressId) return;
-    this.store.dispatch(createOrder({ addressId: this.selectedAddressId, paymentMethod: this.selectedPaymentMethod }));
+    if (!this.authUser()?.phone) {
+      this.phoneModal.set(true);
+      return;
+    }
+    this.dispatchCreateOrder();
+  }
+
+  private dispatchCreateOrder() {
+    this.store.dispatch(createOrder({ addressId: this.selectedAddressId!, paymentMethod: this.selectedPaymentMethod }));
+  }
+
+  savePhone() {
+    const phone = this.phoneInput().trim();
+    if (!phone) return;
+    this.savingPhone.set(true);
+    this.phoneError.set('');
+    this.authApi.updatePhone(phone).subscribe({
+      next: me => {
+        this.store.dispatch(updateUser({ changes: { phone: me.phone } }));
+        const current = this.authUser();
+        if (current) this.tokenStore.updateStoredUser({ ...current, phone: me.phone });
+        this.savingPhone.set(false);
+        this.phoneModal.set(false);
+        this.store.dispatch(resetCreateOrder());
+        this.dispatchCreateOrder();
+      },
+      error: () => {
+        this.phoneError.set('No se pudo guardar el teléfono. Intenta de nuevo.');
+        this.savingPhone.set(false);
+      },
+    });
   }
 }
