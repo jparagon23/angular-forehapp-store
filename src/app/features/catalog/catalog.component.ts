@@ -127,6 +127,11 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
           }
           this.hasNext.set(result.hasNext);
           this.currentPage = result.page;
+          // Re-evalúa el sentinel por si ya estaba en el viewport durante la carga
+          if (result.hasNext && this.observer && this.sentinelRef) {
+            this.observer.unobserve(this.sentinelRef.nativeElement);
+            this.observer.observe(this.sentinelRef.nativeElement);
+          }
         },
         error: () => {
           this.initialLoading.set(false);
