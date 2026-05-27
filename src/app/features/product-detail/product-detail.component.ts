@@ -2,7 +2,7 @@ import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angula
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { AsyncPipe, DatePipe, NgFor, NgIf, TitleCasePipe } from '@angular/common';
-import { Observable, combineLatest, map, take } from 'rxjs';
+import { Observable, combineLatest, filter, map, take } from 'rxjs';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { clearSelectedProduct, loadProduct, loadProducts } from '../../store/products/products.actions';
 import { selectSelectedProduct, selectSelectedProductLoading, selectAllProducts } from '../../store/products/products.selectors';
@@ -16,6 +16,7 @@ import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
 import { DetailVariant, Product } from '../../core/models/product.model';
 import { ReviewResponse, ProductRatingSummary } from '../../core/models/review.model';
 import { ReviewService } from '../../core/services/review.service';
+import { SeoService } from '../../core/services/seo.service';
 
 const COLOR_HEX: Record<string, string> = {
   'Blanco': '#f0f0f0', 'Negro': '#1a1a1a', 'Azul Royal': '#1565c0',
@@ -35,6 +36,7 @@ export class ProductDetailComponent implements OnInit {
   private route         = inject(ActivatedRoute);
   private reviewService = inject(ReviewService);
   private destroyRef    = inject(DestroyRef);
+  private seo           = inject(SeoService);
 
   product$          = this.store.select(selectSelectedProduct);
   selectedLoading$  = this.store.select(selectSelectedProductLoading);
@@ -107,6 +109,8 @@ export class ProductDetailComponent implements OnInit {
   );
 
   ngOnInit() {
+    this.destroyRef.onDestroy(() => this.seo.clearJsonLd());
+
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       const id = Number(params.get('id'));
       this.currentProductId = id;
@@ -130,6 +134,37 @@ export class ProductDetailComponent implements OnInit {
 
       this.store.select(selectIsLoggedIn).pipe(take(1)).subscribe(loggedIn => {
         if (loggedIn) this.loadMyReview();
+      });
+
+      this.store.select(selectSelectedProduct).pipe(
+        filter((p): p is Product => !!p && p.id === id),
+        take(1),
+      ).subscribe(p => {
+        this.seo.set({
+          title: `${p.name} — ${p.brand}`,
+          description: p.desc || `Compra ${p.name} de ${p.brand} en Forehapp Store Colombia`,
+          image: p.images?.[0]?.url || p.image,
+          url: window.location.href,
+          type: 'product',
+        });
+        this.seo.setJsonLd({
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: p.name,
+          brand: { '@type': 'Brand', name: p.brand },
+          description: p.desc,
+          image: p.images?.[0]?.url || p.image,
+          sku: p.variants?.[0]?.sku,
+          offers: {
+            '@type': 'Offer',
+            price: p.price,
+            priceCurrency: 'COP',
+            availability: p.stock > 0
+              ? 'https://schema.org/InStock'
+              : 'https://schema.org/OutOfStock',
+            url: window.location.href,
+          },
+        });
       });
     });
   }

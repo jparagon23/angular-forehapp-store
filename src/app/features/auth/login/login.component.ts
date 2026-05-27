@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgIf } from '@angular/common';
@@ -7,6 +7,7 @@ import { loginSuccess } from '../../../store/auth/auth.actions';
 import { AuthApiService } from '../../../core/services/auth-api.service';
 import { TokenStore } from '../../../core/services/token-store.service';
 import { resolveRole } from '../../../core/utils/jwt.utils';
+import { SeoService } from '../../../core/services/seo.service';
 
 @Component({
   selector: 'app-login',
@@ -15,13 +16,16 @@ import { resolveRole } from '../../../core/utils/jwt.utils';
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   private fb          = inject(FormBuilder);
   private router      = inject(Router);
   private route       = inject(ActivatedRoute);
   private store       = inject(Store);
   private authService = inject(AuthApiService);
   private tokenStore  = inject(TokenStore);
+  private seo         = inject(SeoService);
+
+  ngOnInit() { this.seo.set({ title: 'Iniciar Sesión' }); }
 
   form = this.fb.group({
     email:    ['', [Validators.required, Validators.email]],

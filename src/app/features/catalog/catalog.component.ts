@@ -17,6 +17,7 @@ import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
 import { Product } from '../../core/models/product.model';
 import { ProductService, ProductFilters } from '../../core/services/product.service';
 import { Category } from '../../core/models/seller-product.model';
+import { SeoService } from '../../core/services/seo.service';
 
 @Component({
   selector: 'app-catalog',
@@ -31,6 +32,7 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
   private router         = inject(Router);
   private route          = inject(ActivatedRoute);
   private productService = inject(ProductService);
+  private seo            = inject(SeoService);
 
   @ViewChild('sentinel') private sentinelRef!: ElementRef<HTMLElement>;
   private observer: IntersectionObserver | null = null;
@@ -83,6 +85,13 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
           ? (categories as Category[]).find(c => c.name === catName)?.id
           : undefined;
         this.activeFilters = { search, categoryId };
+        if (params['q']) {
+          this.seo.set({ title: `Resultados para "${params['q']}"` });
+        } else if (catName) {
+          this.seo.set({ title: `${catName} de Tenis` });
+        } else {
+          this.seo.set({ title: 'Tienda de Tenis Online en Colombia' });
+        }
         this.loadPage(0);
       })
     );
