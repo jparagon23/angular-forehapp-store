@@ -18,10 +18,28 @@
 <h2 class="section-title">Catálogo de <span>Productos</span></h2>
 <p class="section-sub">Selecciona los productos y agrégalos al carrito</p>
 
-<ng-container *ngIf="!(loading$ | async); else loader">
-  <div class="catalog" *ngIf="filteredProducts$ | async as products">
-    <ng-container *ngIf="products.length > 0; else noResults">
-      <div class="card" *ngFor="let product of products" (click)="goToProduct(product.id)">
+<!-- Initial load skeleton -->
+<ng-container *ngIf="initialLoading(); else productList">
+  <div class="catalog">
+    <div class="card skeleton-card" *ngFor="let i of [1,2,3,4,5,6,7,8]">
+      <div class="skeleton-img"></div>
+      <div class="card-body">
+        <div class="skeleton-line skel-brand"></div>
+        <div class="skeleton-line skel-name"></div>
+        <div class="skeleton-line skel-desc"></div>
+        <div class="skeleton-line skel-desc skel-desc-short"></div>
+        <div class="skeleton-line skel-price"></div>
+        <div class="skeleton-btn"></div>
+      </div>
+    </div>
+  </div>
+</ng-container>
+
+<!-- Product grid -->
+<ng-template #productList>
+  <div class="catalog">
+    <ng-container *ngIf="products().length > 0; else noResults">
+      <div class="card" *ngFor="let product of products()" (click)="goToProduct(product.id)">
         <div class="card-img">
           <span class="prod-emoji">{{ product.emoji }}</span>
           <div class="img-skeleton" *ngIf="product.image"></div>
@@ -76,23 +94,29 @@
       </div>
     </ng-template>
   </div>
-</ng-container>
+</ng-template>
 
-<ng-template #loader>
-  <div class="catalog">
-    <div class="card skeleton-card" *ngFor="let i of [1,2,3,4,5,6,7,8]">
-      <div class="skeleton-img"></div>
-      <div class="card-body">
-        <div class="skeleton-line skel-brand"></div>
-        <div class="skeleton-line skel-name"></div>
-        <div class="skeleton-line skel-desc"></div>
-        <div class="skeleton-line skel-desc skel-desc-short"></div>
-        <div class="skeleton-line skel-price"></div>
-        <div class="skeleton-btn"></div>
-      </div>
+<!-- Load-more skeleton (se muestra mientras carga la siguiente página) -->
+<div class="catalog" *ngIf="loadingMore()">
+  <div class="card skeleton-card" *ngFor="let i of [1,2,3,4]">
+    <div class="skeleton-img"></div>
+    <div class="card-body">
+      <div class="skeleton-line skel-brand"></div>
+      <div class="skeleton-line skel-name"></div>
+      <div class="skeleton-line skel-desc"></div>
+      <div class="skeleton-line skel-price"></div>
+      <div class="skeleton-btn"></div>
     </div>
   </div>
-</ng-template>
+</div>
+
+<!-- Fin del catálogo -->
+<p class="end-list" *ngIf="!hasNext() && !initialLoading() && products().length > 0">
+  — Fin del catálogo —
+</p>
+
+<!-- Sentinel para IntersectionObserver -->
+<div #sentinel class="sentinel"></div>
 
 <footer class="site-footer">
   &copy; 2026 <span>Forehapp Store</span> — Todos los derechos reservados

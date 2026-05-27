@@ -27,12 +27,19 @@ interface PageResponse<T> {
   totalPages: number;
   number: number;
   size: number;
+  hasNext: boolean;
 }
 
 export interface ProductFilters {
   search?: string;
   categoryId?: number;
   brandId?: number;
+}
+
+export interface PagedProducts {
+  items: Product[];
+  hasNext: boolean;
+  page: number;
 }
 
 const EMOJI_MAP: Record<string, string> = {
@@ -58,7 +65,22 @@ export class ProductService {
     if (filters?.brandId)    params['brandId']    = String(filters.brandId);
 
     return this.http.get<PageResponse<ApiProductSummary>>(`${this.BASE}/products/public`, { params }).pipe(
-      map(page => page.content.map(p => this.mapProduct(p)))
+      map(res => res.content.map(p => this.mapProduct(p)))
+    );
+  }
+
+  getProductsPage(filters?: ProductFilters, page = 0): Observable<PagedProducts> {
+    const params: Record<string, string> = { page: String(page), size: '20' };
+    if (filters?.search)     params['search']     = filters.search;
+    if (filters?.categoryId) params['categoryId'] = String(filters.categoryId);
+    if (filters?.brandId)    params['brandId']    = String(filters.brandId);
+
+    return this.http.get<PageResponse<ApiProductSummary>>(`${this.BASE}/products/public`, { params }).pipe(
+      map(res => ({
+        items:   res.content.map(p => this.mapProduct(p)),
+        hasNext: res.hasNext,
+        page:    res.number,
+      }))
     );
   }
 

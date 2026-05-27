@@ -176,6 +176,15 @@
   height: 42px; border-radius: 10px; margin-top: 10px;
 }
 
+.sentinel { height: 1px; display: block; }
+
+.end-list {
+  text-align: center;
+  color: var(--muted);
+  font-size: .82rem;
+  padding: 12px 0 40px;
+}
+
 .site-footer {
   background: var(--dark); color: #aaa;
   text-align: center; padding: 26px; font-size: .85rem;
