@@ -169,6 +169,7 @@
 
           <div class="ds-card-img">
             <span class="prod-emoji">{{ product.emoji }}</span>
+            <div class="img-skeleton"></div>
             <img class="prod-img" [src]="product.image" [alt]="product.name"
                  (load)="onImgLoad($event)" (error)="onImgError($event)">
           </div>
