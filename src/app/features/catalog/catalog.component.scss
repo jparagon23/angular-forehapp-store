@@ -178,6 +178,133 @@
 
 .sentinel { height: 1px; display: block; }
 
+// ── Discovery sections ────────────────────────────────────
+.ds-wrap {
+  max-width: 1320px; margin: 0 auto; padding: 32px 24px 64px;
+}
+
+.ds-section {
+  margin-bottom: 48px;
+}
+
+.ds-section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px; gap: 12px;
+}
+
+.ds-section-info {
+  display: flex; align-items: baseline; gap: 10px; min-width: 0;
+}
+
+.ds-section-title {
+  font-size: 1.35rem; font-weight: 800; color: var(--dark); margin: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.ds-section-count {
+  font-size: .8rem; color: #999; white-space: nowrap;
+}
+
+.ds-see-more {
+  flex-shrink: 0;
+  background: none; border: 1.5px solid var(--green); border-radius: 20px;
+  color: var(--green-dark); font-size: .83rem; font-weight: 700;
+  padding: 5px 15px; cursor: pointer; white-space: nowrap;
+  transition: background .15s, color .15s;
+  &:hover { background: var(--green); color: #fff; }
+}
+
+// Fila horizontal con scroll snap
+.ds-row {
+  display: flex; gap: 14px;
+  overflow-x: auto; overflow-y: visible;
+  padding-bottom: 10px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,.12) transparent;
+  &::-webkit-scrollbar        { height: 4px; }
+  &::-webkit-scrollbar-thumb  { background: rgba(0,0,0,.14); border-radius: 4px; }
+  &::-webkit-scrollbar-track  { background: transparent; }
+}
+
+// Card de discovery (ancho fijo, scroll snap)
+.ds-card {
+  flex-shrink: 0; width: 210px;
+  scroll-snap-align: start;
+  background: #fff; border-radius: 16px; overflow: hidden;
+  box-shadow: 0 3px 12px rgba(0,0,0,.07); border: 1px solid #e8f4e8;
+  cursor: pointer; display: flex; flex-direction: column;
+  transition: transform .2s, box-shadow .2s;
+  &:hover { transform: translateY(-5px); box-shadow: 0 10px 26px rgba(66,170,20,.15); }
+}
+
+.ds-card-img {
+  position: relative; width: 100%; height: 160px;
+  background: #f7f7f7; overflow: hidden; flex-shrink: 0;
+  .prod-emoji { font-size: 3.8rem; }
+  .prod-img   { z-index: 1; }
+}
+
+.ds-card-body {
+  padding: 12px 12px 14px; flex: 1;
+  display: flex; flex-direction: column; gap: 5px;
+}
+
+.ds-card-brand {
+  font-size: .67rem; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--green); font-weight: 700;
+}
+
+.ds-card-name {
+  font-size: .9rem; font-weight: 700; color: var(--dark); line-height: 1.3;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+.ds-card-price-row {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 4px;
+}
+
+.ds-card-compare {
+  font-size: .78rem; color: #999; text-decoration: line-through;
+}
+
+.ds-card-price {
+  font-size: 1.05rem; font-weight: 800; color: var(--dark);
+}
+
+.ds-card-badge {
+  background: #e53e3e; color: #fff;
+  font-size: .63rem; font-weight: 800; padding: 2px 6px; border-radius: 20px;
+}
+
+.ds-card-ship {
+  display: inline-flex; align-items: center; gap: 4px; margin-top: 2px;
+  background: #e8f5e9; color: #2e7d32;
+  font-size: .67rem; font-weight: 700; padding: 2px 8px; border-radius: 12px;
+  border: 1px solid #a5d6a7;
+}
+
+// ── Skeleton discovery ───────────────────────────────────
+.ds-sk-title {
+  @extend %shimmer; height: 22px; width: 180px; border-radius: 6px;
+}
+.ds-sk-btn {
+  @extend %shimmer; height: 30px; width: 90px; border-radius: 20px; margin-left: auto;
+}
+.ds-card--skeleton {
+  pointer-events: none;
+}
+.ds-sk-img {
+  @extend %shimmer; width: 100%; height: 160px;
+}
+.ds-sk-line {
+  @extend %shimmer; border-radius: 5px;
+  &.ds-sk-brand { height: 10px; width: 60%; }
+  &.ds-sk-name  { height: 14px; width: 90%; }
+  &.ds-sk-price { height: 18px; width: 50%; margin-top: 4px; }
+}
+
 .end-list {
   text-align: center;
   color: var(--muted);
@@ -211,6 +338,16 @@
   }
 
   .filter-bar { padding: 0 16px; }
+
+  .ds-wrap { padding: 20px 16px 48px; }
+  .ds-section { margin-bottom: 36px; }
+  .ds-section-title { font-size: 1.1rem; }
+  .ds-card { width: 158px; }
+  .ds-card-img { height: 130px; .prod-emoji { font-size: 3rem; } }
+  .ds-card-body { padding: 10px 10px 12px; gap: 4px; }
+  .ds-card-name { font-size: .84rem; }
+  .ds-card-price { font-size: .98rem; }
+  .ds-sk-img { height: 130px; }
 }
 
 @media (max-width: 400px) {
@@ -221,4 +358,8 @@
   }
 
   .section-title { font-size: 1.25rem; }
+
+  .ds-card { width: 144px; }
+  .ds-card-img { height: 116px; }
+  .ds-sk-img { height: 116px; }
 }

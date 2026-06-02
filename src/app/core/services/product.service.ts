@@ -43,6 +43,20 @@ export interface PagedProducts {
   page: number;
 }
 
+interface RawDiscoverySection {
+  categoryId: number;
+  categoryName: string;
+  totalInCategory: number;
+  products: ApiProductSummary[];
+}
+
+export interface DiscoverySection {
+  categoryId: number;
+  categoryName: string;
+  totalInCategory: number;
+  products: Product[];
+}
+
 const EMOJI_MAP: Record<string, string> = {
   'Raquetas': '🎾',
   'Zapatillas de Tenis': '👟',
@@ -126,6 +140,19 @@ export class ProductService {
           store:      raw.store ? (raw.store as ProductStore) : undefined,
         } as Product;
       })
+    );
+  }
+
+  getDiscoverySections(limit = 8): Observable<DiscoverySection[]> {
+    return this.http.get<RawDiscoverySection[]>(`${this.BASE}/products/public/discovery/sections`, {
+      params: { limit: String(limit) },
+    }).pipe(
+      map(sections => sections.map(s => ({
+        categoryId:      s.categoryId,
+        categoryName:    s.categoryName,
+        totalInCategory: s.totalInCategory,
+        products:        s.products.map(p => this.mapProduct(p)),
+      })))
     );
   }
 

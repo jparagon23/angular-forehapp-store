@@ -1,6 +1,7 @@
 <app-navbar></app-navbar>
 
-<section class="hero">
+<!-- Hero: solo en discovery -->
+<section class="hero" *ngIf="mode() === 'discovery'">
   <div class="hero-content">
     <div class="hero-badge">🎾 Tu tienda de tenis</div>
     <h1>Equípate con lo<br><span>mejor del juego</span></h1>
@@ -8,114 +9,201 @@
   </div>
 </section>
 
-<ng-container *ngIf="activeFilter$ | async as filter">
-  <div class="filter-bar" *ngIf="filter">
-    <span class="filter-label">{{ filter }}</span>
-    <button class="filter-clear" (click)="clearFilter()">✕ Limpiar filtro</button>
-  </div>
-</ng-container>
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- MODO LISTING (búsqueda o categoría activa)                -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<ng-container *ngIf="mode() === 'listing'">
 
-<h2 class="section-title">Catálogo de <span>Productos</span></h2>
-<p class="section-sub">Selecciona los productos y agrégalos al carrito</p>
+  <ng-container *ngIf="activeFilter$ | async as filter">
+    <div class="filter-bar" *ngIf="filter">
+      <span class="filter-label">{{ filter }}</span>
+      <button class="filter-clear" (click)="clearFilter()">✕ Limpiar filtro</button>
+    </div>
+  </ng-container>
 
-<!-- Initial load skeleton -->
-<ng-container *ngIf="initialLoading(); else productList">
-  <div class="catalog">
-    <div class="card skeleton-card" *ngFor="let i of [1,2,3,4,5,6,7,8]">
+  <h2 class="section-title">Catálogo de <span>Productos</span></h2>
+  <p class="section-sub">Selecciona los productos y agrégalos al carrito</p>
+
+  <!-- Skeleton carga inicial -->
+  <ng-container *ngIf="initialLoading(); else productList">
+    <div class="catalog">
+      <div class="card skeleton-card" *ngFor="let i of [1,2,3,4,5,6,7,8]">
+        <div class="skeleton-img"></div>
+        <div class="card-body">
+          <div class="skeleton-line skel-brand"></div>
+          <div class="skeleton-line skel-name"></div>
+          <div class="skeleton-line skel-desc"></div>
+          <div class="skeleton-line skel-desc skel-desc-short"></div>
+          <div class="skeleton-line skel-price"></div>
+          <div class="skeleton-btn"></div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Grid de productos -->
+  <ng-template #productList>
+    <div class="catalog">
+      <ng-container *ngIf="products().length > 0; else noResults">
+        <div class="card" *ngFor="let product of products()" (click)="goToProduct(product.id)">
+          <div class="card-img">
+            <span class="prod-emoji">{{ product.emoji }}</span>
+            <div class="img-skeleton" *ngIf="product.image"></div>
+            <img class="prod-img" [src]="product.image" [alt]="product.name"
+                 (load)="onImgLoad($event)" (error)="onImgError($event)">
+            <button *ngIf="isLoggedIn()" class="wish-btn" [class.active]="isWishlisted(product.id)"
+                    (click)="toggleWishlist(product, $event)" aria-label="Lista de deseos">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="card-body">
+            <div class="card-brand">{{ product.brand }}</div>
+            <div class="card-name">{{ product.name }}</div>
+            <div class="card-desc">{{ product.desc }}</div>
+            <div class="card-price-row">
+              <span class="card-compare"
+                *ngIf="product.compareAtPrice && product.compareAtPrice > product.price">
+                {{ product.compareAtPrice | currencyCop }}
+              </span>
+              <span class="card-price">{{ product.price | currencyCop }}</span>
+              <span class="card-discount-badge"
+                *ngIf="product.compareAtPrice && product.compareAtPrice > product.price">
+                -{{ discountPct(product.compareAtPrice, product.price) }}%
+              </span>
+            </div>
+            <div class="card-free-ship" *ngIf="product.freeShipping">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+              </svg>
+              Envío gratis
+            </div>
+            <button *ngIf="!hasVariations(product)" class="add-btn"
+              [disabled]="addingProductId() === product.id"
+              (click)="addToCart(product, $event)">
+              {{ addingProductId() === product.id ? 'Agregando...' : '+ Agregar al carrito' }}
+            </button>
+            <button *ngIf="hasVariations(product)" class="add-btn add-btn--var"
+              (click)="goToProduct(product.id); $event.stopPropagation()">
+              Elegir opciones →
+            </button>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-template #noResults>
+        <div class="no-results">
+          <p>🔍 No encontramos productos con ese filtro.</p>
+          <button class="filter-clear" (click)="clearFilter()">Ver todos los productos</button>
+        </div>
+      </ng-template>
+    </div>
+  </ng-template>
+
+  <!-- Skeleton load-more -->
+  <div class="catalog" *ngIf="loadingMore()">
+    <div class="card skeleton-card" *ngFor="let i of [1,2,3,4]">
       <div class="skeleton-img"></div>
       <div class="card-body">
         <div class="skeleton-line skel-brand"></div>
         <div class="skeleton-line skel-name"></div>
         <div class="skeleton-line skel-desc"></div>
-        <div class="skeleton-line skel-desc skel-desc-short"></div>
         <div class="skeleton-line skel-price"></div>
         <div class="skeleton-btn"></div>
       </div>
     </div>
   </div>
+
+  <p class="end-list" *ngIf="!hasNext() && !initialLoading() && products().length > 0">
+    — Fin del catálogo —
+  </p>
+
 </ng-container>
 
-<!-- Product grid -->
-<ng-template #productList>
-  <div class="catalog">
-    <ng-container *ngIf="products().length > 0; else noResults">
-      <div class="card" *ngFor="let product of products()" (click)="goToProduct(product.id)">
-        <div class="card-img">
-          <span class="prod-emoji">{{ product.emoji }}</span>
-          <div class="img-skeleton" *ngIf="product.image"></div>
-          <img class="prod-img" [src]="product.image" [alt]="product.name"
-               (load)="onImgLoad($event)" (error)="onImgError($event)">
-          <button *ngIf="isLoggedIn()" class="wish-btn" [class.active]="isWishlisted(product.id)"
-                  (click)="toggleWishlist(product, $event)" aria-label="Lista de deseos">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-            </svg>
-          </button>
-        </div>
-        <div class="card-body">
-          <div class="card-brand">{{ product.brand }}</div>
-          <div class="card-name">{{ product.name }}</div>
-          <div class="card-desc">{{ product.desc }}</div>
-          <div class="card-price-row">
-            <span class="card-compare"
-              *ngIf="product.compareAtPrice && product.compareAtPrice > product.price">
-              {{ product.compareAtPrice | currencyCop }}
-            </span>
-            <span class="card-price">{{ product.price | currencyCop }}</span>
-            <span class="card-discount-badge"
-              *ngIf="product.compareAtPrice && product.compareAtPrice > product.price">
-              -{{ discountPct(product.compareAtPrice, product.price) }}%
-            </span>
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- MODO DISCOVERY (home sin filtros)                         -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<ng-container *ngIf="mode() === 'discovery'">
+
+  <!-- Skeleton secciones -->
+  <div *ngIf="sectionsLoading()" class="ds-wrap">
+    <div *ngFor="let i of [1,2,3]" class="ds-section">
+      <div class="ds-section-header">
+        <div class="ds-sk-title"></div>
+        <div class="ds-sk-btn"></div>
+      </div>
+      <div class="ds-row ds-row--skeleton">
+        <div *ngFor="let j of [1,2,3,4,5,6]" class="ds-card ds-card--skeleton">
+          <div class="ds-sk-img"></div>
+          <div class="ds-card-body">
+            <div class="ds-sk-line ds-sk-brand"></div>
+            <div class="ds-sk-line ds-sk-name"></div>
+            <div class="ds-sk-line ds-sk-price"></div>
           </div>
-          <div class="card-free-ship" *ngIf="product.freeShipping">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
-            </svg>
-            Envío gratis
-          </div>
-          <button *ngIf="!hasVariations(product)" class="add-btn"
-            [disabled]="addingProductId() === product.id"
-            (click)="addToCart(product, $event)">
-            {{ addingProductId() === product.id ? 'Agregando...' : '+ Agregar al carrito' }}
-          </button>
-          <button *ngIf="hasVariations(product)" class="add-btn add-btn--var"
-            (click)="goToProduct(product.id); $event.stopPropagation()">
-            Elegir opciones →
-          </button>
         </div>
       </div>
-    </ng-container>
-
-    <ng-template #noResults>
-      <div class="no-results">
-        <p>🔍 No encontramos productos con ese filtro.</p>
-        <button class="filter-clear" (click)="clearFilter()">Ver todos los productos</button>
-      </div>
-    </ng-template>
-  </div>
-</ng-template>
-
-<!-- Load-more skeleton (se muestra mientras carga la siguiente página) -->
-<div class="catalog" *ngIf="loadingMore()">
-  <div class="card skeleton-card" *ngFor="let i of [1,2,3,4]">
-    <div class="skeleton-img"></div>
-    <div class="card-body">
-      <div class="skeleton-line skel-brand"></div>
-      <div class="skeleton-line skel-name"></div>
-      <div class="skeleton-line skel-desc"></div>
-      <div class="skeleton-line skel-price"></div>
-      <div class="skeleton-btn"></div>
     </div>
   </div>
-</div>
 
-<!-- Fin del catálogo -->
-<p class="end-list" *ngIf="!hasNext() && !initialLoading() && products().length > 0">
-  — Fin del catálogo —
-</p>
+  <!-- Secciones cargadas -->
+  <div *ngIf="!sectionsLoading()" class="ds-wrap">
+    <section *ngFor="let section of sections()" class="ds-section">
 
-<!-- Sentinel para IntersectionObserver -->
+      <div class="ds-section-header">
+        <div class="ds-section-info">
+          <h2 class="ds-section-title">{{ section.categoryName }}</h2>
+          <span class="ds-section-count">{{ section.totalInCategory }} productos</span>
+        </div>
+        <button class="ds-see-more" (click)="goToCategoryListing(section.categoryName)">
+          Ver más →
+        </button>
+      </div>
+
+      <div class="ds-row">
+        <div
+          *ngFor="let product of section.products"
+          class="ds-card"
+          (click)="goToProduct(product.id)">
+
+          <div class="ds-card-img">
+            <span class="prod-emoji">{{ product.emoji }}</span>
+            <img class="prod-img" [src]="product.image" [alt]="product.name"
+                 (load)="onImgLoad($event)" (error)="onImgError($event)">
+          </div>
+
+          <div class="ds-card-body">
+            <div class="ds-card-brand">{{ product.brand }}</div>
+            <div class="ds-card-name">{{ product.name }}</div>
+            <div class="ds-card-price-row">
+              <span class="ds-card-compare"
+                *ngIf="product.compareAtPrice && product.compareAtPrice > product.price">
+                {{ product.compareAtPrice | currencyCop }}
+              </span>
+              <span class="ds-card-price">{{ product.price | currencyCop }}</span>
+              <span class="ds-card-badge"
+                *ngIf="product.compareAtPrice && product.compareAtPrice > product.price">
+                -{{ discountPct(product.compareAtPrice, product.price) }}%
+              </span>
+            </div>
+            <div class="ds-card-ship" *ngIf="product.freeShipping">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+              </svg>
+              Envío gratis
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+  </div>
+
+</ng-container>
+
+<!-- Sentinel IntersectionObserver (siempre presente) -->
 <div #sentinel class="sentinel"></div>
 
 <footer class="site-footer">
