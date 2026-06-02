@@ -64,15 +64,21 @@
             <div class="card-name">{{ product.name }}</div>
             <div class="card-desc">{{ product.desc }}</div>
             <div class="card-price-row">
-              <span class="card-compare"
-                *ngIf="product.compareAtPrice && product.compareAtPrice > product.price">
-                {{ product.compareAtPrice | currencyCop }}
-              </span>
-              <span class="card-price">{{ product.price | currencyCop }}</span>
-              <span class="card-discount-badge"
-                *ngIf="product.compareAtPrice && product.compareAtPrice > product.price">
-                -{{ discountPct(product.compareAtPrice, product.price) }}%
-              </span>
+              <ng-container *ngIf="!hasVariations(product)">
+                <span class="card-compare"
+                  *ngIf="product.compareAtPrice && product.compareAtPrice > product.price">
+                  {{ product.compareAtPrice | currencyCop }}
+                </span>
+                <span class="card-price">{{ product.price | currencyCop }}</span>
+                <span class="card-discount-badge"
+                  *ngIf="product.compareAtPrice && product.compareAtPrice > product.price">
+                  -{{ discountPct(product.compareAtPrice, product.price) }}%
+                </span>
+              </ng-container>
+              <ng-container *ngIf="hasVariations(product)">
+                <span class="card-from">Desde</span>
+                <span class="card-price">{{ product.price | currencyCop }}</span>
+              </ng-container>
             </div>
             <div class="card-free-ship" *ngIf="product.freeShipping">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -178,15 +184,21 @@
             <div class="ds-card-brand">{{ product.brand }}</div>
             <div class="ds-card-name">{{ product.name }}</div>
             <div class="ds-card-price-row">
-              <span class="ds-card-compare"
-                *ngIf="product.compareAtPrice && product.compareAtPrice > product.price">
-                {{ product.compareAtPrice | currencyCop }}
-              </span>
-              <span class="ds-card-price">{{ product.price | currencyCop }}</span>
-              <span class="ds-card-badge"
-                *ngIf="product.compareAtPrice && product.compareAtPrice > product.price">
-                -{{ discountPct(product.compareAtPrice, product.price) }}%
-              </span>
+              <ng-container *ngIf="!hasVariations(product)">
+                <span class="ds-card-compare"
+                  *ngIf="product.compareAtPrice && product.compareAtPrice > product.price">
+                  {{ product.compareAtPrice | currencyCop }}
+                </span>
+                <span class="ds-card-price">{{ product.price | currencyCop }}</span>
+                <span class="ds-card-badge"
+                  *ngIf="product.compareAtPrice && product.compareAtPrice > product.price">
+                  -{{ discountPct(product.compareAtPrice, product.price) }}%
+                </span>
+              </ng-container>
+              <ng-container *ngIf="hasVariations(product)">
+                <span class="ds-card-from">Desde</span>
+                <span class="ds-card-price">{{ product.price | currencyCop }}</span>
+              </ng-container>
             </div>
             <div class="ds-card-ship" *ngIf="product.freeShipping">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
