@@ -98,6 +98,10 @@
   padding: 2px 7px; border-radius: 20px;
 }
 
+.card-from {
+  font-size: .78rem; color: #888; font-weight: 500; align-self: center;
+}
+
 .card-free-ship {
   display: inline-flex; align-items: center; gap: 5px;
   background: #e8f5e9; color: #2e7d32;
@@ -276,6 +280,10 @@
 .ds-card-badge {
   background: #e53e3e; color: #fff;
   font-size: .63rem; font-weight: 800; padding: 2px 6px; border-radius: 20px;
+}
+
+.ds-card-from {
+  font-size: .7rem; color: #888; font-weight: 500; align-self: center;
 }
 
 .ds-card-ship {
