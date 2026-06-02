@@ -31,6 +31,8 @@ import { CartEffects } from './store/cart/cart.effects';
 import { WishlistEffects } from './store/wishlist/wishlist.effects';
 import { StoresEffects } from './store/stores/stores.effects';
 import { CategoriesEffects } from './store/categories/categories.effects';
+import { userStatsReducer } from './store/user-stats/user-stats.reducer';
+import { UserStatsEffects } from './store/user-stats/user-stats.effects';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
@@ -49,8 +51,9 @@ export const appConfig: ApplicationConfig = {
       addresses: addressesReducer,
       stores: storesReducer,
       categories: categoriesReducer,
+      userStats: userStatsReducer,
     }),
-    provideEffects([ProductsEffects, OrdersEffects, CustomersEffects, DiscountsEffects, SellerEffects, AddressesEffects, CartEffects, WishlistEffects, StoresEffects, CategoriesEffects]),
+    provideEffects([ProductsEffects, OrdersEffects, CustomersEffects, DiscountsEffects, SellerEffects, AddressesEffects, CartEffects, WishlistEffects, StoresEffects, CategoriesEffects, UserStatsEffects]),
     provideStoreDevtools({ maxAge: 25, logOnly: false }),
     { provide: ErrorHandler, useClass: ChunkErrorHandler },
     {

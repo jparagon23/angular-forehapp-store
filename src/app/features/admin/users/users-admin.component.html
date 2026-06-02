@@ -1,0 +1,105 @@
+<app-admin-topbar title="Usuarios"></app-admin-topbar>
+
+<div class="content">
+
+  <div class="alert alert-warn" *ngIf="error$ | async">
+    ⚠️ No se pudo cargar las estadísticas de usuarios.
+  </div>
+
+  <ng-container *ngIf="stats$ | async as s">
+
+    <!-- KPI grid -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-top"><span class="kpi-icon">👥</span></div>
+        <div class="kpi-val">{{ s.totalUsers }}</div>
+        <div class="kpi-label">Total usuarios</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-top"><span class="kpi-icon">🆕</span></div>
+        <div class="kpi-val">{{ s.newUsersToday }}</div>
+        <div class="kpi-label">Nuevos hoy</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-top"><span class="kpi-icon">📅</span></div>
+        <div class="kpi-val">{{ s.newUsersThisWeek }}</div>
+        <div class="kpi-label">Últimos 7 días</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-top"><span class="kpi-icon">📆</span></div>
+        <div class="kpi-val">{{ s.newUsersThisMonth }}</div>
+        <div class="kpi-label">Este mes</div>
+      </div>
+      <div class="kpi-card kpi-green">
+        <div class="kpi-top"><span class="kpi-icon">🎯</span></div>
+        <div class="kpi-val">{{ s.conversionRate }}%</div>
+        <div class="kpi-label">Tasa de conversión</div>
+      </div>
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-top"><span class="kpi-icon">📱</span></div>
+        <div class="kpi-val">{{ s.usersWithPhone }}</div>
+        <div class="kpi-label">Con teléfono</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-top"><span class="kpi-icon">✅</span></div>
+        <div class="kpi-val">{{ s.activeUsers }}</div>
+        <div class="kpi-label">Activos</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+
+      <!-- Usuarios recientes -->
+      <div class="table-card">
+        <div class="table-header"><h3>Últimos registrados</h3></div>
+        <table>
+          <thead>
+            <tr><th>#</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Fecha</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of s.recentUsers">
+              <td style="color:var(--muted)">{{ u.id }}</td>
+              <td><strong>{{ u.name }} {{ u.lastname }}</strong></td>
+              <td style="color:var(--muted)">{{ u.email }}</td>
+              <td>{{ u.phone || '—' }}</td>
+              <td style="color:var(--muted)">{{ u.creationDate | date:'dd/MM/yyyy HH:mm' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Tendencia de registros -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Registros — últimos 30 días</h3>
+          <span>Solo días con actividad</span>
+        </div>
+        <div class="chart-body">
+          <div class="empty-trend" *ngIf="s.registrationTrend.length === 0">
+            Sin datos de tendencia
+          </div>
+          <ng-container *ngIf="s.registrationTrend.length > 0">
+            <div class="trend-row" *ngFor="let t of s.registrationTrend">
+              <span class="trend-date">{{ t.date | date:'dd MMM' }}</span>
+              <div class="trend-bar-wrap">
+                <div class="trend-bar"
+                  [style.width.%]="barWidth(t.count, trendMax(s.registrationTrend))">
+                </div>
+              </div>
+              <span class="trend-count">{{ t.count }}</span>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+
+    </div>
+  </ng-container>
+
+  <!-- Skeleton mientras carga -->
+  <ng-container *ngIf="loading$ | async">
+    <div class="kpi-grid">
+      <div class="kpi-card" *ngFor="let i of [1,2,3,4,5,6,7]" style="min-height:100px;background:#f5f5f5"></div>
+    </div>
+  </ng-container>
+
+</div>
