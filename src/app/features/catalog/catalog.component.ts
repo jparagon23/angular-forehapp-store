@@ -15,7 +15,7 @@ import { CartDrawerComponent } from '../cart/cart-drawer.component';
 import { ToastComponent } from '../../shared/components/toast/toast.component';
 import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
 import { Product } from '../../core/models/product.model';
-import { ProductService, ProductFilters } from '../../core/services/product.service';
+import { ProductService, ProductFilters, DiscoverySection } from '../../core/services/product.service';
 import { Category } from '../../core/models/seller-product.model';
 import { SeoService } from '../../core/services/seo.service';
 
@@ -41,6 +41,10 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
   private categories: Category[] = [];
   private activeFilters: ProductFilters = {};
   private currentPage = 0;
+
+  mode            = signal<'discovery' | 'listing'>('discovery');
+  sections        = signal<DiscoverySection[]>([]);
+  sectionsLoading = signal(true);
 
   products        = signal<Product[]>([]);
   initialLoading  = signal(true);
@@ -84,8 +88,9 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
         const categoryId = catName
           ? (categories as Category[]).find(c => c.name === catName)?.id
           : undefined;
-        const sortBy = search || categoryId ? 'NEWEST' : 'DISCOVERY';
-        this.activeFilters = { search, categoryId, sortBy };
+        const isDiscovery = !search && !catName;
+        this.mode.set(isDiscovery ? 'discovery' : 'listing');
+
         if (params['q']) {
           this.seo.set({ title: `Resultados para "${params['q']}"` });
         } else if (catName) {
@@ -93,14 +98,20 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
         } else {
           this.seo.set({ title: 'Tienda de Tenis Online en Colombia' });
         }
-        this.loadPage(0);
+
+        if (isDiscovery) {
+          this.loadDiscovery();
+        } else {
+          this.activeFilters = { search, categoryId, sortBy: 'NEWEST' };
+          this.loadPage(0);
+        }
       })
     );
   }
 
   ngAfterViewInit() {
     this.observer = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && this.hasNext() && !this.loadingMore() && !this.initialLoading()) {
+      if (this.mode() === 'listing' && entries[0].isIntersecting && this.hasNext() && !this.loadingMore() && !this.initialLoading()) {
         this.loadPage(this.currentPage + 1);
       }
     }, { rootMargin: '300px' });
@@ -151,8 +162,21 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
-  clearFilter()           { this.router.navigate(['/']); }
-  goToProduct(id: number) { this.router.navigate(['/product', id]); }
+  private loadDiscovery() {
+    this.sectionsLoading.set(true);
+    this.loadSub.unsubscribe();
+    this.loadSub = new Subscription();
+    this.loadSub.add(
+      this.productService.getDiscoverySections().pipe(take(1)).subscribe({
+        next: sections => { this.sections.set(sections); this.sectionsLoading.set(false); },
+        error: ()       => this.sectionsLoading.set(false),
+      })
+    );
+  }
+
+  clearFilter()                              { this.router.navigate(['/']); }
+  goToProduct(id: number)                    { this.router.navigate(['/product', id]); }
+  goToCategoryListing(categoryName: string)  { this.router.navigate(['/'], { queryParams: { cat: categoryName } }); }
   isWishlisted(id: number): boolean { return this.wishlistItemMap().has(id); }
 
   addToCart(product: Product, event: Event) {
