@@ -51,7 +51,7 @@ export class NavbarComponent {
   defaultAddress$   = this.store.select(selectDefaultAddress);
   addressesLoading$ = this.store.select(selectAddressesLoading);
 
-  private categoriesSig = toSignal(this.store.select(selectAllCategories), { initialValue: [] as Category[] });
+  categoriesSig = toSignal(this.store.select(selectAllCategories), { initialValue: [] as Category[] });
   private windowWidth = signal(window.innerWidth);
   private maxVisible  = computed(() => {
     const w = this.windowWidth();
@@ -61,10 +61,8 @@ export class NavbarComponent {
   });
 
   visibleCats = computed(() => this.categoriesSig().slice(0, this.maxVisible()));
-  moreCats    = computed(() => this.categoriesSig().slice(this.maxVisible()));
-  moreLabel   = computed(() => this.maxVisible() === 0 ? 'Categorías ▾' : 'Más ▾');
 
-  moreOpen = signal(false);
+  sidebarOpen = signal(false);
 
   activeCategory = toSignal(
     this.router.events.pipe(
@@ -155,17 +153,18 @@ export class NavbarComponent {
     this.router.navigate(['/'], { queryParams: cat ? { cat: cat.name } : {} });
   }
 
-  toggleMore(e: Event) { e.stopPropagation(); this.moreOpen.update(v => !v); }
-
-  @HostListener('window:resize')
+@HostListener('window:resize')
   onResize() { this.windowWidth.set(window.innerWidth); }
 
   @HostListener('document:click')
   onDocumentClick() {
     this.accountOpen = false;
     this.locationOpen = false;
-    this.moreOpen.set(false);
+    this.sidebarOpen.set(false);
   }
+
+  toggleSidebar(e: Event) { e.stopPropagation(); this.sidebarOpen.update(v => !v); }
+  closeSidebar()           { this.sidebarOpen.set(false); }
 
   toggleAccount(e: Event) {
     e.stopPropagation();
