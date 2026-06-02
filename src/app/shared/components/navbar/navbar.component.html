@@ -285,7 +285,7 @@
   <!-- ── BOTTOM ROW – CATEGORIES ────────────────────────── -->
   <div class="nb-bottom">
 
-    <button class="nb-all" (click)="goToCategory(null)">
+    <button class="nb-all" [class.open]="sidebarOpen()" (click)="toggleSidebar($event)">
       <svg viewBox="0 0 20 14" fill="currentColor" width="18" height="18">
         <rect y="0"  width="20" height="2" rx="1"/>
         <rect y="6"  width="20" height="2" rx="1"/>
@@ -304,26 +304,6 @@
       {{ cat.name }}
     </button>
 
-    <!-- "Más" dropdown for overflow categories -->
-    <div class="nb-more-wrap" *ngIf="moreCats().length > 0" (click)="$event.stopPropagation()">
-      <button class="nb-cat nb-more-btn" [class.open]="moreOpen()" (click)="toggleMore($event)">
-        {{ moreLabel() }}
-      </button>
-      <div class="nb-more-drop" [class.open]="moreOpen()">
-        <button
-          *ngFor="let cat of moreCats()"
-          class="nb-more-item"
-          [class.active]="activeCategory() === cat.name"
-          (click)="goToCategory(cat); moreOpen.set(false)">
-          {{ cat.name }}
-        </button>
-        <div class="nb-more-divider"></div>
-        <button class="nb-more-item nb-more-promo" (click)="goToCategory(null); moreOpen.set(false)">
-          🔥 Ofertas del día
-        </button>
-      </div>
-    </div>
-
     <div class="nb-sep"></div>
 
     <button class="nb-cat nb-promo" (click)="goToCategory(null)">
@@ -341,5 +321,40 @@
     </a>
 
   </div>
+
+
+  <!-- ── CATEGORY SIDEBAR ───────────────────────────────────── -->
+  <div class="nb-sidebar-backdrop" [class.open]="sidebarOpen()" (click)="closeSidebar()"></div>
+
+  <nav class="nb-sidebar" [class.open]="sidebarOpen()" (click)="$event.stopPropagation()">
+
+    <!-- Sidebar header -->
+    <div class="nb-sidebar-head">
+      <ng-container *ngIf="authUser$ | async as user">
+        <span class="nb-sidebar-greeting">Hola, {{ user.name }}</span>
+      </ng-container>
+      <ng-container *ngIf="!(isLoggedIn$ | async)">
+        <span class="nb-sidebar-greeting">Hola, ingresa aquí</span>
+      </ng-container>
+      <button class="nb-sidebar-close" (click)="closeSidebar()">✕</button>
+    </div>
+
+    <!-- All categories -->
+    <p class="nb-sidebar-section-title">Categorías</p>
+    <button
+      *ngFor="let cat of categoriesSig()"
+      class="nb-sidebar-item"
+      [class.active]="activeCategory() === cat.name"
+      (click)="goToCategory(cat); closeSidebar()">
+      {{ cat.name }}
+    </button>
+
+    <div class="nb-sidebar-divider"></div>
+
+    <button class="nb-sidebar-item nb-sidebar-promo" (click)="goToCategory(null); closeSidebar()">
+      🔥 Ofertas del día
+    </button>
+
+  </nav>
 
 </header>
