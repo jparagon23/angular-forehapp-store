@@ -3,13 +3,14 @@ import { Store } from '@ngrx/store';
 import { Actions, ofType } from '@ngrx/effects';
 import { AsyncPipe, NgFor, NgIf } from '@angular/common';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
-import { combineLatest, Subscription, take, catchError, of } from 'rxjs';
+import { combineLatest, Subscription, take, catchError, of, filter } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { addCartItem, openCart } from '../../store/cart/cart.actions';
 import { addToWishlist, addToWishlistFailure, removeFromWishlist } from '../../store/wishlist/wishlist.actions';
 import { selectWishlistProductIdToItemId } from '../../store/wishlist/wishlist.selectors';
 import { selectIsLoggedIn, selectUserRole } from '../../store/auth/auth.selectors';
+import { selectAllCategories } from '../../store/categories/categories.selectors';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { CartDrawerComponent } from '../cart/cart-drawer.component';
 import { ToastComponent } from '../../shared/components/toast/toast.component';
@@ -79,7 +80,7 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.sub.add(
       combineLatest([
-        this.productService.getCategories().pipe(catchError(() => of([])), take(1)),
+        this.store.select(selectAllCategories).pipe(filter(cats => cats.length > 0), take(1)),
         this.route.queryParams,
       ]).subscribe(([categories, params]) => {
         this.categories = categories;
