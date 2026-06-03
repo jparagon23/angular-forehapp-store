@@ -106,6 +106,20 @@
   }
 }
 
+.google-btn-wrap {
+  display: flex; justify-content: center;
+  min-height: 44px; overflow: hidden;
+}
+
+.google-loading {
+  font-size: .85rem; color: #888; text-align: center; padding: 12px 0;
+}
+
+.google-error {
+  font-size: .82rem; color: var(--red);
+  text-align: center; margin-top: 6px;
+}
+
 .btn-secondary {
   display: block; width: 100%; height: 42px;
   border: 1px solid #b0c8b0; border-radius: 6px;

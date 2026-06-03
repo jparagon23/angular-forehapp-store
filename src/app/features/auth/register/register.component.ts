@@ -1,11 +1,17 @@
-﻿import { Component, inject, OnInit } from '@angular/core';
+import { Component, ElementRef, inject, NgZone, OnInit, AfterViewInit, ViewChild } from '@angular/core';
 import { AbstractControl, FormBuilder, ValidationErrors, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { NgIf } from '@angular/common';
+import { Store } from '@ngrx/store';
 import { AuthApiService } from '../../../core/services/auth-api.service';
+import { TokenStore } from '../../../core/services/token-store.service';
+import { GoogleAuthService } from '../../../core/services/google-auth.service';
 import Swal from 'sweetalert2';
 import { apiCode } from '../../../core/models/api-error.model';
 import { SeoService } from '../../../core/services/seo.service';
+import { environment } from '../../../../environments/environment';
+
+declare const google: any;
 
 function passwordsMatch(ctrl: AbstractControl): ValidationErrors | null {
   const pass    = ctrl.get('password')?.value;
@@ -20,13 +26,35 @@ function passwordsMatch(ctrl: AbstractControl): ValidationErrors | null {
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss',
 })
-export class RegisterComponent implements OnInit {
+export class RegisterComponent implements OnInit, AfterViewInit {
   private fb          = inject(FormBuilder);
   private router      = inject(Router);
   private authService = inject(AuthApiService);
+  private tokenStore  = inject(TokenStore);
+  private store       = inject(Store);
+  private googleAuth  = inject(GoogleAuthService);
+  private ngZone      = inject(NgZone);
   private seo         = inject(SeoService);
 
+  @ViewChild('googleBtn') private googleBtnRef!: ElementRef<HTMLDivElement>;
+
   ngOnInit() { this.seo.set({ title: 'Crear Cuenta' }); }
+
+  ngAfterViewInit() {
+    if (typeof google === 'undefined' || !environment.googleClientId) return;
+    google.accounts.id.initialize({
+      client_id: environment.googleClientId,
+      callback: (response: any) =>
+        this.ngZone.run(() => this.onGoogleCredential(response.credential)),
+    });
+    google.accounts.id.renderButton(this.googleBtnRef.nativeElement, {
+      type:   'standard',
+      size:   'large',
+      text:   'signup_with',
+      width:  336,
+      locale: 'es',
+    });
+  }
 
   form = this.fb.group({
     name:     ['', [Validators.required, Validators.minLength(2)]],
@@ -40,7 +68,9 @@ export class RegisterComponent implements OnInit {
   showPass         = false;
   showConfirmPass  = false;
   loading          = false;
-  serverError = '';
+  serverError      = '';
+  googleLoading    = false;
+  googleError      = '';
 
   get name()     { return this.form.controls['name']; }
   get lastname() { return this.form.controls['lastname']; }
@@ -79,6 +109,21 @@ export class RegisterComponent implements OnInit {
         } else {
           this.serverError = 'Error al registrarse. Inténtalo de nuevo.';
         }
+      },
+    });
+  }
+
+  private onGoogleCredential(idToken: string) {
+    this.googleLoading = true;
+    this.googleError   = '';
+    this.googleAuth.handleCredential(idToken).subscribe({
+      next: res => {
+        this.googleAuth.applySession(res);
+        this.router.navigate(['/']);
+      },
+      error: () => {
+        this.googleLoading = false;
+        this.googleError = 'No se pudo registrar con Google. Inténtalo de nuevo.';
       },
     });
   }

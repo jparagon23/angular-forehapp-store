@@ -112,6 +112,14 @@
       <a href="#" class="auth-link">Política de privacidad</a>.
     </p>
 
+    <div class="auth-divider"><span>o regístrate con</span></div>
+
+    <div class="google-btn-wrap">
+      <div #googleBtn></div>
+      <div class="google-loading" *ngIf="googleLoading">Creando cuenta…</div>
+    </div>
+    <div class="google-error" *ngIf="googleError">{{ googleError }}</div>
+
     <div class="auth-divider"><span>¿Ya tienes cuenta?</span></div>
 
     <a routerLink="/login" class="btn-secondary">Iniciar sesión</a>
