@@ -155,7 +155,8 @@
   transition: border-color .15s, background .15s, color .15s;
   &:hover { border-color: var(--green); color: var(--green-dark); }
   &.active { border-color: var(--green); background: var(--green); color: #fff; }
-  &.out-of-stock, &:disabled {
+  &.single { cursor: default; pointer-events: none; }
+  &.out-of-stock, &:disabled:not(.single) {
     opacity: .4; cursor: not-allowed; text-decoration: line-through;
     &:hover { border-color: #d5e8cf; color: #555; }
   }

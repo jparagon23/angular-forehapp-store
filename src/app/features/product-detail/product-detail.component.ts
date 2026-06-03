@@ -104,6 +104,8 @@ export class ProductDetailComponent implements OnInit {
     return [...map.entries()].map(([name, vals]) => ({ name, values: [...vals] }));
   });
 
+  isSingleVariant = computed(() => (this.productSignal()?.variants?.length ?? 0) === 1);
+
   displayRating = computed(() =>
     Math.round((this.reviewSummary()?.averageRating ?? 0) * 10) / 10
   );
@@ -140,6 +142,11 @@ export class ProductDetailComponent implements OnInit {
         filter((p): p is Product => !!p && p.id === id),
         take(1),
       ).subscribe(p => {
+        if (p.variants?.length) {
+          const attrs: Record<string, string> = {};
+          for (const a of p.variants[0].attributes) attrs[a.attribute] = a.value;
+          this.selectedAttributes.set(attrs);
+        }
         this.seo.set({
           title: `${p.name} — ${p.brand}`,
           description: p.desc || `Compra ${p.name} de ${p.brand} en ForehApp Store Colombia`,
