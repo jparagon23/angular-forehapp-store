@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+﻿import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { AsyncPipe, DatePipe, NgFor, NgIf, TitleCasePipe } from '@angular/common';
@@ -142,7 +142,7 @@ export class ProductDetailComponent implements OnInit {
       ).subscribe(p => {
         this.seo.set({
           title: `${p.name} — ${p.brand}`,
-          description: p.desc || `Compra ${p.name} de ${p.brand} en Forehapp Store Colombia`,
+          description: p.desc || `Compra ${p.name} de ${p.brand} en ForehApp Store Colombia`,
           image: p.images?.[0]?.url || p.image,
           url: window.location.href,
           type: 'product',

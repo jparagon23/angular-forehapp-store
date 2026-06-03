@@ -1,8 +1,8 @@
-import { inject, Injectable } from '@angular/core';
+﻿import { inject, Injectable } from '@angular/core';
 import { Title, Meta } from '@angular/platform-browser';
 import { environment } from '../../../environments/environment';
 
-const SITE_NAME = 'Forehapp Store';
+const SITE_NAME = 'ForehApp Store';
 const SITE_URL  = environment.siteUrl;
 const DEFAULT_DESC = 'Tienda online de tenis en Colombia. Raquetas, zapatillas, ropa y accesorios de las mejores marcas. Envíos a todo el país.';
 const DEFAULT_IMG  = `${SITE_URL}/assets/og-default.jpg`;

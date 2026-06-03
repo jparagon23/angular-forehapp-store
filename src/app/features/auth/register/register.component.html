@@ -1,8 +1,8 @@
-<div class="auth-page">
+﻿<div class="auth-page">
   <div class="auth-card">
 
     <a routerLink="/" class="auth-brand">
-      <span class="auth-brand-name">Forehapp <span>Store</span></span>
+      <span class="auth-brand-name">ForehApp <span>Store</span></span>
     </a>
 
     <h1 class="auth-title">Crear cuenta</h1>
@@ -13,7 +13,7 @@
         <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8"/>
         <line x1="12" y1="12" x2="12" y2="16"/>
       </svg>
-      ¿Ya tienes cuenta en <strong>Forehapp</strong>? Usa el mismo correo y contraseña.
+      ¿Ya tienes cuenta en <strong>ForehApp</strong>? Usa el mismo correo y contraseña.
     </div>
 
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
@@ -101,7 +101,7 @@
       <div class="login-error" *ngIf="serverError">{{ serverError }}</div>
 
       <button type="submit" class="btn-primary" [disabled]="loading">
-        {{ loading ? 'Creando cuenta…' : 'Crear tu cuenta Forehapp' }}
+        {{ loading ? 'Creando cuenta…' : 'Crear tu cuenta ForehApp' }}
       </button>
 
     </form>
