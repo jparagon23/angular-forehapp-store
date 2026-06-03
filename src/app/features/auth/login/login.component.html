@@ -62,6 +62,14 @@
 
     </form>
 
+    <div class="auth-divider"><span>o continúa con</span></div>
+
+    <div class="google-btn-wrap">
+      <div #googleBtn></div>
+      <div class="google-loading" *ngIf="googleLoading">Iniciando sesión…</div>
+    </div>
+    <div class="google-error" *ngIf="googleError">{{ googleError }}</div>
+
     <div class="auth-divider"><span>¿Eres nuevo en ForehApp?</span></div>
 
     <a routerLink="/register" class="btn-secondary">Crear tu cuenta ForehApp</a>

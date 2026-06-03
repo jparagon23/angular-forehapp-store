@@ -42,6 +42,14 @@ export class AuthApiService {
     return this.http.post<AuthResponse>(`${this.BASE}/login`, { email, password });
   }
 
+  googleLogin(idToken: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.BASE}/auth/google/login`, { idToken });
+  }
+
+  googleRegister(idToken: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.BASE}/auth/google/register`, { idToken });
+  }
+
   refreshToken(refreshToken: string): Observable<TokenResponse> {
     return this.http.post<TokenResponse>(`${this.BASE}/auth/refresh-token`, { refreshToken });
   }
