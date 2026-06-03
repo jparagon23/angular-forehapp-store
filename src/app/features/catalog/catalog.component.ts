@@ -16,7 +16,7 @@ import { CartDrawerComponent } from '../cart/cart-drawer.component';
 import { ToastComponent } from '../../shared/components/toast/toast.component';
 import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
 import { Product } from '../../core/models/product.model';
-import { ProductService, ProductFilters, DiscoverySection, SortBy } from '../../core/services/product.service';
+import { ProductService, ProductFilters, DiscoverySection, SortBy, BrandFacet } from '../../core/services/product.service';
 import { Category } from '../../core/models/seller-product.model';
 import { SeoService } from '../../core/services/seo.service';
 
@@ -58,6 +58,8 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
   addingProductId  = signal<number | null>(null);
   activeSortBy     = signal<SortBy>('NEWEST');
   freeShippingOnly = signal(false);
+  activeBrandId    = signal<number | null>(null);
+  brandFacets      = signal<BrandFacet[]>([]);
 
   wishlistItemMap = toSignal(this.store.select(selectWishlistProductIdToItemId), { initialValue: new Map<number, number>() });
   isLoggedIn      = toSignal(this.store.select(selectIsLoggedIn), { initialValue: false });
@@ -93,10 +95,12 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
           : undefined;
         const sortBy      = (params['sort'] as SortBy) || 'NEWEST';
         const freeShip    = params['freeShipping'] === 'true';
+        const brandId     = params['brandId'] ? Number(params['brandId']) : undefined;
         const isDiscovery = !search && !catName;
 
         this.activeSortBy.set(sortBy);
         this.freeShippingOnly.set(freeShip);
+        this.activeBrandId.set(brandId ?? null);
         this.mode.set(isDiscovery ? 'discovery' : 'listing');
 
         if (params['q']) {
@@ -110,7 +114,7 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
         if (isDiscovery) {
           this.loadDiscovery();
         } else {
-          this.activeFilters = { search, categoryId, sortBy, freeShipping: freeShip || undefined };
+          this.activeFilters = { search, categoryId, sortBy, freeShipping: freeShip || undefined, brandId };
           this.loadPage(0);
         }
       })
@@ -137,6 +141,7 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
       this.loadSub.unsubscribe();
       this.loadSub = new Subscription();
       this.products.set([]);
+      this.brandFacets.set([]);
       this.initialLoading.set(true);
       this.hasNext.set(false);
     } else {
@@ -151,6 +156,7 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
           this.loadingMore.set(false);
           if (result.page === 0) {
             this.products.set(result.items);
+            this.brandFacets.set(result.brandFacets);
           } else {
             this.products.update(prev => [...prev, ...result.items]);
           }
@@ -193,6 +199,12 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
 
   toggleFreeShipping() {
     const qp = { ...this.route.snapshot.queryParams, freeShipping: this.freeShippingOnly() ? null : 'true' };
+    this.router.navigate(['/'], { queryParams: qp, queryParamsHandling: 'merge' });
+  }
+
+  setBrand(id: number) {
+    const current = this.activeBrandId();
+    const qp = { ...this.route.snapshot.queryParams, brandId: current === id ? null : id };
     this.router.navigate(['/'], { queryParams: qp, queryParamsHandling: 'merge' });
   }
   isWishlisted(id: number): boolean { return this.wishlistItemMap().has(id); }
