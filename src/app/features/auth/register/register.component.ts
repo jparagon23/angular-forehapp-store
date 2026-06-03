@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+﻿import { Component, inject, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, ValidationErrors, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { NgIf } from '@angular/common';
@@ -67,7 +67,7 @@ export class RegisterComponent implements OnInit {
           Swal.fire({
             icon: 'info',
             title: 'Correo ya registrado',
-            html: 'Este correo ya tiene una cuenta en <strong>Forehapp Store</strong>.<br>Puedes iniciar sesión con el mismo correo y contraseña.',
+            html: 'Este correo ya tiene una cuenta en <strong>ForehApp Store</strong>.<br>Puedes iniciar sesión con el mismo correo y contraseña.',
             confirmButtonText: 'Ir al inicio de sesión',
             confirmButtonColor: '#2e7d32',
             showCancelButton: true,

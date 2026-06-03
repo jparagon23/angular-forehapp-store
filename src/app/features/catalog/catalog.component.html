@@ -1,4 +1,4 @@
-<app-navbar></app-navbar>
+﻿<app-navbar></app-navbar>
 
 <!-- Hero: solo en discovery -->
 <section class="hero" *ngIf="mode() === 'discovery'">
@@ -220,7 +220,7 @@
 <div #sentinel class="sentinel"></div>
 
 <footer class="site-footer">
-  &copy; 2026 <span>Forehapp Store</span> — Todos los derechos reservados
+  &copy; 2026 <span>ForehApp Store</span> — Todos los derechos reservados
   <ng-container *ngIf="(userRole$ | async) === 'STORE_ADMIN'">
     &nbsp;·&nbsp; <a routerLink="/admin">Panel Admin →</a>
   </ng-container>
