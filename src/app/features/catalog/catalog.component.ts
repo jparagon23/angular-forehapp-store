@@ -16,7 +16,7 @@ import { CartDrawerComponent } from '../cart/cart-drawer.component';
 import { ToastComponent } from '../../shared/components/toast/toast.component';
 import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
 import { Product } from '../../core/models/product.model';
-import { ProductService, ProductFilters, DiscoverySection } from '../../core/services/product.service';
+import { ProductService, ProductFilters, DiscoverySection, SortBy } from '../../core/services/product.service';
 import { Category } from '../../core/models/seller-product.model';
 import { SeoService } from '../../core/services/seo.service';
 
@@ -52,10 +52,12 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
   loadingMore     = signal(false);
   hasNext         = signal(false);
 
-  userRole$       = this.store.select(selectUserRole);
-  toastMessage    = signal('');
-  toastTrigger    = signal(0);
-  addingProductId = signal<number | null>(null);
+  userRole$        = this.store.select(selectUserRole);
+  toastMessage     = signal('');
+  toastTrigger     = signal(0);
+  addingProductId  = signal<number | null>(null);
+  activeSortBy     = signal<SortBy>('NEWEST');
+  freeShippingOnly = signal(false);
 
   wishlistItemMap = toSignal(this.store.select(selectWishlistProductIdToItemId), { initialValue: new Map<number, number>() });
   isLoggedIn      = toSignal(this.store.select(selectIsLoggedIn), { initialValue: false });
@@ -89,7 +91,12 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
         const categoryId = catName
           ? (categories as Category[]).find(c => c.name === catName)?.id
           : undefined;
+        const sortBy      = (params['sort'] as SortBy) || 'NEWEST';
+        const freeShip    = params['freeShipping'] === 'true';
         const isDiscovery = !search && !catName;
+
+        this.activeSortBy.set(sortBy);
+        this.freeShippingOnly.set(freeShip);
         this.mode.set(isDiscovery ? 'discovery' : 'listing');
 
         if (params['q']) {
@@ -103,7 +110,7 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
         if (isDiscovery) {
           this.loadDiscovery();
         } else {
-          this.activeFilters = { search, categoryId, sortBy: 'NEWEST' };
+          this.activeFilters = { search, categoryId, sortBy, freeShipping: freeShip || undefined };
           this.loadPage(0);
         }
       })
@@ -178,6 +185,16 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
   clearFilter()                              { this.router.navigate(['/']); }
   goToProduct(id: number)                    { this.router.navigate(['/product', id]); }
   goToCategoryListing(categoryName: string)  { this.router.navigate(['/'], { queryParams: { cat: categoryName } }); }
+
+  setSortBy(sort: SortBy) {
+    const qp = { ...this.route.snapshot.queryParams, sort: sort === 'NEWEST' ? null : sort };
+    this.router.navigate(['/'], { queryParams: qp, queryParamsHandling: 'merge' });
+  }
+
+  toggleFreeShipping() {
+    const qp = { ...this.route.snapshot.queryParams, freeShipping: this.freeShippingOnly() ? null : 'true' };
+    this.router.navigate(['/'], { queryParams: qp, queryParamsHandling: 'merge' });
+  }
   isWishlisted(id: number): boolean { return this.wishlistItemMap().has(id); }
 
   addToCart(product: Product, event: Event) {
