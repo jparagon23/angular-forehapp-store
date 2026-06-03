@@ -165,7 +165,10 @@ export class ProductService {
     );
   }
 
-  getCategories(): Observable<Category[]> {
+  getCategories(hasProducts = false): Observable<Category[]> {
+    if (hasProducts) {
+      return this.http.get<Category[]>(`${this.BASE}/categories`, { params: { hasProducts: 'true' } });
+    }
     return this.http.get<Category[]>(`${this.BASE}/categories`);
   }
 
