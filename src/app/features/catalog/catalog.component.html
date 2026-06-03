@@ -21,6 +21,28 @@
     </div>
   </ng-container>
 
+  <!-- Barra de ordenamiento y filtros rápidos -->
+  <div class="sort-bar">
+    <div class="sort-chips">
+      <button class="sort-chip" [class.active]="activeSortBy() === 'NEWEST'"
+              (click)="setSortBy('NEWEST')">Más nuevos</button>
+      <button class="sort-chip" [class.active]="activeSortBy() === 'PRICE_ASC'"
+              (click)="setSortBy('PRICE_ASC')">Precio ↑</button>
+      <button class="sort-chip" [class.active]="activeSortBy() === 'PRICE_DESC'"
+              (click)="setSortBy('PRICE_DESC')">Precio ↓</button>
+    </div>
+    <button class="sort-chip sort-chip--ship" [class.active]="freeShippingOnly()"
+            (click)="toggleFreeShipping()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="1" y="3" width="15" height="13" rx="1"/>
+        <path d="M16 8h4l3 5v3h-7V8z"/>
+        <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+      </svg>
+      Envío gratis
+    </button>
+  </div>
+
   <h2 class="section-title">Catálogo de <span>Productos</span></h2>
   <p class="section-sub">Selecciona los productos y agrégalos al carrito</p>
 

@@ -30,11 +30,14 @@ interface PageResponse<T> {
   hasNext: boolean;
 }
 
+export type SortBy = 'NEWEST' | 'PRICE_ASC' | 'PRICE_DESC';
+
 export interface ProductFilters {
   search?: string;
   categoryId?: number;
   brandId?: number;
-  sortBy?: 'NEWEST' | 'DISCOVERY';
+  sortBy?: SortBy;
+  freeShipping?: boolean;
 }
 
 export interface PagedProducts {
@@ -86,9 +89,10 @@ export class ProductService {
 
   getProductsPage(filters?: ProductFilters, page = 0): Observable<PagedProducts> {
     const params: Record<string, string> = { page: String(page), size: '20' };
-    if (filters?.search)     params['search']     = filters.search;
-    if (filters?.categoryId) params['categoryId'] = String(filters.categoryId);
-    if (filters?.brandId)    params['brandId']    = String(filters.brandId);
+    if (filters?.search)      params['search']      = filters.search;
+    if (filters?.categoryId)  params['categoryId']  = String(filters.categoryId);
+    if (filters?.brandId)     params['brandId']     = String(filters.brandId);
+    if (filters?.freeShipping) params['freeShipping'] = 'true';
     params['sortBy'] = filters?.sortBy ?? 'NEWEST';
 
     return this.http.get<PageResponse<ApiProductSummary>>(`${this.BASE}/products/public`, { params }).pipe(
