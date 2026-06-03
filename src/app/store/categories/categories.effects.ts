@@ -14,7 +14,7 @@ export class CategoriesEffects {
     this.actions$.pipe(
       ofType(CategoriesActions.loadCategories),
       switchMap(() =>
-        this.productService.getCategories().pipe(
+        this.productService.getCategories(true).pipe(
           map(categories => CategoriesActions.loadCategoriesSuccess({ categories })),
           catchError(error => of(CategoriesActions.loadCategoriesFailure({ error: error.message })))
         )
