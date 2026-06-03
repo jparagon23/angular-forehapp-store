@@ -4,7 +4,7 @@ import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Product, ProductImage, ProductStore, ProductVariations } from '../models/product.model';
-import { Category } from '../models/seller-product.model';
+import { Brand, Category } from '../models/seller-product.model';
 
 // Formato del listado público (sin variantes detalladas)
 interface ApiProductSummary {
@@ -28,6 +28,7 @@ interface PageResponse<T> {
   page: number;
   size: number;
   hasNext: boolean;
+  facets?: { brands?: Array<{ id: number; name: string; count: number }> };
 }
 
 export type SortBy = 'NEWEST' | 'PRICE_ASC' | 'PRICE_DESC';
@@ -40,10 +41,13 @@ export interface ProductFilters {
   freeShipping?: boolean;
 }
 
+export interface BrandFacet { id: number; name: string; count: number; }
+
 export interface PagedProducts {
   items: Product[];
   hasNext: boolean;
   page: number;
+  brandFacets: BrandFacet[];
 }
 
 interface RawDiscoverySection {
@@ -97,9 +101,10 @@ export class ProductService {
 
     return this.http.get<PageResponse<ApiProductSummary>>(`${this.BASE}/products/public`, { params }).pipe(
       map(res => ({
-        items:   res.content.map(p => this.mapProduct(p)),
-        hasNext: res.hasNext,
-        page:    res.page,
+        items:       res.content.map(p => this.mapProduct(p)),
+        hasNext:     res.hasNext,
+        page:        res.page,
+        brandFacets: res.facets?.brands ?? [],
       }))
     );
   }
@@ -162,6 +167,10 @@ export class ProductService {
 
   getCategories(): Observable<Category[]> {
     return this.http.get<Category[]>(`${this.BASE}/categories`);
+  }
+
+  getBrands(): Observable<Brand[]> {
+    return this.http.get<Brand[]>(`${this.BASE}/brands`);
   }
 
   // Mantenidos para compatibilidad con el panel de admin (operan localmente)

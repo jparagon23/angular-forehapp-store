@@ -162,6 +162,37 @@
   &--ship { margin-left: auto; }
 }
 
+.brand-bar {
+  max-width: 1200px; margin: 10px auto 0; padding: 0 30px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+
+.brand-bar-label {
+  font-size: .8rem; font-weight: 700; color: #999;
+  text-transform: uppercase; letter-spacing: 1px; white-space: nowrap;
+}
+
+.brand-chips { display: flex; gap: 7px; flex-wrap: wrap; }
+
+.brand-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #fff; border: 1.5px solid #d5e4d5; border-radius: 20px;
+  padding: 5px 12px; font-size: .82rem; font-weight: 600; color: #555;
+  cursor: pointer; transition: border-color .15s, background .15s, color .15s;
+  &:hover { border-color: var(--green); color: var(--green-dark); }
+  &.active { border-color: var(--green); background: var(--green); color: #fff;
+    .brand-chip-count { background: rgba(255,255,255,.25); color: #fff; }
+    &:hover { background: var(--green-dark); }
+  }
+}
+
+.brand-chip-count {
+  font-size: .72rem; font-weight: 700;
+  background: #f0f0f0; color: #888;
+  border-radius: 10px; padding: 1px 6px;
+  transition: background .15s, color .15s;
+}
+
 .no-results {
   grid-column: 1 / -1; text-align: center; padding: 80px 20px;
   p { font-size: 1.1rem; color: #888; margin-bottom: 20px; }
@@ -367,9 +398,10 @@
     gap: 16px;
   }
 
-  .filter-bar { padding: 0 16px; }
-  .sort-bar   { padding: 0 16px; }
+  .filter-bar  { padding: 0 16px; }
+  .sort-bar    { padding: 0 16px; }
   .sort-chip--ship { margin-left: 0; }
+  .brand-bar   { padding: 0 16px; }
 
   .ds-wrap { padding: 20px 16px 48px; }
   .ds-section { margin-bottom: 36px; }

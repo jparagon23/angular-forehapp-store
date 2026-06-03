@@ -43,6 +43,19 @@
     </button>
   </div>
 
+  <!-- Filtro de marcas — solo visible cuando el back devuelve facetas -->
+  <div class="brand-bar" *ngIf="brandFacets().length > 0">
+    <span class="brand-bar-label">Marca:</span>
+    <div class="brand-chips">
+      <button *ngFor="let b of brandFacets()" class="brand-chip"
+              [class.active]="activeBrandId() === b.id"
+              (click)="setBrand(b.id)">
+        {{ b.name }}
+        <span class="brand-chip-count">{{ b.count }}</span>
+      </button>
+    </div>
+  </div>
+
   <h2 class="section-title">Catálogo de <span>Productos</span></h2>
   <p class="section-sub">Selecciona los productos y agrégalos al carrito</p>
 
