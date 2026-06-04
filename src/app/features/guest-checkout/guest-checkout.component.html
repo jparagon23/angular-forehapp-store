@@ -46,6 +46,16 @@
           <h2 class="gc-card-title">Datos de contacto</h2>
 
           <div class="gc-fields">
+            <div class="gc-field">
+              <label>Correo electrónico *</label>
+              <div class="gc-input-wrap" [class.checking]="emailChecking()">
+                <input type="email" placeholder="juan@correo.com"
+                       [ngModel]="email()" (ngModelChange)="email.set($event)"
+                       (blur)="onEmailBlur()" autocomplete="email">
+                <div class="checking-spinner" *ngIf="emailChecking()"></div>
+              </div>
+            </div>
+
             <div class="gc-row-2">
               <div class="gc-field">
                 <label>Nombre *</label>
@@ -54,16 +64,6 @@
               <div class="gc-field">
                 <label>Apellido *</label>
                 <input type="text" placeholder="Pérez" [ngModel]="lastname()" (ngModelChange)="lastname.set($event)" autocomplete="family-name">
-              </div>
-            </div>
-
-            <div class="gc-field">
-              <label>Correo electrónico *</label>
-              <div class="gc-input-wrap" [class.checking]="emailChecking()">
-                <input type="email" placeholder="juan@correo.com"
-                       [ngModel]="email()" (ngModelChange)="email.set($event)"
-                       (blur)="onEmailBlur()" autocomplete="email">
-                <div class="checking-spinner" *ngIf="emailChecking()"></div>
               </div>
             </div>
 

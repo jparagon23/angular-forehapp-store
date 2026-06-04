@@ -5,25 +5,23 @@
   </div>
 </div>
 
-<!-- Filter pills -->
-<div class="so-filters">
-  <button class="so-pill" [class.so-pill-on]="activeFilter() === null" (click)="activeFilter.set(null)">
-    Todos <span class="so-count">{{ counts().ALL }}</span>
+<!-- Tabs -->
+<div class="so-tabs">
+  <button class="so-tab" [class.so-tab-on]="activeTab() === 'ACTIVE'" (click)="activeTab.set('ACTIVE')">
+    Por atender
+    <span class="so-tab-count" [class.so-tab-count-alert]="counts().ACTIVE > 0">{{ counts().ACTIVE }}</span>
   </button>
-  <button class="so-pill so-pill-pending" [class.so-pill-on]="activeFilter() === 'PENDING'" (click)="activeFilter.set('PENDING')">
-    Pendientes <span class="so-count">{{ counts().PENDING }}</span>
+  <button class="so-tab" [class.so-tab-on]="activeTab() === 'DELIVERED'" (click)="activeTab.set('DELIVERED')">
+    Entregadas
+    <span class="so-tab-count">{{ counts().DELIVERED }}</span>
   </button>
-  <button class="so-pill so-pill-preparing" [class.so-pill-on]="activeFilter() === 'PREPARING'" (click)="activeFilter.set('PREPARING')">
-    En preparación <span class="so-count">{{ counts().PREPARING }}</span>
+  <button class="so-tab" [class.so-tab-on]="activeTab() === 'CANCELLED'" (click)="activeTab.set('CANCELLED')">
+    Canceladas
+    <span class="so-tab-count">{{ counts().CANCELLED }}</span>
   </button>
-  <button class="so-pill so-pill-shipped" [class.so-pill-on]="activeFilter() === 'SHIPPED'" (click)="activeFilter.set('SHIPPED')">
-    Enviados <span class="so-count">{{ counts().SHIPPED }}</span>
-  </button>
-  <button class="so-pill so-pill-delivered" [class.so-pill-on]="activeFilter() === 'DELIVERED'" (click)="activeFilter.set('DELIVERED')">
-    Entregados <span class="so-count">{{ counts().DELIVERED }}</span>
-  </button>
-  <button class="so-pill so-pill-cancelled" [class.so-pill-on]="activeFilter() === 'CANCELLED'" (click)="activeFilter.set('CANCELLED')">
-    Cancelados <span class="so-count">{{ counts().CANCELLED }}</span>
+  <button class="so-tab" [class.so-tab-on]="activeTab() === 'ALL'" (click)="activeTab.set('ALL')">
+    Todas
+    <span class="so-tab-count">{{ counts().ALL }}</span>
   </button>
 </div>
 
@@ -52,7 +50,8 @@
     <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
     <line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
   </svg>
-  <p>No hay pedidos en esta categoría.</p>
+  <p *ngIf="activeTab() === 'ACTIVE'">¡Al día! No tienes pedidos pendientes por atender.</p>
+  <p *ngIf="activeTab() !== 'ACTIVE'">No hay pedidos en esta categoría.</p>
 </div>
 
 <!-- Orders list -->
