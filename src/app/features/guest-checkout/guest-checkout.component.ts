@@ -85,10 +85,7 @@ export class GuestCheckoutComponent implements OnInit {
   paymentMethod = signal<PaymentMethod | null>(null);
 
   readonly paymentOptions: { value: PaymentMethod; label: string; desc: string }[] = [
-    { value: 'MERCADO_PAGO', label: 'MercadoPago',        desc: 'Pago seguro en línea con tarjeta o PSE' },
-    { value: 'TRANSFER',     label: 'Transferencia',       desc: 'Te enviamos los datos bancarios por correo' },
-    { value: 'CASH',         label: 'Efectivo',            desc: 'Coordinaremos el método de pago contigo' },
-    { value: 'CASH_ON_DELIVERY', label: 'Pago contra entrega', desc: 'Paga al recibir (disponible solo en Cali)' },
+    { value: 'CASH_ON_DELIVERY', label: 'Pago contra entrega', desc: 'Pagas en efectivo al recibir tu pedido' },
   ];
 
   submitting   = signal(false);
