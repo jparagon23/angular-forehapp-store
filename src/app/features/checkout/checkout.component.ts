@@ -69,7 +69,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   createdOrder$     = this.store.select(selectCreatedOrder);
 
   selectedAddressId: number | null = null;
-  selectedPaymentMethod: PaymentMethod = 'TRANSFER';
+  selectedPaymentMethod: PaymentMethod | null = null;
   showAddressPicker = false;
   showAddressForm   = false;
 
@@ -126,6 +126,9 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         if (!this.selectedAddressId) {
           this.selectedAddressId = def.id;
           this.loadShippingEstimate(def.id);
+          if (def.city?.name?.toLowerCase() === 'cali') {
+            this.selectedPaymentMethod = 'CASH_ON_DELIVERY';
+          }
         }
       });
     });
@@ -174,6 +177,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.selectedAddressId = id;
     this.showAddressPicker = false;
     this.loadShippingEstimate(id);
+    this.addresses$.pipe(take(1)).subscribe(addrs => {
+      const addr = addrs.find(a => a.id === id);
+      this.selectedPaymentMethod = addr?.city?.name?.toLowerCase() === 'cali' ? 'CASH_ON_DELIVERY' : null;
+    });
   }
 
   private loadShippingEstimate(addressId: number) {
@@ -351,7 +358,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   confirm() {
-    if (!this.selectedAddressId) return;
+    if (!this.selectedAddressId || !this.selectedPaymentMethod) return;
     if (!this.authUser()?.phone) {
       this.phoneModal.set(true);
       return;
@@ -360,7 +367,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   private dispatchCreateOrder() {
-    this.store.dispatch(createOrder({ addressId: this.selectedAddressId!, paymentMethod: this.selectedPaymentMethod }));
+    this.store.dispatch(createOrder({ addressId: this.selectedAddressId!, paymentMethod: this.selectedPaymentMethod! }));
   }
 
   savePhone() {

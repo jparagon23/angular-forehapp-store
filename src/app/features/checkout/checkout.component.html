@@ -304,7 +304,7 @@
       </div>
 
       <button class="btn-confirm"
-              [disabled]="(addressesLoading$ | async) || !selectedAddressId || (creatingOrder$ | async)"
+              [disabled]="(addressesLoading$ | async) || !selectedAddressId || !selectedPaymentMethod || (creatingOrder$ | async)"
               (click)="confirm()">
         <ng-container *ngIf="!(creatingOrder$ | async); else loadingTpl">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
