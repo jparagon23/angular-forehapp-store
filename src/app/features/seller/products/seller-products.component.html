@@ -207,12 +207,24 @@
   <table class="sp-table">
     <thead>
       <tr>
-        <th>Producto</th>
-        <th>Categoría</th>
-        <th>Estado</th>
-        <th>Variantes</th>
-        <th>Precio desde</th>
-        <th>Creado</th>
+        <th class="sp-th-sort" (click)="sort('title')">
+          Producto <span class="sp-sort-icon">{{ sortField() === 'title' ? (sortDir() === 'asc' ? '↑' : '↓') : '↕' }}</span>
+        </th>
+        <th class="sp-th-sort" (click)="sort('category')">
+          Categoría <span class="sp-sort-icon">{{ sortField() === 'category' ? (sortDir() === 'asc' ? '↑' : '↓') : '↕' }}</span>
+        </th>
+        <th class="sp-th-sort" (click)="sort('status')">
+          Estado <span class="sp-sort-icon">{{ sortField() === 'status' ? (sortDir() === 'asc' ? '↑' : '↓') : '↕' }}</span>
+        </th>
+        <th class="sp-th-sort" (click)="sort('variants')">
+          Variantes <span class="sp-sort-icon">{{ sortField() === 'variants' ? (sortDir() === 'asc' ? '↑' : '↓') : '↕' }}</span>
+        </th>
+        <th class="sp-th-sort" (click)="sort('price')">
+          Precio desde <span class="sp-sort-icon">{{ sortField() === 'price' ? (sortDir() === 'asc' ? '↑' : '↓') : '↕' }}</span>
+        </th>
+        <th class="sp-th-sort" (click)="sort('createdAt')">
+          Creado <span class="sp-sort-icon">{{ sortField() === 'createdAt' ? (sortDir() === 'asc' ? '↑' : '↓') : '↕' }}</span>
+        </th>
         <th>Acciones</th>
       </tr>
     </thead>
