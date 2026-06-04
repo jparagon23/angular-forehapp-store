@@ -52,6 +52,11 @@ export class CartDrawerComponent {
     this.router.navigate(['/checkout']);
   }
 
+  goToGuestCheckout() {
+    this.store.dispatch(closeCart());
+    this.router.navigate(['/checkout/guest']);
+  }
+
   goToLogin() {
     this.store.dispatch(closeCart());
     this.router.navigate(['/login'], { queryParams: { redirect: '/checkout' } });

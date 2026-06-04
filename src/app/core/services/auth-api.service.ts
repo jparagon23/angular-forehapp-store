@@ -61,4 +61,8 @@ export class AuthApiService {
   updatePhone(phone: string): Observable<UserProfileResponse> {
     return this.http.patch<UserProfileResponse>(`${this.BASE}/users/me/phone`, { phone });
   }
+
+  checkEmail(email: string): Observable<{ exists: boolean }> {
+    return this.http.get<{ exists: boolean }>(`${this.BASE}/auth/check-email`, { params: { email } });
+  }
 }

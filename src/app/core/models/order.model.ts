@@ -82,6 +82,36 @@ export interface SellerOrderGroupDetail {
   items: OrderItemResponse[];
 }
 
+// ── Guest checkout ────────────────────────────────────────────────────────────
+
+export interface GuestOrderItem {
+  variantId: number;
+  quantity: number;
+}
+
+export interface GuestOrderRequest {
+  name: string;
+  lastname: string;
+  email: string;
+  phone: string;
+  shippingAddress: string;
+  shippingCityId: number;
+  shippingComplement?: string;
+  shippingReference?: string;
+  items: GuestOrderItem[];
+  paymentMethod: PaymentMethod;
+}
+
+export interface GuestEstimateRequest {
+  cityId: number;
+  items: GuestOrderItem[];
+}
+
+export interface CreateAccountRequest {
+  email: string;
+  password: string;
+}
+
 // ── Admin panel (legacy mock) ─────────────────────────────────────────────────
 
 export type OrderStatus = 'Pendiente' | 'Enviado' | 'Entregado' | 'Cancelado';

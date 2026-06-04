@@ -29,7 +29,23 @@ export class ThanksComponent implements OnInit {
     }
     this.orderService.getOrderById(orderId).subscribe({
       next: order => { this.order = order; this.loading = false; },
-      error: ()    => { this.loading = false; this.error = true; },
+      error: () => {
+        // Guest order: user is not authenticated, fall back to sessionStorage
+        const cached = sessionStorage.getItem('guest_order');
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached) as OrderResponse;
+            if (parsed.orderId === orderId) {
+              this.order = parsed;
+              sessionStorage.removeItem('guest_order');
+              this.loading = false;
+              return;
+            }
+          } catch { /* ignore */ }
+        }
+        this.loading = false;
+        this.error = true;
+      },
     });
   }
 }
