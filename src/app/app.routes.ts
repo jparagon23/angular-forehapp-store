@@ -41,6 +41,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/checkout/checkout.component').then(m => m.CheckoutComponent),
   },
   {
+    path: 'checkout/start',
+    loadComponent: () => import('./features/checkout-entry/checkout-entry.component').then(m => m.CheckoutEntryComponent),
+  },
+  {
     path: 'checkout/guest',
     loadComponent: () => import('./features/guest-checkout/guest-checkout.component').then(m => m.GuestCheckoutComponent),
   },

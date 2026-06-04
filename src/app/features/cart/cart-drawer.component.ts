@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AsyncPipe, NgFor, NgIf } from '@angular/common';
 import { Router } from '@angular/router';
+import { take } from 'rxjs/operators';
 import {
   selectCartIsOpen, selectSellerGroups, selectCartTotal,
   selectCartCount, selectPriceChangedItems, selectCartLoading,
@@ -49,21 +50,9 @@ export class CartDrawerComponent {
 
   goToCheckout() {
     this.store.dispatch(closeCart());
-    this.router.navigate(['/checkout']);
-  }
-
-  goToGuestCheckout() {
-    this.store.dispatch(closeCart());
-    this.router.navigate(['/checkout/guest']);
-  }
-
-  goToLogin() {
-    this.store.dispatch(closeCart());
-    this.router.navigate(['/login'], { queryParams: { redirect: '/checkout' } });
-  }
-
-  goToRegister() {
-    this.store.dispatch(closeCart());
-    this.router.navigate(['/register'], { queryParams: { redirect: '/checkout' } });
+    // Logged-in users go directly to checkout; guests go to the entry page
+    this.store.select(selectIsLoggedIn).pipe(take(1)).subscribe(loggedIn => {
+      this.router.navigate([loggedIn ? '/checkout' : '/checkout/start']);
+    });
   }
 }
