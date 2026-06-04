@@ -53,11 +53,20 @@ export class SellerProductsComponent implements OnInit {
 
   searchQuery  = signal('');
   statusFilter = signal<ProductStatus | null>(null);
+  sortField    = signal<'title' | 'category' | 'status' | 'variants' | 'price' | 'createdAt' | null>(null);
+  sortDir      = signal<'asc' | 'desc'>('asc');
+
+  private readonly STATUS_ORDER: Record<ProductStatus, number> = {
+    ACTIVE: 0, OUT_OF_STOCK: 1, INACTIVE: 2, DRAFT: 3,
+  };
 
   filteredProducts = computed(() => {
     const q      = this.searchQuery().toLowerCase().trim();
     const status = this.statusFilter();
-    return this.allProducts().filter(p => {
+    const field  = this.sortField();
+    const dir    = this.sortDir();
+
+    const filtered = this.allProducts().filter(p => {
       const matchesSearch = !q
         || p.title.toLowerCase().includes(q)
         || p.brand.toLowerCase().includes(q)
@@ -66,9 +75,33 @@ export class SellerProductsComponent implements OnInit {
       const matchesStatus = !status || p.status === status;
       return matchesSearch && matchesStatus;
     });
+
+    if (!field) return filtered;
+
+    return [...filtered].sort((a, b) => {
+      let cmp = 0;
+      switch (field) {
+        case 'title':    cmp = a.title.localeCompare(b.title, 'es'); break;
+        case 'category': cmp = a.category.localeCompare(b.category, 'es'); break;
+        case 'status':   cmp = this.STATUS_ORDER[a.status] - this.STATUS_ORDER[b.status]; break;
+        case 'variants': cmp = this.activeVariantCount(a.variants) - this.activeVariantCount(b.variants); break;
+        case 'price':    cmp = this.minPrice(a.variants) - this.minPrice(b.variants); break;
+        case 'createdAt': cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(); break;
+      }
+      return dir === 'asc' ? cmp : -cmp;
+    });
   });
 
   hasFilters = computed(() => !!this.searchQuery() || this.statusFilter() !== null);
+
+  sort(field: 'title' | 'category' | 'status' | 'variants' | 'price' | 'createdAt') {
+    if (this.sortField() === field) {
+      this.sortDir.update(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortField.set(field);
+      this.sortDir.set('asc');
+    }
+  }
 
   toastMsg  = signal('');
   toastType = signal<'success' | 'error'>('success');
