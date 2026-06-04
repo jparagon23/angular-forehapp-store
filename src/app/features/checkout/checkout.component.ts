@@ -126,9 +126,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         if (!this.selectedAddressId) {
           this.selectedAddressId = def.id;
           this.loadShippingEstimate(def.id);
-          if (def.city?.name?.toLowerCase() === 'cali') {
-            this.selectedPaymentMethod = 'CASH_ON_DELIVERY';
-          }
         }
       });
     });
@@ -177,10 +174,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.selectedAddressId = id;
     this.showAddressPicker = false;
     this.loadShippingEstimate(id);
-    this.addresses$.pipe(take(1)).subscribe(addrs => {
-      const addr = addrs.find(a => a.id === id);
-      this.selectedPaymentMethod = addr?.city?.name?.toLowerCase() === 'cali' ? 'CASH_ON_DELIVERY' : null;
-    });
+    this.selectedPaymentMethod = null;
   }
 
   private loadShippingEstimate(addressId: number) {
