@@ -20,11 +20,11 @@ export class SellerOrdersComponent implements OnInit {
 
   private storeId = toSignal(this.ngrx.select(selectActiveSellerStoreId), { initialValue: null });
 
-  groups       = signal<SellerOrderGroupDetail[]>([]);
-  loading      = signal(true);
-  error        = signal<string | null>(null);
-  activeFilter = signal<SellerGroupStatus | null>(null);
-  expandedId   = signal<number | null>(null);
+  groups    = signal<SellerOrderGroupDetail[]>([]);
+  loading   = signal(true);
+  error     = signal<string | null>(null);
+  activeTab = signal<'ACTIVE' | 'DELIVERED' | 'CANCELLED' | 'ALL'>('ACTIVE');
+  expandedId = signal<number | null>(null);
 
   shipModal         = signal<number | null>(null);
   shipModalTracking = signal<string>('');
@@ -35,20 +35,25 @@ export class SellerOrdersComponent implements OnInit {
   modalOrder    = computed(() => this.groups().find(g => g.groupId === this.shipModal()) ?? null);
   shipModalBusy = computed(() => { const id = this.shipModal(); return id !== null && this.actionLoading().has(id); });
 
+  private readonly ACTIVE_STATUSES: SellerGroupStatus[] = ['PENDING', 'PREPARING', 'SHIPPED'];
+
   filtered = computed(() => {
-    const f = this.activeFilter();
-    return f ? this.groups().filter(g => g.status === f) : this.groups();
+    const gs = this.groups();
+    switch (this.activeTab()) {
+      case 'ACTIVE':    return gs.filter(g => this.ACTIVE_STATUSES.includes(g.status));
+      case 'DELIVERED': return gs.filter(g => g.status === 'DELIVERED');
+      case 'CANCELLED': return gs.filter(g => g.status === 'CANCELLED');
+      default:          return gs;
+    }
   });
 
   counts = computed(() => {
     const gs = this.groups();
     return {
-      ALL:       gs.length,
-      PENDING:   gs.filter(g => g.status === 'PENDING').length,
-      PREPARING: gs.filter(g => g.status === 'PREPARING').length,
-      SHIPPED:   gs.filter(g => g.status === 'SHIPPED').length,
+      ACTIVE:    gs.filter(g => this.ACTIVE_STATUSES.includes(g.status)).length,
       DELIVERED: gs.filter(g => g.status === 'DELIVERED').length,
       CANCELLED: gs.filter(g => g.status === 'CANCELLED').length,
+      ALL:       gs.length,
     };
   });
 
