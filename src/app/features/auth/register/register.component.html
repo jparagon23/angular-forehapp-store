@@ -56,7 +56,8 @@
           autocomplete="email"
         />
         <span class="form-error" *ngIf="submitted && email.hasError('required')">Ingresa tu correo.</span>
-        <span class="form-error" *ngIf="submitted && email.hasError('email')">Correo no válido.</span>
+        <span class="form-error" *ngIf="submitted && email.hasError('emailFormat')">Ingresa un correo electrónico válido.</span>
+        <span class="form-error" *ngIf="submitted && email.hasError('disposableEmail')">No se permiten correos temporales o de prueba.</span>
       </div>
 
       <div class="form-group">

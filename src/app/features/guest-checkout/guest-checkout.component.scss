@@ -207,6 +207,13 @@
   position: relative;
   input { width: 100%; box-sizing: border-box; }
   &.checking input { padding-right: 36px; }
+  &.gc-input-error input { border-color: #e53935; }
+}
+
+.gc-field-error {
+  font-size: .74rem;
+  color: #e53935;
+  margin-top: -2px;
 }
 
 .checking-spinner {

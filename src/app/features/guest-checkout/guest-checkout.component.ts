@@ -19,6 +19,7 @@ import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { resolveRole } from '../../core/utils/jwt.utils';
 import { loadCart } from '../../store/cart/cart.actions';
+import { validateEmail, EmailValidationResult } from '../../core/utils/email.utils';
 
 @Component({
   selector: 'app-guest-checkout',
@@ -52,10 +53,21 @@ export class GuestCheckoutComponent implements OnInit {
   emailExists   = signal<boolean | null>(null);
   emailDismissed = signal(false);
 
+  emailValidation = computed<EmailValidationResult>(() => validateEmail(this.email().trim()));
+
+  emailError = computed(() => {
+    const e = this.email().trim();
+    if (!e) return '';
+    const r = this.emailValidation();
+    if (r === 'invalid-format') return 'Ingresa un correo electrónico válido.';
+    if (r === 'disposable')     return 'No se permiten correos temporales o de prueba.';
+    return '';
+  });
+
   step1Valid = computed(() =>
     this.name().trim().length > 0 &&
     this.lastname().trim().length > 0 &&
-    this.email().includes('@') && this.email().includes('.') &&
+    this.emailValidation() === 'valid' &&
     this.phone().trim().length >= 7
   );
 
@@ -113,7 +125,7 @@ export class GuestCheckoutComponent implements OnInit {
   // ── Email check ──────────────────────────────────────────────────────────────
   onEmailBlur() {
     const e = this.email().trim();
-    if (!e.includes('@') || !e.includes('.')) return;
+    if (this.emailValidation() !== 'valid') return;
     this.emailChecking.set(true);
     this.authApi.checkEmail(e).pipe(take(1)).subscribe({
       next: res => {
