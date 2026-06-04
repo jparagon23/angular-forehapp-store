@@ -39,19 +39,28 @@
 
   <div class="ss-kpi ss-kpi-accent">
     <div class="ss-kpi-top"><span class="ss-kpi-icon">💰</span></div>
-    <div class="ss-kpi-val">{{ (summary?.totalRevenue ?? 0) | currencyCop }}</div>
+    <div class="ss-kpi-val">
+      <span *ngIf="!loading">{{ (summary?.totalRevenue ?? 0) | currencyCop }}</span>
+      <span class="ss-skel ss-skel-val" *ngIf="loading"></span>
+    </div>
     <div class="ss-kpi-label">Ingresos totales</div>
   </div>
 
   <div class="ss-kpi">
     <div class="ss-kpi-top"><span class="ss-kpi-icon">📦</span></div>
-    <div class="ss-kpi-val">{{ summary?.totalOrders ?? '—' }}</div>
+    <div class="ss-kpi-val">
+      <span *ngIf="!loading">{{ summary?.totalOrders ?? '—' }}</span>
+      <span class="ss-skel ss-skel-val" *ngIf="loading"></span>
+    </div>
     <div class="ss-kpi-label">Órdenes</div>
   </div>
 
   <div class="ss-kpi">
     <div class="ss-kpi-top"><span class="ss-kpi-icon">🎯</span></div>
-    <div class="ss-kpi-val">{{ (summary?.averageTicket ?? 0) | currencyCop }}</div>
+    <div class="ss-kpi-val">
+      <span *ngIf="!loading">{{ (summary?.averageTicket ?? 0) | currencyCop }}</span>
+      <span class="ss-skel ss-skel-val" *ngIf="loading"></span>
+    </div>
     <div class="ss-kpi-label">Ticket promedio</div>
   </div>
 
@@ -67,9 +76,12 @@
     <div class="ss-kpi-label">Productos activos</div>
   </div>
 
-  <div class="ss-kpi" [class.ss-kpi-warn]="(summary?.lowStockCount ?? 0) > 0">
+  <div class="ss-kpi" [class.ss-kpi-warn]="!loading && (summary?.lowStockCount ?? 0) > 0">
     <div class="ss-kpi-top"><span class="ss-kpi-icon">⚠️</span></div>
-    <div class="ss-kpi-val">{{ summary?.lowStockCount ?? '—' }}</div>
+    <div class="ss-kpi-val">
+      <span *ngIf="!loading">{{ summary?.lowStockCount ?? '—' }}</span>
+      <span class="ss-skel ss-skel-val" *ngIf="loading"></span>
+    </div>
     <div class="ss-kpi-label">Stock bajo</div>
   </div>
 
