@@ -78,37 +78,30 @@ export const routes: Routes = [
       {
         path: 'stats',
         loadComponent: () => import('./features/seller/stats/seller-stats.component').then(m => m.SellerStatsComponent),
-        canActivate: [sellerGuard],
       },
       {
         path: 'products',
         loadComponent: () => import('./features/seller/products/seller-products.component').then(m => m.SellerProductsComponent),
-        canActivate: [sellerGuard],
       },
       {
         path: 'products/create',
         loadComponent: () => import('./features/seller/products/create/product-create.component').then(m => m.ProductCreateComponent),
-        canActivate: [sellerGuard],
       },
       {
         path: 'products/:id/edit',
         loadComponent: () => import('./features/seller/products/edit/product-edit.component').then(m => m.ProductEditComponent),
-        canActivate: [sellerGuard],
       },
       {
         path: 'orders',
         loadComponent: () => import('./features/seller/orders/seller-orders.component').then(m => m.SellerOrdersComponent),
-        canActivate: [sellerGuard],
       },
       {
         path: 'coupons',
         loadComponent: () => import('./features/seller/coupons/seller-coupons.component').then(m => m.SellerCouponsComponent),
-        canActivate: [sellerGuard],
       },
       {
         path: 'settings',
         loadComponent: () => import('./features/seller/settings/seller-settings.component').then(m => m.SellerSettingsComponent),
-        canActivate: [sellerGuard],
       },
     ],
   },

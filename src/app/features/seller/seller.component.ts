@@ -33,20 +33,26 @@ export class SellerComponent implements OnInit {
 
   ngOnInit(): void {
     this.seo.set({ title: 'Panel de Vendedor' });
-    this.storeService.getMyStores().subscribe({
-      next: stores => {
-        this.myStores = stores;
-        if (stores.length === 0) return;
-        // Keep existing selection if still valid, otherwise pick first store
-        this.ngrx.select(selectActiveSellerStoreId).pipe(take(1)).subscribe(currentId => {
+
+    this.ngrx.select(selectActiveSellerStoreId).pipe(take(1)).subscribe(currentId => {
+      // If we already have a storeId in the store (navigating back without page refresh),
+      // child components can start their API calls immediately without waiting for getMyStores().
+      // getMyStores() still runs in the background to keep the store list fresh.
+      this.storeService.getMyStores().subscribe({
+        next: stores => {
+          this.myStores = stores;
+          if (stores.length === 0) return;
           const match = stores.find(s => s.storeId === currentId);
           const target = match ?? stores[0];
-          this.ngrx.dispatch(setActiveSellerStore({ storeId: target.storeId, storeName: target.name }));
-        });
-      },
-      error: err => {
-        this.storesError = err.error?.message ?? 'No se pudieron cargar las tiendas.';
-      },
+          // Only dispatch if storeId changed to avoid unnecessary re-triggers
+          if (target.storeId !== currentId) {
+            this.ngrx.dispatch(setActiveSellerStore({ storeId: target.storeId, storeName: target.name }));
+          }
+        },
+        error: err => {
+          this.storesError = err.error?.message ?? 'No se pudieron cargar las tiendas.';
+        },
+      });
     });
   }
 
