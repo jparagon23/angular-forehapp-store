@@ -1,3 +1,85 @@
+// ── Email-exists modal ─────────────────────────────────────────────────────
+.email-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .5);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(3px);
+  &.open { display: flex; }
+}
+
+.email-modal {
+  background: #fff;
+  border-radius: 18px;
+  padding: 36px 32px;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, .18);
+  animation: modalPop .2s ease;
+}
+
+@keyframes modalPop {
+  from { transform: scale(.92); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.email-modal-icon {
+  font-size: 2.4rem;
+  margin-bottom: 14px;
+}
+
+.email-modal-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin: 0 0 10px;
+}
+
+.email-modal-body {
+  font-size: .88rem;
+  color: #666;
+  line-height: 1.5;
+  margin: 0 0 24px;
+  strong { color: #222; }
+}
+
+.btn-modal-login {
+  display: block;
+  width: 100%;
+  padding: 13px;
+  background: #4caf50;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: .95rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 10px;
+  transition: background .15s;
+  &:hover { background: #388e3c; }
+}
+
+.btn-modal-guest {
+  display: block;
+  width: 100%;
+  padding: 11px;
+  background: none;
+  color: #888;
+  border: 1.5px solid #dde;
+  border-radius: 10px;
+  font-size: .88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+  &:hover { border-color: #aaa; color: #444; }
+}
+
+// ── Page ───────────────────────────────────────────────────────────────────
 .gc-page {
   min-height: 100vh;
   background: #f5f6fa;
@@ -87,55 +169,6 @@
   font-weight: 800;
   color: #1a1a2e;
   margin: 0 0 20px;
-}
-
-// ── Email exists banner ────────────────────────────────────────────────────
-.gc-email-banner {
-  display: flex;
-  gap: 12px;
-  background: #fff8e1;
-  border: 1px solid #ffe082;
-  border-radius: 10px;
-  padding: 14px 16px;
-  margin-bottom: 20px;
-
-  svg { width: 20px; height: 20px; stroke: #f57f17; flex-shrink: 0; margin-top: 2px; }
-}
-
-.banner-body {
-  flex: 1;
-  strong { font-size: .88rem; color: #e65100; }
-  p { font-size: .82rem; color: #666; margin: 4px 0 10px; }
-}
-
-.banner-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.btn-banner-login {
-  padding: 6px 14px;
-  background: #4caf50;
-  color: #fff;
-  border: none;
-  border-radius: 7px;
-  font-size: .8rem;
-  font-weight: 700;
-  cursor: pointer;
-  &:hover { background: #388e3c; }
-}
-
-.btn-banner-guest {
-  padding: 6px 14px;
-  background: none;
-  color: #555;
-  border: 1px solid #ccc;
-  border-radius: 7px;
-  font-size: .8rem;
-  font-weight: 600;
-  cursor: pointer;
-  &:hover { border-color: #888; }
 }
 
 // ── Form fields ────────────────────────────────────────────────────────────

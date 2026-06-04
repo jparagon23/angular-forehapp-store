@@ -1,3 +1,17 @@
+<!-- Modal: email already has an account -->
+<div class="email-modal-overlay" [class.open]="emailExists() === true && !emailDismissed()" (click)="emailDismissed.set(true)">
+  <div class="email-modal" (click)="$event.stopPropagation()">
+    <div class="email-modal-icon">👤</div>
+    <h3 class="email-modal-title">Ya tienes una cuenta</h3>
+    <p class="email-modal-body">
+      El correo <strong>{{ email() }}</strong> está registrado.<br>
+      Inicia sesión para ver tus pedidos anteriores y continuar con la compra.
+    </p>
+    <button class="btn-modal-login" (click)="goToLogin()">Iniciar sesión</button>
+    <button class="btn-modal-guest" (click)="emailDismissed.set(true)">Continuar como invitado</button>
+  </div>
+</div>
+
 <app-navbar></app-navbar>
 
 <div class="gc-page">
@@ -30,21 +44,6 @@
         <!-- ── STEP 1 — Contact ─────────────────────────────────────── -->
         <div class="gc-card" *ngIf="step() === 1">
           <h2 class="gc-card-title">Datos de contacto</h2>
-
-          <!-- Email-exists banner -->
-          <div class="gc-email-banner" *ngIf="emailExists() === true && !emailDismissed()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-            <div class="banner-body">
-              <strong>Ya tienes una cuenta con este correo.</strong>
-              <p>Puedes iniciar sesión para acceder a tus pedidos, o continuar como invitado.</p>
-              <div class="banner-actions">
-                <button class="btn-banner-login" (click)="goToLogin()">Iniciar sesión</button>
-                <button class="btn-banner-guest" (click)="emailDismissed.set(true)">Continuar como invitado</button>
-              </div>
-            </div>
-          </div>
 
           <div class="gc-fields">
             <div class="gc-row-2">

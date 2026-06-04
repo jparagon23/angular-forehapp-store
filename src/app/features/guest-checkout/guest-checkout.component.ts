@@ -129,7 +129,9 @@ export class GuestCheckoutComponent implements OnInit {
   }
 
   goToLogin() {
-    this.router.navigate(['/login'], { queryParams: { redirect: '/checkout/guest' } });
+    this.router.navigate(['/login'], {
+      queryParams: { redirect: '/checkout', email: this.email().trim() },
+    });
   }
 
   // ── Location cascade ─────────────────────────────────────────────────────────
