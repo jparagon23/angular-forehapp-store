@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, take } from 'rxjs';
 import ApexCharts from 'apexcharts';
 
 import { loadSellerProducts } from '../../../store/seller/seller.actions';
@@ -43,7 +44,7 @@ export class SellerStatsComponent implements OnInit, OnDestroy {
   customTo     = '';
   showCustom   = false;
 
-  loading = false;
+  loading = true;
   error   = false;
 
   summary: ReportSummary | null = null;
@@ -56,7 +57,10 @@ export class SellerStatsComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.store.dispatch(loadSellerProducts());
-    this.loadReport('last30');
+    this.store.select(selectActiveSellerStoreId).pipe(
+      filter((id): id is number => !!id),
+      take(1),
+    ).subscribe(() => this.loadReport('last30'));
   }
 
   ngOnDestroy() {
