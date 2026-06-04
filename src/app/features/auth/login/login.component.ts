@@ -33,7 +33,13 @@ export class LoginComponent implements OnInit, AfterViewInit {
 
   @ViewChild('googleBtn') private googleBtnRef!: ElementRef<HTMLDivElement>;
 
-  ngOnInit() { this.seo.set({ title: 'Iniciar Sesión' }); }
+  ngOnInit() {
+    this.seo.set({ title: 'Iniciar Sesión' });
+    const emailParam = this.route.snapshot.queryParams['email'];
+    if (emailParam) {
+      this.form.patchValue({ email: emailParam });
+    }
+  }
 
   ngAfterViewInit() {
     if (typeof google === 'undefined' || !environment.googleClientId) return;

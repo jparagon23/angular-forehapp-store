@@ -194,42 +194,7 @@
 }
 .total-val { font-size: 1.35rem; font-weight: 900; color: var(--dark); }
 
-// ── Auth gate ─────────────────────────────────────────────
-.auth-gate {
-  background: #fffbeb; border: 1px solid #f0e060;
-  border-radius: 10px; padding: 16px;
-  display: flex; flex-direction: column; gap: 10px;
-}
-.gate-header {
-  display: flex; align-items: center; gap: 8px;
-  font-size: .9rem; font-weight: 600; color: #555;
-}
-.gate-lock { width: 18px; height: 18px; stroke: #888; flex-shrink: 0; }
-
-.btn-gate-login {
-  width: 100%; height: 44px;
-  background: var(--green); color: #fff;
-  border: none; border-radius: 8px;
-  font-size: .95rem; font-weight: 700; cursor: pointer;
-  transition: background .15s;
-  &:hover { background: var(--green-dark); }
-}
-.gate-reg {
-  text-align: center; font-size: .8rem; color: #777;
-}
-.gate-reg-btn {
-  background: none; border: none; color: var(--green);
-  font-size: .8rem; font-weight: 600; cursor: pointer; padding: 0;
-  &:hover { text-decoration: underline; }
-}
-
-// ── User tag & checkout button (logged in) ────────────────
-.user-tag {
-  display: flex; align-items: center; gap: 6px;
-  font-size: .8rem; color: var(--green-dark); font-weight: 600;
-  margin-bottom: 10px;
-  svg { width: 14px; height: 14px; stroke: var(--green); flex-shrink: 0; }
-}
+// ── Checkout button ───────────────────────────────────────
 
 .btn-checkout {
   width: 100%; height: 50px;

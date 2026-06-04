@@ -1,0 +1,313 @@
+<!-- Modal: email already has an account -->
+<div class="email-modal-overlay" [class.open]="emailExists() === true && !emailDismissed()" (click)="emailDismissed.set(true)">
+  <div class="email-modal" (click)="$event.stopPropagation()">
+    <div class="email-modal-icon">👤</div>
+    <h3 class="email-modal-title">Ya tienes una cuenta</h3>
+    <p class="email-modal-body">
+      El correo <strong>{{ email() }}</strong> está registrado.<br>
+      Inicia sesión para ver tus pedidos anteriores y continuar con la compra.
+    </p>
+    <button class="btn-modal-login" (click)="goToLogin()">Iniciar sesión</button>
+    <button class="btn-modal-guest" (click)="emailDismissed.set(true)">Continuar como invitado</button>
+  </div>
+</div>
+
+<app-navbar></app-navbar>
+
+<div class="gc-page">
+  <div class="gc-wrap">
+
+    <!-- ── Progress bar ──────────────────────────────────────────────── -->
+    <div class="gc-steps" *ngIf="step() < 4">
+      <div class="gc-step" [class.active]="step() >= 1" [class.done]="step() > 1">
+        <div class="step-dot">{{ step() > 1 ? '✓' : '1' }}</div>
+        <span>Contacto</span>
+      </div>
+      <div class="step-line" [class.done]="step() > 1"></div>
+      <div class="gc-step" [class.active]="step() >= 2" [class.done]="step() > 2">
+        <div class="step-dot">{{ step() > 2 ? '✓' : '2' }}</div>
+        <span>Dirección</span>
+      </div>
+      <div class="step-line" [class.done]="step() > 2"></div>
+      <div class="gc-step" [class.active]="step() >= 3">
+        <div class="step-dot">3</div>
+        <span>Pago</span>
+      </div>
+    </div>
+
+    <!-- ── Layout ────────────────────────────────────────────────────── -->
+    <div class="gc-layout" *ngIf="step() < 4">
+
+      <!-- Left: form area -->
+      <div class="gc-form-col">
+
+        <!-- ── STEP 1 — Contact ─────────────────────────────────────── -->
+        <div class="gc-card" *ngIf="step() === 1">
+          <h2 class="gc-card-title">Datos de contacto</h2>
+
+          <div class="gc-fields">
+            <div class="gc-row-2">
+              <div class="gc-field">
+                <label>Nombre *</label>
+                <input type="text" placeholder="Juan" [ngModel]="name()" (ngModelChange)="name.set($event)" autocomplete="given-name">
+              </div>
+              <div class="gc-field">
+                <label>Apellido *</label>
+                <input type="text" placeholder="Pérez" [ngModel]="lastname()" (ngModelChange)="lastname.set($event)" autocomplete="family-name">
+              </div>
+            </div>
+
+            <div class="gc-field">
+              <label>Correo electrónico *</label>
+              <div class="gc-input-wrap" [class.checking]="emailChecking()">
+                <input type="email" placeholder="juan@correo.com"
+                       [ngModel]="email()" (ngModelChange)="email.set($event)"
+                       (blur)="onEmailBlur()" autocomplete="email">
+                <div class="checking-spinner" *ngIf="emailChecking()"></div>
+              </div>
+            </div>
+
+            <div class="gc-field">
+              <label>Teléfono *</label>
+              <input type="tel" placeholder="3001234567" [ngModel]="phone()" (ngModelChange)="phone.set($event)" autocomplete="tel">
+            </div>
+          </div>
+
+          <div class="gc-card-footer">
+            <span class="gc-login-hint">
+              ¿Ya tienes cuenta?
+              <button class="link-btn" (click)="goToLogin()">Inicia sesión</button>
+            </span>
+            <button class="btn-next" [disabled]="!step1Valid()" (click)="goNext()">
+              Continuar
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── STEP 2 — Address ─────────────────────────────────────── -->
+        <div class="gc-card" *ngIf="step() === 2">
+          <h2 class="gc-card-title">Dirección de envío</h2>
+
+          <div class="gc-fields">
+            <div class="gc-row-3">
+              <div class="gc-field">
+                <label>País *</label>
+                <select [ngModel]="selectedCountryId()" (ngModelChange)="onCountryChange($event)">
+                  <option value="">Seleccionar país</option>
+                  <option *ngFor="let c of countries()" [value]="c.id">{{ c.name }}</option>
+                </select>
+              </div>
+
+              <div class="gc-field">
+                <label>Departamento *</label>
+                <select [ngModel]="selectedStateId()" (ngModelChange)="onStateChange($event)"
+                        [disabled]="!selectedCountryId() || loadingStates()">
+                  <option value="">{{ loadingStates() ? 'Cargando...' : 'Seleccionar departamento' }}</option>
+                  <option *ngFor="let s of states()" [value]="s.id">{{ s.name }}</option>
+                </select>
+              </div>
+
+              <div class="gc-field">
+                <label>Ciudad *</label>
+                <select [ngModel]="selectedCityId()" (ngModelChange)="onCityChange($event)"
+                        [disabled]="!selectedStateId() || loadingCities()">
+                  <option value="">{{ loadingCities() ? 'Cargando...' : 'Seleccionar ciudad' }}</option>
+                  <option *ngFor="let c of cities()" [value]="c.id">{{ c.name }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="gc-field">
+              <label>Dirección *</label>
+              <input type="text" placeholder="Calle 10 # 5-20" [ngModel]="street()" (ngModelChange)="street.set($event)" autocomplete="street-address">
+            </div>
+
+            <div class="gc-row-2">
+              <div class="gc-field">
+                <label>Complemento <span class="opt">(opcional)</span></label>
+                <input type="text" placeholder="Apto 301, Casa B" [ngModel]="complement()" (ngModelChange)="complement.set($event)">
+              </div>
+              <div class="gc-field">
+                <label>Referencia <span class="opt">(opcional)</span></label>
+                <input type="text" placeholder="Edificio azul, junto al parque" [ngModel]="reference()" (ngModelChange)="reference.set($event)">
+              </div>
+            </div>
+          </div>
+
+          <!-- Shipping estimate -->
+          <div class="gc-estimate" *ngIf="estimating()">
+            <div class="est-spinner"></div>
+            <span>Calculando envío...</span>
+          </div>
+
+          <div class="gc-estimate-error" *ngIf="estimateError() && !estimating()">
+            {{ estimateError() }}
+          </div>
+
+          <div class="gc-estimate-result" *ngIf="estimate() && !estimating()">
+            <div class="est-title">Costo de envío estimado</div>
+            <div class="est-row" *ngFor="let g of estimate()!.sellerGroups">
+              <span class="est-store">{{ g.storeName }}</span>
+              <span class="est-cost" [class.est-free]="g.freeShipping">
+                {{ g.freeShipping ? 'Gratis' : (g.shippingCost | currencyCop) }}
+              </span>
+            </div>
+            <div class="est-total-row">
+              <span>Total envío</span>
+              <span>{{ estimate()!.shippingTotal | currencyCop }}</span>
+            </div>
+          </div>
+
+          <div class="gc-card-footer">
+            <button class="btn-back" (click)="goBack()">← Volver</button>
+            <button class="btn-next" [disabled]="!step2Valid()" (click)="goNext()">
+              Continuar
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── STEP 3 — Payment ─────────────────────────────────────── -->
+        <div class="gc-card" *ngIf="step() === 3">
+          <h2 class="gc-card-title">Método de pago</h2>
+
+          <p class="gc-pay-hint" *ngIf="!paymentMethod()">Selecciona cómo quieres pagar para continuar.</p>
+
+          <div class="gc-payment-opts">
+            <label class="gc-pay-opt" *ngFor="let opt of paymentOptions"
+                   [class.selected]="paymentMethod() === opt.value">
+              <input type="radio" name="paymentMethod" [value]="opt.value"
+                     [ngModel]="paymentMethod()" (ngModelChange)="paymentMethod.set($event)">
+              <div class="pay-opt-body">
+                <span class="pay-opt-label">{{ opt.label }}</span>
+                <span class="pay-opt-desc">{{ opt.desc }}</span>
+              </div>
+            </label>
+          </div>
+
+          <div class="gc-submit-error" *ngIf="submitError()">{{ submitError() }}</div>
+
+          <div class="gc-card-footer">
+            <button class="btn-back" (click)="goBack()">← Volver</button>
+            <button class="btn-confirm" [disabled]="submitting() || !paymentMethod()" (click)="submit()">
+              <div class="btn-spinner" *ngIf="submitting()"></div>
+              <span>{{ submitting() ? 'Procesando...' : 'Confirmar pedido' }}</span>
+            </button>
+          </div>
+        </div>
+
+      </div><!-- /gc-form-col -->
+
+      <!-- Right: order summary -->
+      <aside class="gc-summary">
+        <div class="gc-card">
+          <h3 class="sum-title">Resumen del pedido</h3>
+
+          <div class="sum-items">
+            <div class="sum-item" *ngFor="let item of cartItems()">
+              <div class="sum-item-info">
+                <span class="sum-item-name">{{ item.productTitle }}</span>
+                <span class="sum-item-qty">× {{ item.quantity }}</span>
+              </div>
+              <span class="sum-item-price">{{ (item.unitPrice * item.quantity) | currencyCop }}</span>
+            </div>
+          </div>
+
+          <div class="sum-divider"></div>
+
+          <div class="sum-row">
+            <span>Subtotal</span>
+            <span>{{ cartTotal() | currencyCop }}</span>
+          </div>
+
+          <ng-container *ngIf="estimate()">
+            <div class="sum-row" *ngFor="let g of estimate()!.sellerGroups">
+              <span>Envío ({{ g.storeName }})</span>
+              <span [class.sum-free]="g.freeShipping">{{ g.freeShipping ? 'Gratis' : (g.shippingCost | currencyCop) }}</span>
+            </div>
+            <div class="sum-divider"></div>
+            <div class="sum-row sum-grand">
+              <strong>Total</strong>
+              <strong>{{ estimate()!.grandTotal | currencyCop }}</strong>
+            </div>
+          </ng-container>
+
+          <div class="sum-row sum-grand" *ngIf="!estimate()">
+            <strong>Subtotal (sin envío)</strong>
+            <strong>{{ cartTotal() | currencyCop }}</strong>
+          </div>
+        </div>
+      </aside>
+
+    </div><!-- /gc-layout -->
+
+    <!-- ── STEP 4 — Confirmation ──────────────────────────────────── -->
+    <div class="gc-confirmation" *ngIf="step() === 4 && createdOrder() as order">
+
+      <div class="conf-icon">✓</div>
+      <h2 class="conf-title">¡Pedido recibido!</h2>
+      <p class="conf-sub">Te enviamos un correo de confirmación a <strong>{{ email() }}</strong></p>
+
+      <div class="conf-card">
+        <div class="conf-row">
+          <span>Número de pedido</span>
+          <strong>#{{ order.orderId }}</strong>
+        </div>
+        <div class="conf-row">
+          <span>Total</span>
+          <strong>{{ order.total | currencyCop }}</strong>
+        </div>
+        <div class="conf-row">
+          <span>Método de pago</span>
+          <strong>{{ paymentMethodLabel(order.paymentMethod) }}</strong>
+        </div>
+        <div class="conf-row">
+          <span>Dirección</span>
+          <strong>{{ order.shippingAddress }}, {{ order.shippingCity }}</strong>
+        </div>
+      </div>
+
+      <!-- Payment instructions -->
+      <div class="conf-instructions" *ngIf="order.paymentMethod === 'TRANSFER'">
+        <h3>¿Cómo pagar?</h3>
+        <p>Te enviaremos los datos bancarios a tu correo. Una vez realizada la transferencia, el pedido será confirmado en máximo 24 horas.</p>
+      </div>
+      <div class="conf-instructions" *ngIf="order.paymentMethod === 'CASH'">
+        <h3>¿Cómo pagar?</h3>
+        <p>Nos pondremos en contacto contigo para coordinar el método de pago en efectivo.</p>
+      </div>
+      <div class="conf-instructions" *ngIf="order.paymentMethod === 'CASH_ON_DELIVERY'">
+        <h3>Pago contra entrega</h3>
+        <p>Pagarás en efectivo al recibir tu pedido. Asegúrate de tener el monto exacto disponible.</p>
+      </div>
+
+      <!-- Optional: create account (only when email didn't exist) -->
+      <div class="conf-create-account" *ngIf="emailExists() === false && !accountCreated()">
+        <h3>¿Guardar tus datos para compras futuras?</h3>
+        <p>Crea una cuenta gratis — vinculamos tu pedido automáticamente.</p>
+        <div class="conf-account-form">
+          <input type="password" placeholder="Elige una contraseña (mín. 6 caracteres)"
+                 [ngModel]="newPassword()" (ngModelChange)="newPassword.set($event)">
+          <button class="btn-create-account" [disabled]="creatingAccount()" (click)="createAccount()">
+            {{ creatingAccount() ? 'Creando cuenta...' : 'Crear cuenta' }}
+          </button>
+        </div>
+        <p class="conf-account-error" *ngIf="accountError()">{{ accountError() }}</p>
+      </div>
+
+      <div class="conf-account-done" *ngIf="accountCreated()">
+        <span>✓</span> ¡Cuenta creada! Ya puedes ver tus pedidos desde tu perfil.
+      </div>
+
+      <div class="conf-actions">
+        <a routerLink="/" class="btn-back-home">Seguir comprando</a>
+      </div>
+    </div>
+
+  </div><!-- /gc-wrap -->
+</div><!-- /gc-page -->

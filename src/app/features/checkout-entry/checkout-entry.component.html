@@ -1,0 +1,61 @@
+<app-navbar></app-navbar>
+
+<div class="ce-page">
+  <div class="ce-wrap">
+
+    <div class="ce-header">
+      <h1 class="ce-title">¿Cómo quieres continuar?</h1>
+      <p class="ce-subtitle">
+        {{ itemCount }} {{ itemCount === 1 ? 'artículo' : 'artículos' }} · Subtotal
+        <strong>{{ subtotal | currencyCop }}</strong>
+      </p>
+    </div>
+
+    <div class="ce-cards">
+
+      <!-- Guest option -->
+      <a class="ce-card ce-card--guest" routerLink="/checkout/guest">
+        <div class="ce-card-icon">🛒</div>
+        <div class="ce-card-body">
+          <h2 class="ce-card-title">Comprar sin cuenta</h2>
+          <p class="ce-card-desc">Rápido y sin registro. Solo ingresa tu correo y dirección.</p>
+          <ul class="ce-card-perks">
+            <li>Sin formularios largos</li>
+            <li>Confirmación por correo</li>
+            <li>Opción de crear cuenta al final</li>
+          </ul>
+        </div>
+        <div class="ce-card-cta">
+          Continuar como invitado
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </div>
+      </a>
+
+      <!-- Login option -->
+      <a class="ce-card ce-card--login" [routerLink]="['/login']" [queryParams]="{ redirect: '/checkout' }">
+        <div class="ce-card-icon">👤</div>
+        <div class="ce-card-body">
+          <h2 class="ce-card-title">Ya tengo cuenta</h2>
+          <p class="ce-card-desc">Inicia sesión para usar tu dirección guardada y ver tu historial.</p>
+          <ul class="ce-card-perks">
+            <li>Dirección guardada automáticamente</li>
+            <li>Historial de pedidos</li>
+            <li>Inicio de sesión con Google</li>
+          </ul>
+        </div>
+        <div class="ce-card-cta">
+          Iniciar sesión
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </div>
+      </a>
+
+    </div>
+
+    <p class="ce-back"><a routerLink="/">← Seguir comprando</a></p>
+
+  </div>
+</div>

@@ -1,0 +1,166 @@
+.ce-page {
+  min-height: 100vh;
+  background: #f5f6fa;
+  display: flex;
+  flex-direction: column;
+}
+
+.ce-wrap {
+  flex: 1;
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 48px 20px 60px;
+  width: 100%;
+}
+
+// ── Header ─────────────────────────────────────────────────────────────────
+.ce-header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.ce-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin: 0 0 8px;
+}
+
+.ce-subtitle {
+  font-size: .92rem;
+  color: #888;
+  margin: 0;
+  strong { color: #333; }
+}
+
+// ── Cards ──────────────────────────────────────────────────────────────────
+.ce-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.ce-card {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 18px;
+  padding: 28px 24px;
+  text-decoration: none;
+  border: 2px solid #eee;
+  transition: border-color .18s, box-shadow .18s, transform .18s;
+  cursor: pointer;
+
+  &:hover {
+    border-color: #4caf50;
+    box-shadow: 0 6px 28px rgba(76, 175, 80, .15);
+    transform: translateY(-3px);
+  }
+}
+
+.ce-card-icon {
+  font-size: 2.2rem;
+  margin-bottom: 16px;
+}
+
+.ce-card-body { flex: 1; }
+
+.ce-card-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin: 0 0 8px;
+}
+
+.ce-card-desc {
+  font-size: .85rem;
+  color: #777;
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.ce-card-perks {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  li {
+    font-size: .82rem;
+    color: #555;
+    padding-left: 18px;
+    position: relative;
+    &::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: #4caf50;
+      font-weight: 700;
+    }
+  }
+}
+
+.ce-card-cta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .88rem;
+  font-weight: 700;
+  color: #4caf50;
+  margin-top: auto;
+  svg { width: 15px; height: 15px; stroke: #4caf50; transition: transform .18s; }
+}
+
+.ce-card:hover .ce-card-cta svg { transform: translateX(4px); }
+
+// Guest card: highlighted as primary
+.ce-card--guest {
+  border-color: #4caf50;
+  box-shadow: 0 2px 12px rgba(76, 175, 80, .12);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: 'Más rápido';
+    position: absolute;
+    top: 16px;
+    right: -10px;
+    background: #4caf50;
+    color: #fff;
+    font-size: .68rem;
+    font-weight: 800;
+    padding: 3px 20px 3px 10px;
+    border-radius: 4px 0 0 4px;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+  }
+
+  &:hover {
+    border-color: #388e3c;
+    box-shadow: 0 8px 32px rgba(76, 175, 80, .22);
+  }
+}
+
+// ── Back link ──────────────────────────────────────────────────────────────
+.ce-back {
+  text-align: center;
+  margin-top: 28px;
+  font-size: .84rem;
+
+  a {
+    color: #aaa;
+    text-decoration: none;
+    &:hover { color: #666; }
+  }
+}
+
+// ── Responsive ─────────────────────────────────────────────────────────────
+@media (max-width: 620px) {
+  .ce-wrap { padding: 28px 16px 48px; }
+  .ce-cards { grid-template-columns: 1fr; }
+  .ce-title { font-size: 1.3rem; }
+
+  .ce-card--guest::before { display: none; }
+}
