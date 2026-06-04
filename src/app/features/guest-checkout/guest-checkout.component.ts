@@ -82,7 +82,7 @@ export class GuestCheckoutComponent implements OnInit {
   );
 
   // ── Step 3 — Payment ─────────────────────────────────────────────────────────
-  paymentMethod = signal<PaymentMethod>('TRANSFER');
+  paymentMethod = signal<PaymentMethod | null>(null);
 
   readonly paymentOptions: { value: PaymentMethod; label: string; desc: string }[] = [
     { value: 'MERCADO_PAGO', label: 'MercadoPago',        desc: 'Pago seguro en línea con tarjeta o PSE' },
@@ -214,6 +214,11 @@ export class GuestCheckoutComponent implements OnInit {
     if (this.submitting()) return;
     const cityId = this.selectedCityId();
     if (!cityId) return;
+    const method = this.paymentMethod();
+    if (!method) {
+      this.submitError.set('Selecciona un método de pago para continuar.');
+      return;
+    }
 
     this.submitting.set(true);
     this.submitError.set('');
@@ -228,7 +233,7 @@ export class GuestCheckoutComponent implements OnInit {
       shippingComplement: this.complement().trim() || undefined,
       shippingReference:  this.reference().trim() || undefined,
       items:              this.cartItems().map(i => ({ variantId: i.variantId, quantity: i.quantity })),
-      paymentMethod:      this.paymentMethod(),
+      paymentMethod:      method,
     };
 
     this.guestCheckout.createOrder(body).pipe(take(1)).subscribe({

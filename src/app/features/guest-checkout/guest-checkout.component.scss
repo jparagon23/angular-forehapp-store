@@ -291,6 +291,13 @@
   color: #1a1a2e;
 }
 
+// ── Payment hint ───────────────────────────────────────────────────────────
+.gc-pay-hint {
+  font-size: .82rem;
+  color: #888;
+  margin: 0 0 12px;
+}
+
 // ── Payment options ────────────────────────────────────────────────────────
 .gc-payment-opts {
   display: flex;
