@@ -48,12 +48,13 @@
           <div class="gc-fields">
             <div class="gc-field">
               <label>Correo electrónico *</label>
-              <div class="gc-input-wrap" [class.checking]="emailChecking()">
+              <div class="gc-input-wrap" [class.checking]="emailChecking()" [class.gc-input-error]="!!emailError()">
                 <input type="email" placeholder="juan@correo.com"
                        [ngModel]="email()" (ngModelChange)="email.set($event)"
                        (blur)="onEmailBlur()" autocomplete="email">
                 <div class="checking-spinner" *ngIf="emailChecking()"></div>
               </div>
+              <span class="gc-field-error" *ngIf="emailError()">{{ emailError() }}</span>
             </div>
 
             <div class="gc-row-2">

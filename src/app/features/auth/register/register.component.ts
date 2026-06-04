@@ -1,5 +1,6 @@
 import { Component, ElementRef, inject, NgZone, OnInit, AfterViewInit, ViewChild } from '@angular/core';
 import { AbstractControl, FormBuilder, ValidationErrors, Validators, ReactiveFormsModule } from '@angular/forms';
+import { emailValidator } from '../../../core/utils/email.utils';
 import { Router, RouterLink } from '@angular/router';
 import { NgIf } from '@angular/common';
 import { Store } from '@ngrx/store';
@@ -59,7 +60,7 @@ export class RegisterComponent implements OnInit, AfterViewInit {
   form = this.fb.group({
     name:     ['', [Validators.required, Validators.minLength(2)]],
     lastname: ['', [Validators.required, Validators.minLength(2)]],
-    email:    ['', [Validators.required, Validators.email]],
+    email:    ['', [Validators.required, emailValidator]],
     password: ['', [Validators.required, Validators.minLength(6)]],
     confirm:  ['', Validators.required],
   }, { validators: passwordsMatch });
