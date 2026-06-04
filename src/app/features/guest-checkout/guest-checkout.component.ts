@@ -82,7 +82,7 @@ export class GuestCheckoutComponent implements OnInit {
   );
 
   // ── Step 3 — Payment ─────────────────────────────────────────────────────────
-  paymentMethod = signal<PaymentMethod | null>(null);
+  paymentMethod = signal<PaymentMethod | null>('CASH_ON_DELIVERY');
 
   readonly paymentOptions: { value: PaymentMethod; label: string; desc: string }[] = [
     { value: 'CASH_ON_DELIVERY', label: 'Pago contra entrega', desc: 'Pagas en efectivo al recibir tu pedido' },

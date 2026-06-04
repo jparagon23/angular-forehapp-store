@@ -176,8 +176,6 @@
         <div class="gc-card" *ngIf="step() === 3">
           <h2 class="gc-card-title">Método de pago</h2>
 
-          <p class="gc-pay-hint" *ngIf="!paymentMethod()">Selecciona cómo quieres pagar para continuar.</p>
-
           <div class="gc-payment-opts">
             <label class="gc-pay-opt" *ngFor="let opt of paymentOptions"
                    [class.selected]="paymentMethod() === opt.value">
