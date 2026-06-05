@@ -197,7 +197,7 @@
             <button class="btn-back" (click)="goBack()">← Volver</button>
             <button class="btn-confirm" [disabled]="submitting() || !paymentMethod()" (click)="submit()">
               <div class="btn-spinner" *ngIf="submitting()"></div>
-              <span>{{ submitting() ? 'Procesando...' : (paymentMethod() === 'MERCADO_PAGO' ? 'Confirmar y pagar en MercadoPago' : 'Confirmar pedido') }}</span>
+              <span>{{ submitting() ? 'Procesando...' : (paymentMethod() === 'MERCADO_PAGO' ? 'Pagar con MercadoPago' : 'Confirmar pedido') }}</span>
             </button>
           </div>
         </div>
