@@ -15,6 +15,7 @@ export interface CartSellerGroup {
   storeId: number;
   storeName: string;
   subtotal: number;
+  freeShippingMinAmount?: number | null;
   items: CartItemResponse[];
 }
 

@@ -96,6 +96,27 @@
   strong { color: var(--dark); }
 }
 
+// ── Free shipping progress ────────────────────────────────
+.free-ship-progress { margin-top: 2px; }
+.fsp-hint {
+  font-size: .8rem; color: #666; margin-bottom: 6px;
+  strong { color: var(--dark); }
+}
+.fsp-track {
+  height: 6px; background: #e8e8e8; border-radius: 3px; overflow: hidden;
+}
+.fsp-fill {
+  height: 100%; background: var(--primary, #42aa14); border-radius: 3px;
+  transition: width .4s ease;
+}
+.fsp-achieved {
+  display: flex; align-items: center; gap: 6px;
+  font-size: .82rem; font-weight: 600; color: #2e7d32;
+  background: #f1f8f1; border: 1px solid #c8e6c9;
+  border-radius: 8px; padding: 6px 10px;
+  svg { flex-shrink: 0; }
+}
+
 // ── Price change alert ────────────────────────────────────
 .price-alert {
   display: flex; align-items: center; gap: 5px; flex-wrap: wrap;

@@ -235,6 +235,10 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
 
   toggleWishlist(product: Product, event: Event) {
     event.stopPropagation();
+    if (!this.isLoggedIn()) {
+      this.router.navigate(['/login']);
+      return;
+    }
     if (this.isWishlisted(product.id)) {
       const itemId = this.wishlistItemMap().get(product.id);
       if (itemId) this.store.dispatch(removeFromWishlist({ itemId }));

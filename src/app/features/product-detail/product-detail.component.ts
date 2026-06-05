@@ -6,7 +6,10 @@ import { Observable, combineLatest, filter, map, take } from 'rxjs';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { clearSelectedProduct, loadProduct, loadProducts } from '../../store/products/products.actions';
 import { selectSelectedProduct, selectSelectedProductLoading, selectAllProducts } from '../../store/products/products.selectors';
+import { Router } from '@angular/router';
 import { addCartItem, openCart } from '../../store/cart/cart.actions';
+import { addToWishlist, removeFromWishlist } from '../../store/wishlist/wishlist.actions';
+import { selectWishlistProductIdToItemId } from '../../store/wishlist/wishlist.selectors';
 import { selectIsLoggedIn } from '../../store/auth/auth.selectors';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { apiCode } from '../../core/models/api-error.model';
@@ -34,6 +37,7 @@ const COLOR_HEX: Record<string, string> = {
 export class ProductDetailComponent implements OnInit {
   private store         = inject(Store);
   private route         = inject(ActivatedRoute);
+  private router        = inject(Router);
   private reviewService = inject(ReviewService);
   private destroyRef    = inject(DestroyRef);
   private seo           = inject(SeoService);
@@ -50,12 +54,16 @@ export class ProductDetailComponent implements OnInit {
   );
 
   isLoggedIn        = toSignal(this.store.select(selectIsLoggedIn), { initialValue: false });
+  wishlistItemMap   = toSignal(this.store.select(selectWishlistProductIdToItemId), { initialValue: new Map<number, number>() });
 
   selectedAttributes = signal<Record<string, string>>({});
   qty            = signal(1);
   toastMessage   = signal('');
   currentSlide   = signal(0);
   slideImgLoaded = signal(false);
+  descExpanded   = signal(false);
+
+  readonly DESC_LIMIT = 250;
 
   // Reviews state
   reviews         = signal<ReviewResponse[]>([]);
@@ -123,6 +131,7 @@ export class ProductDetailComponent implements OnInit {
       this.currentSlide.set(0);
       this.qty.set(1);
       this.selectedAttributes.set({});
+      this.descExpanded.set(false);
       this.reviews.set([]);
       this.reviewSummary.set(null);
       this.reviewsPage.set(0);
@@ -201,6 +210,24 @@ export class ProductDetailComponent implements OnInit {
         this.myReview.set(mine);
       },
     });
+  }
+
+  isWishlisted(id: number): boolean { return this.wishlistItemMap().has(id); }
+
+  toggleWishlist(product: Product) {
+    if (!this.isLoggedIn()) { this.router.navigate(['/login']); return; }
+    if (this.isWishlisted(product.id)) {
+      const itemId = this.wishlistItemMap().get(product.id);
+      if (itemId) this.store.dispatch(removeFromWishlist({ itemId }));
+    } else {
+      this.store.dispatch(addToWishlist({ productId: product.id }));
+      this.toastMessage.set('Guardado en lista de deseos ♥ — ' + Date.now());
+    }
+  }
+
+  shortDesc(desc: string): string {
+    if (!desc) return '';
+    return desc.length > this.DESC_LIMIT ? desc.slice(0, this.DESC_LIMIT).trimEnd() + '…' : desc;
   }
 
   setRating(n: number) { this.rvRating.set(n); }
