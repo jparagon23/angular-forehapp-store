@@ -53,6 +53,29 @@
   margin-bottom: 0;
 }
 
+// ── Free shipping progress ────────────────────────────────
+.fsp-wrap {
+  padding: 10px 14px 6px;
+  border-top: 1px dashed #ddeedd;
+  background: #fafdf9;
+}
+.fsp-hint {
+  font-size: .8rem; color: #666; margin-bottom: 6px;
+  strong { color: var(--dark); }
+}
+.fsp-track {
+  height: 6px; background: #e8e8e8; border-radius: 3px; overflow: hidden;
+}
+.fsp-fill {
+  height: 100%; background: var(--primary, #42aa14); border-radius: 3px;
+  transition: width .4s ease;
+}
+.fsp-achieved {
+  display: flex; align-items: center; gap: 6px;
+  font-size: .82rem; font-weight: 600; color: #2e7d32;
+  svg { flex-shrink: 0; }
+}
+
 // ── Coupon section ────────────────────────────────────────
 .coupon-section {
   padding: 10px 14px 14px;

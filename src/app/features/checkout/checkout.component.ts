@@ -6,7 +6,7 @@ import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { Subscription } from 'rxjs';
 import { filter, skip, take } from 'rxjs/operators';
 import { CartService } from '../../core/services/cart.service';
-import { ShippingEstimateGroup, ShippingEstimateResponse } from '../../core/models/cart.model';
+import { CartSellerGroup, ShippingEstimateGroup, ShippingEstimateResponse } from '../../core/models/cart.model';
 import { selectSellerGroups, selectCartTotal, selectCartCount } from '../../store/cart/cart.selectors';
 import { removeCartItem } from '../../store/cart/cart.actions';
 import { selectIsLoggedIn, selectAuthUser } from '../../store/auth/auth.selectors';
@@ -195,6 +195,11 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   getGroupShipping(storeId: number): ShippingEstimateGroup | null {
     return this.shippingEstimate()?.sellerGroups.find(g => g.storeId === storeId) ?? null;
+  }
+
+  fspPct(group: CartSellerGroup): number {
+    if (!group.freeShippingMinAmount) return 0;
+    return Math.min(100, Math.round((group.subtotal / group.freeShippingMinAmount) * 100));
   }
 
   openAddressForm() {
