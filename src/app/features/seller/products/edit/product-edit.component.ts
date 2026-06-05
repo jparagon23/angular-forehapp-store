@@ -9,7 +9,7 @@ import { SellerProductService } from '../../../../core/services/seller-product.s
 import {
   Category, CategoryAttribute,
   InventoryMovement, InventoryRequest, MovementReason, MovementsPage,
-  ProductImage, ProductVariant, SellerProduct,
+  ProductImage, ProductVariant, SellerProduct, UpdateVariantRequest,
 } from '../../../../core/models/seller-product.model';
 import { selectActiveSellerStoreId } from '../../../../store/seller/seller.selectors';
 
@@ -63,6 +63,16 @@ export class ProductEditComponent implements OnInit {
   deletingVariantId  = signal<number | null>(null);
   variantHasOrders   = signal<Set<number>>(new Set());
   variantDeleteError = signal<string | null>(null);
+
+  editingVariantId   = signal<number | null>(null);
+  updatingVariant    = signal(false);
+  variantUpdateError = signal<string | null>(null);
+  clearCompareAtPrice = false;
+
+  editPriceForm = this.fb.group({
+    editPrice:          [null as number | null, [Validators.required, Validators.min(0.01)]],
+    editCompareAtPrice: [null as number | null],
+  });
 
   // ── Inventario modal ─────────────────────────────────────────
   invOpen      = signal(false);
@@ -288,6 +298,47 @@ export class ProductEditComponent implements OnInit {
         } else {
           this.variantDeleteError.set(err.error?.message ?? 'Error al eliminar la variante.');
         }
+      },
+    });
+  }
+
+  startEditPrice(v: ProductVariant) {
+    this.editingVariantId.set(v.id);
+    this.variantUpdateError.set(null);
+    this.clearCompareAtPrice = false;
+    this.editPriceForm.reset({ editPrice: v.price, editCompareAtPrice: v.compareAtPrice ?? null });
+  }
+
+  cancelEditPrice() {
+    this.editingVariantId.set(null);
+    this.variantUpdateError.set(null);
+    this.editPriceForm.reset();
+  }
+
+  saveVariantPrice(v: ProductVariant) {
+    this.editPriceForm.markAllAsTouched();
+    if (this.editPriceForm.invalid) return;
+    const storeId = this.storeId();
+    if (!storeId) return;
+    const { editPrice, editCompareAtPrice } = this.editPriceForm.value;
+    const req: UpdateVariantRequest = { price: editPrice! };
+    if (this.clearCompareAtPrice) {
+      req.clearCompareAtPrice = true;
+    } else if (editCompareAtPrice) {
+      req.compareAtPrice = editCompareAtPrice;
+    }
+    this.updatingVariant.set(true);
+    this.variantUpdateError.set(null);
+    this.service.updateVariant(storeId, this.productId, v.id, req).subscribe({
+      next: updated => {
+        this.variants.update(vs => vs.map(x => x.id === updated.id ? updated : x));
+        this.updatingVariant.set(false);
+        this.editingVariantId.set(null);
+        this.editPriceForm.reset();
+      },
+      error: err => {
+        this.variantUpdateError.set(err.error?.message ?? 'Error al actualizar el precio.');
+        this.updatingVariant.set(false);
       },
     });
   }
