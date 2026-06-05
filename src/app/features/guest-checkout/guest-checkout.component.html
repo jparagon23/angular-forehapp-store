@@ -197,7 +197,7 @@
             <button class="btn-back" (click)="goBack()">← Volver</button>
             <button class="btn-confirm" [disabled]="submitting() || !paymentMethod()" (click)="submit()">
               <div class="btn-spinner" *ngIf="submitting()"></div>
-              <span>{{ submitting() ? 'Procesando...' : 'Confirmar pedido' }}</span>
+              <span>{{ submitting() ? 'Procesando...' : (paymentMethod() === 'MERCADO_PAGO' ? 'Confirmar y pagar en MercadoPago' : 'Confirmar pedido') }}</span>
             </button>
           </div>
         </div>
@@ -231,10 +231,14 @@
               <span>Envío ({{ g.storeName }})</span>
               <span [class.sum-free]="g.freeShipping">{{ g.freeShipping ? 'Gratis' : (g.shippingCost | currencyCop) }}</span>
             </div>
+            <div class="sum-row sum-mp-surcharge" *ngIf="paymentMethod() === 'MERCADO_PAGO'">
+              <span>Recargo MercadoPago (3.5%)</span>
+              <span>{{ estimate()!.mercadoPagoSurcharge | currencyCop }}</span>
+            </div>
             <div class="sum-divider"></div>
             <div class="sum-row sum-grand">
               <strong>Total</strong>
-              <strong>{{ estimate()!.grandTotal | currencyCop }}</strong>
+              <strong>{{ (paymentMethod() === 'MERCADO_PAGO' ? estimate()!.mercadoPagoGrandTotal : estimate()!.grandTotal) | currencyCop }}</strong>
             </div>
           </ng-container>
 

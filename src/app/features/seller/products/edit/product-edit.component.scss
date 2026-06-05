@@ -198,6 +198,7 @@
 }
 
 .req { color: #e53935; margin-left: 2px; }
+.opt { color: #bbb; font-weight: 500; text-transform: none; letter-spacing: 0; }
 
 .form-error {
   font-size: .78rem;
@@ -287,13 +288,20 @@
 
 .variant-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   background: #f9f9f9;
   border: 1px solid #eee;
   border-radius: 8px;
   padding: 10px 14px;
   margin-bottom: 8px;
+  &.variant-row--editing { border-color: #a5d6a7; background: #f7fdf7; }
+}
+
+.variant-row-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .variant-info {
@@ -305,6 +313,43 @@
 
   strong { font-weight: 700; color: #333; }
   span   { color: #666; }
+}
+
+.btn-edit-price {
+  background: #fff8e1;
+  color: #f57f17;
+  &:hover:not(:disabled) { background: #fff3cd; }
+}
+
+.variant-price-edit-row {
+  border-top: 1px solid #e8f5e9;
+  padding-top: 12px;
+  margin-top: 10px;
+}
+
+.variant-price-inputs {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-bottom: 10px;
+}
+
+.clear-compare-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .8rem;
+  color: #888;
+  cursor: pointer;
+  padding-bottom: 2px;
+  input[type="checkbox"] { cursor: pointer; }
+}
+
+.variant-price-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 .variant-compare { text-decoration: line-through; color: #aaa !important; }

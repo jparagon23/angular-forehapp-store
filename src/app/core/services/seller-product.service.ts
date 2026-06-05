@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   Attribute, AttributeValue, Brand, BrandLine, Category, CategoryAttribute,
-  CreateProductRequest, CreateVariantRequest,
+  CreateProductRequest, CreateVariantRequest, UpdateVariantRequest,
   InventoryRequest, MovementReason, MovementsPage,
   ProductImage, ProductVariant, SellerProduct,
 } from '../models/seller-product.model';
@@ -151,6 +151,10 @@ export class SellerProductService {
 
   activateVariant(storeId: number, productId: number, variantId: number): Observable<ProductVariant> {
     return this.http.patch<ProductVariant>(`${this.BASE}/stores/${storeId}/products/${productId}/variants/${variantId}/activate`, {});
+  }
+
+  updateVariant(storeId: number, productId: number, variantId: number, req: UpdateVariantRequest): Observable<ProductVariant> {
+    return this.http.patch<ProductVariant>(`${this.BASE}/stores/${storeId}/products/${productId}/variants/${variantId}`, req);
   }
 
   deleteVariant(storeId: number, productId: number, variantId: number): Observable<void> {

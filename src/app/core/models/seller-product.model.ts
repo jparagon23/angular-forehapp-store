@@ -67,6 +67,12 @@ export interface CreateVariantRequest {
   attributeValueIds: number[];
 }
 
+export interface UpdateVariantRequest {
+  price?: number;
+  compareAtPrice?: number;
+  clearCompareAtPrice?: boolean;
+}
+
 export interface InventoryRequest {
   quantity: number;
   reason: 'RESTOCK' | 'RETURN' | 'ADJUSTMENT';

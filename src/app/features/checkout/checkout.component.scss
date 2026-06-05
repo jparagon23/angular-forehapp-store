@@ -215,8 +215,16 @@
   display: flex; justify-content: space-between; align-items: baseline;
   border-top: 2px solid #daeada; padding-top: 14px;
   font-size: 1rem; font-weight: 600; color: #333;
+  &.total-row--mp .total-val { color: #009ee3; }
 }
 .total-val { font-size: 1.4rem; font-weight: 900; color: var(--dark); }
+
+.sum-row--mp { color: #7b1fa2; font-weight: 600; }
+
+.pm-opt-tag--mp {
+  color: #7b1fa2;
+  background: #f3e5f5;
+}
 
 // ── User info ─────────────────────────────────────────────
 .user-info {

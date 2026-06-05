@@ -97,6 +97,7 @@ export class GuestCheckoutComponent implements OnInit {
   paymentMethod = signal<PaymentMethod | null>(null);
 
   readonly paymentOptions: { value: PaymentMethod; label: string; desc: string }[] = [
+    { value: 'MERCADO_PAGO',    label: 'MercadoPago',          desc: 'Paga en línea con tarjeta, PSE o efectivo. Se aplica un recargo del 3.5%.' },
     { value: 'CASH_ON_DELIVERY', label: 'Pago contra entrega', desc: 'Pagas en efectivo al recibir tu pedido' },
   ];
 

@@ -333,6 +333,17 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     return Object.values(this.appliedCoupons).reduce((sum, c) => sum + c.discountAmount, 0);
   }
 
+  get mpSurcharge(): number {
+    if (this.selectedPaymentMethod !== 'MERCADO_PAGO') return 0;
+    return Math.round(this.totalWithDiscounts * 0.035);
+  }
+
+  get totalForDisplay(): number {
+    return this.selectedPaymentMethod === 'MERCADO_PAGO'
+      ? this.totalWithDiscounts + this.mpSurcharge
+      : this.totalWithDiscounts;
+  }
+
   getGroupTotal(storeId: number, subtotal: number): number {
     return this.appliedCoupons[storeId]?.finalAmount ?? subtotal;
   }

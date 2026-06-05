@@ -163,11 +163,36 @@
               </div>
             </div>
 
-            <!-- Order total -->
-            <div class="oc-summary">
-              <span>Total del pedido <span class="oc-summary-note">(incl. envío)</span></span>
-              <strong>{{ detail.total | currencyCop }}</strong>
+            <!-- Order total breakdown -->
+            <div class="oc-summary-block">
+              <div class="oc-sum-line">
+                <span>Subtotal</span>
+                <span>{{ detail.subtotal | currencyCop }}</span>
+              </div>
+              <div class="oc-sum-line">
+                <span>Envío</span>
+                <span>{{ detail.shippingTotal | currencyCop }}</span>
+              </div>
+              <div class="oc-sum-line oc-sum-discount" *ngIf="detail.couponCode">
+                <span>Cupón <code>{{ detail.couponCode }}</code></span>
+                <span>−{{ detail.couponDiscount | currencyCop }}</span>
+              </div>
+              <div class="oc-sum-line oc-sum-mp" *ngIf="detail.paymentMethod === 'MERCADO_PAGO'">
+                <span>Recargo MercadoPago (3.5%)</span>
+                <span>{{ detail.mercadoPagoSurcharge | currencyCop }}</span>
+              </div>
+              <div class="oc-summary">
+                <span>Total</span>
+                <strong>{{ detail.total | currencyCop }}</strong>
+              </div>
             </div>
+
+            <!-- MP pending: link to complete payment -->
+            <a class="btn-mp-pay"
+               *ngIf="detail.paymentMethod === 'MERCADO_PAGO' && detail.paymentStatus === 'PENDING' && detail.checkoutUrl"
+               [href]="detail.checkoutUrl">
+              Completar pago en MercadoPago →
+            </a>
 
           </ng-container>
         </div>

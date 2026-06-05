@@ -141,41 +141,74 @@
   <h2 class="edit-card-title">Variantes</h2>
 
   <div class="variant-list" *ngIf="variants().length">
-    <div class="variant-row" [class.variant-row--inactive]="!v.active" *ngFor="let v of variants()">
-      <div class="variant-info">
-        <strong>{{ v.sku ?? '—' }}</strong>
-        <span class="variant-status-badge" [class.variant-status-badge--active]="v.active" [class.variant-status-badge--inactive]="!v.active">
-          {{ v.active ? 'Activa' : 'Inactiva' }}
-        </span>
-        <span>$ {{ v.price | number:'1.2-2' }}</span>
-        <span *ngIf="v.compareAtPrice" class="variant-compare">Antes: $ {{ v.compareAtPrice | number:'1.2-2' }}</span>
-        <span [class.stock-warn]="v.stock === 0">Stock: {{ v.stock }}</span>
-        <span class="variant-attrs" *ngIf="v.attributes?.length">
-          <ng-container *ngFor="let a of v.attributes; let last = last">
-            {{ a.attribute }}: {{ a.value }}{{ !last ? ' · ' : '' }}
-          </ng-container>
-        </span>
+    <div class="variant-row" [class.variant-row--inactive]="!v.active" [class.variant-row--editing]="editingVariantId() === v.id" *ngFor="let v of variants()">
+      <div class="variant-row-main">
+        <div class="variant-info">
+          <strong>{{ v.sku ?? '—' }}</strong>
+          <span class="variant-status-badge" [class.variant-status-badge--active]="v.active" [class.variant-status-badge--inactive]="!v.active">
+            {{ v.active ? 'Activa' : 'Inactiva' }}
+          </span>
+          <span>$ {{ v.price | number:'1.2-2' }}</span>
+          <span *ngIf="v.compareAtPrice" class="variant-compare">Antes: $ {{ v.compareAtPrice | number:'1.2-2' }}</span>
+          <span [class.stock-warn]="v.stock === 0">Stock: {{ v.stock }}</span>
+          <span class="variant-attrs" *ngIf="v.attributes?.length">
+            <ng-container *ngFor="let a of v.attributes; let last = last">
+              {{ a.attribute }}: {{ a.value }}{{ !last ? ' · ' : '' }}
+            </ng-container>
+          </span>
+        </div>
+        <div class="variant-row-actions">
+          <button class="btn-action btn-inv"  (click)="openInvModal(v)"    [disabled]="!v.active">Ajustar</button>
+          <button class="btn-action btn-hist" (click)="openMovements(v)">Historial</button>
+          <button class="btn-action btn-edit-price"
+                  (click)="startEditPrice(v)"
+                  *ngIf="editingVariantId() !== v.id"
+                  [disabled]="editingVariantId() !== null"
+                  title="Editar precio de esta variante">
+            Precio
+          </button>
+          <button class="btn-action"
+                  [class.btn-deactivate]="v.active && !variantHasOrders().has(v.id)"
+                  [class.btn-deactivate-cta]="v.active && variantHasOrders().has(v.id)"
+                  [class.btn-activate]="!v.active"
+                  (click)="toggleVariant(v)"
+                  [disabled]="togglingVariantId() !== null"
+                  [title]="v.active ? 'Ocultar esta variante a los compradores' : 'Volver a mostrar esta variante'">
+            {{ togglingVariantId() === v.id ? '…' : (v.active ? 'Desactivar' : 'Activar') }}
+          </button>
+          <button *ngIf="!variantHasOrders().has(v.id)"
+                  class="btn-remove"
+                  (click)="removeVariant(v)"
+                  [disabled]="deletingVariantId() !== null"
+                  [title]="deletingVariantId() === v.id ? 'Eliminando…' : 'Eliminar variante'">
+            {{ deletingVariantId() === v.id ? '…' : '✕' }}
+          </button>
+        </div>
       </div>
-      <div class="variant-row-actions">
-        <button class="btn-action btn-inv"  (click)="openInvModal(v)"    [disabled]="!v.active">Ajustar</button>
-        <button class="btn-action btn-hist" (click)="openMovements(v)">Historial</button>
-        <button class="btn-action"
-                [class.btn-deactivate]="v.active && !variantHasOrders().has(v.id)"
-                [class.btn-deactivate-cta]="v.active && variantHasOrders().has(v.id)"
-                [class.btn-activate]="!v.active"
-                (click)="toggleVariant(v)"
-                [disabled]="togglingVariantId() !== null"
-                [title]="v.active ? 'Ocultar esta variante a los compradores' : 'Volver a mostrar esta variante'">
-          {{ togglingVariantId() === v.id ? '…' : (v.active ? 'Desactivar' : 'Activar') }}
-        </button>
-        <button *ngIf="!variantHasOrders().has(v.id)"
-                class="btn-remove"
-                (click)="removeVariant(v)"
-                [disabled]="deletingVariantId() !== null"
-                [title]="deletingVariantId() === v.id ? 'Eliminando…' : 'Eliminar variante'">
-          {{ deletingVariantId() === v.id ? '…' : '✕' }}
-        </button>
-      </div>
+      <form class="variant-price-edit-row" [formGroup]="editPriceForm" (ngSubmit)="saveVariantPrice(v)" novalidate *ngIf="editingVariantId() === v.id">
+        <div class="variant-price-inputs">
+          <div class="form-group">
+            <label>Precio <span class="req">*</span></label>
+            <input formControlName="editPrice" type="number" min="0.01" step="0.01" placeholder="0.00" />
+            <span class="form-error" *ngIf="editPriceForm.get('editPrice')?.touched && editPriceForm.get('editPrice')?.invalid">Precio mayor a 0 requerido.</span>
+          </div>
+          <div class="form-group">
+            <label>Precio tachado <span class="opt">(opcional)</span></label>
+            <input formControlName="editCompareAtPrice" type="number" min="0.01" step="0.01" placeholder="0.00" />
+          </div>
+          <label class="clear-compare-label" *ngIf="v.compareAtPrice">
+            <input type="checkbox" [(ngModel)]="clearCompareAtPrice" [ngModelOptions]="{standalone: true}" />
+            Eliminar precio tachado
+          </label>
+        </div>
+        <div class="form-error form-error--global" *ngIf="variantUpdateError()">{{ variantUpdateError() }}</div>
+        <div class="variant-price-actions">
+          <button type="button" class="btn-action" (click)="cancelEditPrice()" [disabled]="updatingVariant()">Cancelar</button>
+          <button type="submit" class="btn-action btn-apply" [disabled]="updatingVariant()">
+            {{ updatingVariant() ? '…' : 'Guardar' }}
+          </button>
+        </div>
+      </form>
       <p class="variant-orders-hint" *ngIf="variantHasOrders().has(v.id)">
         Tiene compras asociadas. Desactívala para ocultarla del catálogo.
       </p>

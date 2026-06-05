@@ -48,6 +48,11 @@ export interface OrderResponse {
   orderId: number;
   paymentStatus: OrderApiStatus;
   paymentMethod: PaymentMethod;
+  subtotal: number;
+  shippingTotal: number;
+  couponCode: string | null;
+  couponDiscount: number;
+  mercadoPagoSurcharge: number;
   total: number;
   shippingAddress: string;
   shippingCity: string;
