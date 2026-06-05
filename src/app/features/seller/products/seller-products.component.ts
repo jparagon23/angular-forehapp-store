@@ -1,7 +1,7 @@
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AsyncPipe, CurrencyPipe, DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Actions, ofType } from '@ngrx/effects';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
@@ -22,14 +22,14 @@ import {
 import { ToastComponent } from '../../../shared/components/toast/toast.component';
 import {
   InventoryMovement, InventoryRequest, MovementReason,
-  MovementsPage, ProductStatus, ProductVariant, SellerProduct,
+  MovementsPage, ProductStatus, ProductVariant, SellerProduct, UpdateVariantRequest,
 } from '../../../core/models/seller-product.model';
 import { SellerProductService } from '../../../core/services/seller-product.service';
 
 @Component({
   selector: 'app-seller-products',
   standalone: true,
-  imports: [AsyncPipe, NgFor, NgIf, NgClass, RouterLink, CurrencyPipe, DatePipe, FormsModule, ToastComponent],
+  imports: [AsyncPipe, NgFor, NgIf, NgClass, RouterLink, CurrencyPipe, DatePipe, FormsModule, ReactiveFormsModule, ToastComponent],
   templateUrl: './seller-products.component.html',
   styleUrl: './seller-products.component.scss',
 })
@@ -38,6 +38,7 @@ export class SellerProductsComponent implements OnInit {
   private sellerService = inject(SellerProductService);
   private actions$      = inject(Actions);
   private destroyRef    = inject(DestroyRef);
+  private fb            = inject(FormBuilder);
 
   loading$    = this.store.select(selectSellerLoading);
   invLoading$ = this.store.select(selectSellerInventoryLoading);
@@ -50,6 +51,16 @@ export class SellerProductsComponent implements OnInit {
   variantToggleError = signal<string | null>(null);
   deletingVariantId  = signal<number | null>(null);
   variantHasOrders   = signal<Set<number>>(new Set());
+
+  editingVariantId   = signal<number | null>(null);
+  updatingVariant    = signal(false);
+  variantUpdateError = signal<string | null>(null);
+  clearCompareAtPrice = false;
+
+  editPriceForm = this.fb.group({
+    editPrice:          [null as number | null, [Validators.required, Validators.min(0.01)]],
+    editCompareAtPrice: [null as number | null],
+  });
 
   searchQuery  = signal('');
   statusFilter = signal<ProductStatus | null>(null);
@@ -274,6 +285,51 @@ export class SellerProductsComponent implements OnInit {
         this.toastType.set('error');
         this.toastMsg.set(msg);
         this.togglingVariantId.set(null);
+      },
+    });
+  }
+
+  startEditPrice(p: SellerProduct, v: ProductVariant, e: Event) {
+    e.stopPropagation();
+    this.editingVariantId.set(v.id);
+    this.variantUpdateError.set(null);
+    this.clearCompareAtPrice = false;
+    this.editPriceForm.reset({ editPrice: v.price, editCompareAtPrice: v.compareAtPrice ?? null });
+  }
+
+  cancelEditPrice(e: Event) {
+    e.stopPropagation();
+    this.editingVariantId.set(null);
+    this.variantUpdateError.set(null);
+    this.editPriceForm.reset();
+  }
+
+  saveVariantPrice(p: SellerProduct, v: ProductVariant) {
+    this.editPriceForm.markAllAsTouched();
+    if (this.editPriceForm.invalid) return;
+    const storeId = this.storeId();
+    if (!storeId) return;
+    const { editPrice, editCompareAtPrice } = this.editPriceForm.value;
+    const req: UpdateVariantRequest = { price: editPrice! };
+    if (this.clearCompareAtPrice) {
+      req.clearCompareAtPrice = true;
+    } else if (editCompareAtPrice) {
+      req.compareAtPrice = editCompareAtPrice;
+    }
+    this.updatingVariant.set(true);
+    this.variantUpdateError.set(null);
+    this.sellerService.updateVariant(storeId, p.id, v.id, req).subscribe({
+      next: () => {
+        this.updatingVariant.set(false);
+        this.editingVariantId.set(null);
+        this.editPriceForm.reset();
+        this.toastType.set('success');
+        this.toastMsg.set('Precio actualizado correctamente');
+        this.store.dispatch(loadSellerProducts());
+      },
+      error: err => {
+        this.variantUpdateError.set(err.error?.message ?? 'Error al actualizar el precio.');
+        this.updatingVariant.set(false);
       },
     });
   }

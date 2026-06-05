@@ -292,46 +292,86 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let v of p.variants" [class.sp-variant-inactive]="!v.active">
-                    <td class="sp-sku">{{ v.sku ?? '—' }}</td>
-                    <td>
-                      <span class="sp-variant-badge" [class.sp-variant-badge--active]="v.active" [class.sp-variant-badge--inactive]="!v.active">
-                        {{ v.active ? 'Activa' : 'Inactiva' }}
-                      </span>
-                    </td>
-                    <td>
-                      <span class="sp-attr-pill" *ngFor="let a of v.attributes">
-                        {{ a.attribute }}: <strong>{{ a.value }}</strong>
-                      </span>
-                    </td>
-                    <td>{{ v.price | currency:'USD':'symbol':'1.2-2' }}</td>
-                    <td>{{ v.compareAtPrice ? (v.compareAtPrice | currency:'USD':'symbol':'1.2-2') : '—' }}</td>
-                    <td [class.sp-stock-warn]="v.stock === 0">{{ v.stock }}</td>
-                    <td>
-                      <div class="sp-actions">
-                        <button class="btn-action btn-inv"  [disabled]="!v.active" (click)="openInvModal(p, v, $event)">Ajustar</button>
-                        <button class="btn-action btn-hist" (click)="openMovements(p, v, $event)">Historial</button>
-                        <button class="btn-action"
-                                [class.btn-deactivate]="v.active && !variantHasOrders().has(v.id)"
-                                [class.btn-deactivate-cta]="v.active && variantHasOrders().has(v.id)"
-                                [class.btn-activate]="!v.active"
-                                [disabled]="togglingVariantId() !== null"
-                                (click)="toggleVariant(p, v, $event)"
-                                [title]="v.active ? 'Ocultar a compradores' : 'Volver a mostrar'">
-                          {{ togglingVariantId() === v.id ? '…' : (v.active ? 'Desactivar' : 'Activar') }}
-                        </button>
-                        <button *ngIf="!variantHasOrders().has(v.id)"
-                                class="btn-action btn-delete"
-                                [disabled]="deletingVariantId() !== null"
-                                (click)="deleteVariant(p, v, $event)">
-                          {{ deletingVariantId() === v.id ? '…' : 'Eliminar' }}
-                        </button>
-                      </div>
-                      <p class="sp-orders-hint" *ngIf="variantHasOrders().has(v.id)">
-                        Tiene compras asociadas. Desactívala para ocultarla del catálogo.
-                      </p>
-                    </td>
-                  </tr>
+                  <ng-container *ngFor="let v of p.variants">
+                    <tr [class.sp-variant-inactive]="!v.active" [class.sp-variant-editing]="editingVariantId() === v.id">
+                      <td class="sp-sku">{{ v.sku ?? '—' }}</td>
+                      <td>
+                        <span class="sp-variant-badge" [class.sp-variant-badge--active]="v.active" [class.sp-variant-badge--inactive]="!v.active">
+                          {{ v.active ? 'Activa' : 'Inactiva' }}
+                        </span>
+                      </td>
+                      <td>
+                        <span class="sp-attr-pill" *ngFor="let a of v.attributes">
+                          {{ a.attribute }}: <strong>{{ a.value }}</strong>
+                        </span>
+                      </td>
+                      <td>{{ v.price | currency:'USD':'symbol':'1.2-2' }}</td>
+                      <td>{{ v.compareAtPrice ? (v.compareAtPrice | currency:'USD':'symbol':'1.2-2') : '—' }}</td>
+                      <td [class.sp-stock-warn]="v.stock === 0">{{ v.stock }}</td>
+                      <td>
+                        <div class="sp-actions">
+                          <button class="btn-action btn-inv"  [disabled]="!v.active" (click)="openInvModal(p, v, $event)">Ajustar</button>
+                          <button class="btn-action btn-hist" (click)="openMovements(p, v, $event)">Historial</button>
+                          <button class="btn-action btn-edit-price"
+                                  *ngIf="editingVariantId() !== v.id"
+                                  [disabled]="editingVariantId() !== null"
+                                  (click)="startEditPrice(p, v, $event)"
+                                  title="Editar precio">
+                            Precio
+                          </button>
+                          <button class="btn-action"
+                                  [class.btn-deactivate]="v.active && !variantHasOrders().has(v.id)"
+                                  [class.btn-deactivate-cta]="v.active && variantHasOrders().has(v.id)"
+                                  [class.btn-activate]="!v.active"
+                                  [disabled]="togglingVariantId() !== null"
+                                  (click)="toggleVariant(p, v, $event)"
+                                  [title]="v.active ? 'Ocultar a compradores' : 'Volver a mostrar'">
+                            {{ togglingVariantId() === v.id ? '…' : (v.active ? 'Desactivar' : 'Activar') }}
+                          </button>
+                          <button *ngIf="!variantHasOrders().has(v.id)"
+                                  class="btn-action btn-delete"
+                                  [disabled]="deletingVariantId() !== null"
+                                  (click)="deleteVariant(p, v, $event)">
+                            {{ deletingVariantId() === v.id ? '…' : 'Eliminar' }}
+                          </button>
+                        </div>
+                        <p class="sp-orders-hint" *ngIf="variantHasOrders().has(v.id)">
+                          Tiene compras asociadas. Desactívala para ocultarla del catálogo.
+                        </p>
+                      </td>
+                    </tr>
+                    <!-- Fila de edición de precio -->
+                    <tr *ngIf="editingVariantId() === v.id" class="sp-price-edit-row">
+                      <td colspan="7">
+                        <form [formGroup]="editPriceForm" (ngSubmit)="saveVariantPrice(p, v)" novalidate class="sp-price-edit-form">
+                          <div class="sp-price-inputs">
+                            <div class="sp-price-field">
+                              <label>Precio <span class="sp-req">*</span></label>
+                              <input formControlName="editPrice" type="number" min="0.01" step="0.01" placeholder="0.00" />
+                              <span class="sp-price-err" *ngIf="editPriceForm.get('editPrice')?.touched && editPriceForm.get('editPrice')?.invalid">
+                                Precio mayor a 0 requerido.
+                              </span>
+                            </div>
+                            <div class="sp-price-field">
+                              <label>Precio tachado <span class="sp-opt">(opcional)</span></label>
+                              <input formControlName="editCompareAtPrice" type="number" min="0.01" step="0.01" placeholder="0.00" />
+                            </div>
+                            <label class="sp-clear-compare" *ngIf="v.compareAtPrice">
+                              <input type="checkbox" [(ngModel)]="clearCompareAtPrice" [ngModelOptions]="{standalone: true}" />
+                              Eliminar precio tachado
+                            </label>
+                          </div>
+                          <div class="sp-price-err-global" *ngIf="variantUpdateError()">{{ variantUpdateError() }}</div>
+                          <div class="sp-price-actions">
+                            <button type="button" class="btn-action" (click)="cancelEditPrice($event)" [disabled]="updatingVariant()">Cancelar</button>
+                            <button type="submit" class="btn-action btn-save-price" [disabled]="updatingVariant()">
+                              {{ updatingVariant() ? '…' : 'Guardar precio' }}
+                            </button>
+                          </div>
+                        </form>
+                      </td>
+                    </tr>
+                  </ng-container>
                 </tbody>
               </table>
             </div>

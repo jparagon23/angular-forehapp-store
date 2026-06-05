@@ -469,7 +469,45 @@
   &.btn-delete         { background: #f44336; color: #fff; }
   &.btn-inv        { background: #e3f2fd; color: #1565c0; }
   &.btn-hist       { background: #f3e5f5; color: #7b1fa2; }
+  &.btn-edit-price { background: #fff8e1; color: #f57f17; }
+  &.btn-save-price { background: #4caf50; color: #fff; }
 }
+
+.sp-variant-editing { background: #f7fdf7 !important; }
+
+.sp-price-edit-row td { background: #f7fdf7; border-top: 1px solid #e8f5e9; padding: 12px 14px; }
+
+.sp-price-edit-form { display: flex; flex-direction: column; gap: 10px; }
+
+.sp-price-inputs { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
+
+.sp-price-field {
+  display: flex; flex-direction: column; gap: 4px;
+  label { font-size: .75rem; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: .5px; }
+  input {
+    border: 1.5px solid #ddd; border-radius: 7px;
+    padding: 6px 10px; font-size: .85rem; outline: none; width: 130px;
+    &:focus { border-color: #4caf50; }
+  }
+}
+
+.sp-req { color: #e53935; margin-left: 2px; }
+.sp-opt { color: #bbb; font-weight: 500; text-transform: none; letter-spacing: 0; }
+
+.sp-price-err { font-size: .75rem; color: #e53935; }
+.sp-price-err-global {
+  font-size: .82rem; color: #c62828;
+  background: #fdecea; border: 1px solid #f5c6cb;
+  border-radius: 6px; padding: 7px 10px;
+}
+
+.sp-clear-compare {
+  display: flex; align-items: center; gap: 6px;
+  font-size: .8rem; color: #888; cursor: pointer; padding-bottom: 2px;
+  input[type="checkbox"] { cursor: pointer; }
+}
+
+.sp-price-actions { display: flex; gap: 8px; justify-content: flex-end; }
 
 .sp-orders-hint {
   font-size: .72rem;
