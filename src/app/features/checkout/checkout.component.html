@@ -168,11 +168,17 @@
             <span *ngIf="!sg.freeShipping">{{ sg.shippingCost | currencyCop }}</span>
           </div>
         </ng-container>
+
+        <!-- Recargo MercadoPago -->
+        <div class="sum-row sum-row--mp" *ngIf="selectedPaymentMethod === 'MERCADO_PAGO' && shippingEstimate()">
+          <span>Recargo MercadoPago (3.5%)</span>
+          <span>{{ mpSurcharge | currencyCop }}</span>
+        </div>
       </div>
 
-      <div class="total-row">
+      <div class="total-row" [class.total-row--mp]="selectedPaymentMethod === 'MERCADO_PAGO'">
         <span>Total del pedido</span>
-        <strong class="total-val">{{ totalWithDiscounts | currencyCop }}</strong>
+        <strong class="total-val">{{ totalForDisplay | currencyCop }}</strong>
       </div>
     </div>
 
@@ -293,6 +299,16 @@
         <div class="pm-options">
 
           <button class="pm-opt"
+                  [class.active]="selectedPaymentMethod === 'MERCADO_PAGO'"
+                  (click)="selectedPaymentMethod = 'MERCADO_PAGO'">
+            <span class="pm-opt-icon">💳</span>
+            <div class="pm-opt-body">
+              <span class="pm-opt-name">MercadoPago <span class="pm-opt-tag pm-opt-tag--mp">+3.5%</span></span>
+              <span class="pm-opt-desc">Paga con tarjeta, PSE o efectivo en MercadoPago</span>
+            </div>
+          </button>
+
+          <button class="pm-opt"
                   [class.active]="selectedPaymentMethod === 'CASH_ON_DELIVERY'"
                   [class.pm-disabled]="!isSelectedAddressCali(addrs)"
                   [disabled]="!isSelectedAddressCali(addrs)"
@@ -328,8 +344,8 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
-          {{ selectedPaymentMethod === 'MERCADO_PAGO' ? 'Confirmar y pagar' : 'Confirmar pedido' }}
-          · {{ totalWithDiscounts | currencyCop }}
+          {{ selectedPaymentMethod === 'MERCADO_PAGO' ? 'Confirmar y pagar en MercadoPago' : 'Confirmar pedido' }}
+          · {{ totalForDisplay | currencyCop }}
         </ng-container>
         <ng-template #loadingTpl>
           <span class="btn-spinner"></span>

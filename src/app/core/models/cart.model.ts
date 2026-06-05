@@ -40,4 +40,6 @@ export interface ShippingEstimateResponse {
   itemsTotal: number;
   shippingTotal: number;
   grandTotal: number;
+  mercadoPagoSurcharge: number;
+  mercadoPagoGrandTotal: number;
 }

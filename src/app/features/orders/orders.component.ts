@@ -245,6 +245,7 @@ export class OrdersComponent implements OnInit {
     if (paymentStatus === 'PAID' && paymentMethod === 'CASH_ON_DELIVERY') return 'Pedido entregado y pago completado.';
     if (paymentStatus === 'PAID') return 'Pago recibido — pedido en proceso.';
     if (paymentMethod === 'CASH_ON_DELIVERY') return 'Pedido recibido — pagarás al recibir.';
+    if (paymentMethod === 'MERCADO_PAGO') return 'Pago pendiente — completa el pago en MercadoPago para que procesemos tu pedido.';
     if (paymentMethod === 'CASH' || paymentMethod === 'TRANSFER') return 'Pendiente de confirmación por el administrador.';
     return 'Esperando confirmación de pago.';
   }
