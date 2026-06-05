@@ -81,7 +81,8 @@
   display: inline-block; border-radius: 6px;
   background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
   background-size: 800px 100%; animation: ssSk 1.4s infinite linear;
-  &.ss-skel-val { height: 34px; width: 56px; }
+  &.ss-skel-val  { height: 34px; width: 56px; }
+  &.ss-skel-pipe { height: 28px; width: 36px; }
 }
 
 /* ── Sections ──────────────────────────────────────── */
