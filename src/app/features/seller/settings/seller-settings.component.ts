@@ -48,7 +48,7 @@ export class SellerSettingsComponent implements OnInit {
   }
 
   private doSave(id: number) {
-    const raw = this.inputValue.trim();
+    const raw = String(this.inputValue ?? '').trim();
     const amount = raw === '' ? null : Number(raw);
     if (raw !== '' && (isNaN(amount!) || amount! < 0)) {
       this.error.set('Ingresa un monto válido mayor o igual a 0.');
