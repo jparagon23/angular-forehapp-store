@@ -2,8 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgIf } from '@angular/common';
 import { Store } from '@ngrx/store';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { take } from 'rxjs';
+import { filter, take } from 'rxjs';
 import { selectActiveSellerStoreId } from '../../../store/seller/seller.selectors';
 import { StoreService } from '../../../core/services/store.service';
 import { CurrencyCopPipe } from '../../../shared/pipes/currency-cop.pipe';
@@ -19,7 +18,9 @@ export class SellerSettingsComponent implements OnInit {
   private ngrx         = inject(Store);
   private storeService = inject(StoreService);
 
-  private storeId = toSignal(this.ngrx.select(selectActiveSellerStoreId), { initialValue: null });
+  private storeId$ = this.ngrx.select(selectActiveSellerStoreId).pipe(
+    filter((id): id is number => id !== null),
+  );
 
   loading = signal(true);
   saving  = signal(false);
@@ -30,21 +31,23 @@ export class SellerSettingsComponent implements OnInit {
   inputValue = '';
 
   ngOnInit() {
-    const id = this.storeId();
-    if (!id) { this.loading.set(false); return; }
-    this.storeService.getStore(id).pipe(take(1)).subscribe({
-      next: store => {
-        this.freeShippingMinAmount.set(store.freeShippingMinAmount ?? null);
-        this.inputValue = store.freeShippingMinAmount != null ? String(store.freeShippingMinAmount) : '';
-        this.loading.set(false);
-      },
-      error: () => { this.error.set('Error al cargar la configuración.'); this.loading.set(false); },
+    this.storeId$.pipe(take(1)).subscribe(id => {
+      this.storeService.getStore(id).pipe(take(1)).subscribe({
+        next: store => {
+          this.freeShippingMinAmount.set(store.freeShippingMinAmount ?? null);
+          this.inputValue = store.freeShippingMinAmount != null ? String(store.freeShippingMinAmount) : '';
+          this.loading.set(false);
+        },
+        error: () => { this.error.set('Error al cargar la configuración.'); this.loading.set(false); },
+      });
     });
   }
 
   save() {
-    const id = this.storeId();
-    if (!id) return;
+    this.storeId$.pipe(take(1)).subscribe(id => this.doSave(id));
+  }
+
+  private doSave(id: number) {
     const raw = this.inputValue.trim();
     const amount = raw === '' ? null : Number(raw);
     if (raw !== '' && (isNaN(amount!) || amount! < 0)) {
