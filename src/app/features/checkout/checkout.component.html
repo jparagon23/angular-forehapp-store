@@ -50,6 +50,24 @@
           </div>
         </div>
 
+        <!-- Free shipping progress -->
+        <div class="fsp-wrap" *ngIf="group.freeShippingMinAmount && group.freeShippingMinAmount > 0">
+          <div class="fsp-achieved" *ngIf="group.subtotal >= group.freeShippingMinAmount">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            ¡Envío gratis de {{ group.storeName }}!
+          </div>
+          <ng-container *ngIf="group.subtotal < group.freeShippingMinAmount">
+            <div class="fsp-hint">
+              Te faltan <strong>{{ (group.freeShippingMinAmount - group.subtotal) | currencyCop }}</strong> para envío gratis en {{ group.storeName }}
+            </div>
+            <div class="fsp-track">
+              <div class="fsp-fill" [style.width.%]="fspPct(group)"></div>
+            </div>
+          </ng-container>
+        </div>
+
         <!-- Coupon field -->
         <div class="coupon-section">
           <ng-container *ngIf="!appliedCoupons[group.storeId]; else couponApplied">
