@@ -3,6 +3,7 @@ import { Store } from '@ngrx/store';
 import { AsyncPipe, NgFor, NgIf } from '@angular/common';
 import { Router } from '@angular/router';
 import { take } from 'rxjs/operators';
+import { CartSellerGroup } from '../../core/models/cart.model';
 import {
   selectCartIsOpen, selectSellerGroups, selectCartTotal,
   selectCartCount, selectPriceChangedItems, selectCartLoading,
@@ -47,6 +48,11 @@ export class CartDrawerComponent {
   }
 
   remove(itemId: number) { this.store.dispatch(removeCartItem({ itemId })); }
+
+  fspPct(group: CartSellerGroup): number {
+    if (!group.freeShippingMinAmount) return 0;
+    return Math.min(100, Math.round((group.subtotal / group.freeShippingMinAmount) * 100));
+  }
 
   goToCheckout() {
     this.store.dispatch(closeCart());
