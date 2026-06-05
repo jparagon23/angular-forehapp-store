@@ -344,8 +344,13 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
-          {{ selectedPaymentMethod === 'MERCADO_PAGO' ? 'Confirmar y pagar en MercadoPago' : 'Confirmar pedido' }}
-          · {{ totalForDisplay | currencyCop }}
+          <ng-container *ngIf="selectedPaymentMethod !== 'MERCADO_PAGO'">
+            Confirmar pedido · {{ totalForDisplay | currencyCop }}
+          </ng-container>
+          <span class="btn-confirm-lines" *ngIf="selectedPaymentMethod === 'MERCADO_PAGO'">
+            <span>Pagar con MercadoPago</span>
+            <span class="btn-confirm-sub">{{ totalForDisplay | currencyCop }}</span>
+          </span>
         </ng-container>
         <ng-template #loadingTpl>
           <span class="btn-spinner"></span>
