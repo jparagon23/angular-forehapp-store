@@ -102,10 +102,11 @@
 <div class="ss-section">
   <h2 class="ss-section-title">Estado de pedidos</h2>
 
-  <div class="ss-pipeline" [class.ss-loading-card]="loading">
+  <div class="ss-pipeline">
     <div class="ss-pipe-step ss-pipe-pending">
       <span class="ss-pipe-icon">🕐</span>
-      <span class="ss-pipe-val">{{ summary?.pendingToShip ?? 0 }}</span>
+      <span class="ss-pipe-val" *ngIf="!loading">{{ summary?.pendingToShip ?? 0 }}</span>
+      <span class="ss-skel ss-skel-pipe" *ngIf="loading"></span>
       <span class="ss-pipe-label">Por enviar</span>
     </div>
 
@@ -113,7 +114,8 @@
 
     <div class="ss-pipe-step ss-pipe-transit">
       <span class="ss-pipe-icon">🚚</span>
-      <span class="ss-pipe-val">{{ summary?.inTransit ?? 0 }}</span>
+      <span class="ss-pipe-val" *ngIf="!loading">{{ summary?.inTransit ?? 0 }}</span>
+      <span class="ss-skel ss-skel-pipe" *ngIf="loading"></span>
       <span class="ss-pipe-label">En tránsito</span>
     </div>
 
@@ -121,17 +123,19 @@
 
     <div class="ss-pipe-step ss-pipe-delivered">
       <span class="ss-pipe-icon">✅</span>
-      <span class="ss-pipe-val">{{ summary?.deliveredOrders ?? 0 }}</span>
+      <span class="ss-pipe-val" *ngIf="!loading">{{ summary?.deliveredOrders ?? 0 }}</span>
+      <span class="ss-skel ss-skel-pipe" *ngIf="loading"></span>
       <span class="ss-pipe-label">Entregados</span>
     </div>
 
-    <div class="ss-pipe-divider" *ngIf="(summary?.cancelledOrders ?? 0) > 0"></div>
-
-    <div class="ss-pipe-step ss-pipe-cancelled" *ngIf="(summary?.cancelledOrders ?? 0) > 0">
-      <span class="ss-pipe-icon">✕</span>
-      <span class="ss-pipe-val">{{ summary?.cancelledOrders }}</span>
-      <span class="ss-pipe-label">Cancelados</span>
-    </div>
+    <ng-container *ngIf="!loading && (summary?.cancelledOrders ?? 0) > 0">
+      <div class="ss-pipe-divider"></div>
+      <div class="ss-pipe-step ss-pipe-cancelled">
+        <span class="ss-pipe-icon">✕</span>
+        <span class="ss-pipe-val">{{ summary?.cancelledOrders }}</span>
+        <span class="ss-pipe-label">Cancelados</span>
+      </div>
+    </ng-container>
   </div>
 </div>
 
