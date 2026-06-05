@@ -388,6 +388,11 @@
   &:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; transform: none; }
 }
 
+.btn-confirm-lines {
+  display: flex; flex-direction: column; align-items: center; line-height: 1.25; gap: 1px;
+}
+.btn-confirm-sub { font-size: .78rem; font-weight: 600; opacity: .85; }
+
 .back-link {
   display: block; text-align: center; margin-top: 14px;
   font-size: .85rem; color: #888;
