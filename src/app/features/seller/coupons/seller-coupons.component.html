@@ -54,7 +54,7 @@
           <td class="td-discount">{{ discountLabel(c) }}</td>
           <td class="td-uses">{{ usesLabel(c) }}</td>
           <td class="td-date">
-            <span *ngIf="c.validUntil">{{ c.validUntil | date:'dd MMM yyyy':'':'es-CO' }}</span>
+            <span *ngIf="c.validUntil">{{ c.validUntil | date:'dd MMM yyyy' }}</span>
             <span *ngIf="!c.validUntil" class="no-exp">Sin vencimiento</span>
           </td>
           <td>

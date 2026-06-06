@@ -43,8 +43,8 @@
           <td class="td-discount">{{ discountLabel(c) }}</td>
           <td class="td-uses">{{ usesLabel(c) }}</td>
           <td style="font-size:.82rem">
-            {{ c.validFrom | date:'dd/MM/yy':'':'es-CO' }}
-            <span *ngIf="c.validUntil"> → {{ c.validUntil | date:'dd/MM/yy':'':'es-CO' }}</span>
+            {{ c.validFrom | date:'dd/MM/yy' }}
+            <span *ngIf="c.validUntil"> → {{ c.validUntil | date:'dd/MM/yy' }}</span>
             <span *ngIf="!c.validUntil" class="no-exp"> → ∞</span>
           </td>
           <td>
