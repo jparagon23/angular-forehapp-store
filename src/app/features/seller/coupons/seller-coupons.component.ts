@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { NgFor, NgIf, NgSwitch, NgSwitchCase, DatePipe } from '@angular/common';
+import { NgClass, NgFor, NgIf, NgSwitch, NgSwitchCase, DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -16,7 +16,7 @@ import { selectActiveSellerStoreId } from '../../../store/seller/seller.selector
 @Component({
   selector: 'app-seller-coupons',
   standalone: true,
-  imports: [NgFor, NgIf, NgSwitch, NgSwitchCase, DatePipe, ReactiveFormsModule, CurrencyCopPipe],
+  imports: [NgClass, NgFor, NgIf, NgSwitch, NgSwitchCase, DatePipe, ReactiveFormsModule, CurrencyCopPipe],
   templateUrl: './seller-coupons.component.html',
   styleUrl: './seller-coupons.component.scss',
 })
