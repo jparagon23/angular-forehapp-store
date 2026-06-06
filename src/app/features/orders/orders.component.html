@@ -115,6 +115,9 @@
                     </svg>
                     Guía: <strong>{{ g.trackingNumber }}</strong>
                   </span>
+                  <span class="oc-own-delivery-tag" *ngIf="!g.trackingNumber && (g.status === 'SHIPPED' || g.status === 'DELIVERED')">
+                    El vendedor realizará la entrega directamente
+                  </span>
                 </div>
 
                 <!-- Items -->

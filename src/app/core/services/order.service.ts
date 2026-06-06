@@ -48,7 +48,7 @@ export class OrderService {
     return this.http.patch<void>(`${this.base}/stores/${storeId}/order-groups/${groupId}/prepare`, {});
   }
 
-  shipSellerGroup(storeId: number, groupId: number, trackingNumber: string): Observable<void> {
+  shipSellerGroup(storeId: number, groupId: number, trackingNumber: string | null): Observable<void> {
     return this.http.patch<void>(`${this.base}/stores/${storeId}/order-groups/${groupId}/ship`, { trackingNumber });
   }
 

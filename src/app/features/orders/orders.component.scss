@@ -140,6 +140,11 @@
   svg { flex-shrink: 0; }
   strong { font-family: monospace; }
 }
+.oc-own-delivery-tag {
+  display: inline-flex; align-items: center;
+  background: #f3e5f5; color: #6a1b9a;
+  padding: 3px 10px; border-radius: 20px; font-size: .76rem; font-weight: 500;
+}
 
 .oc-items {
   display: flex; flex-direction: column; gap: 0;

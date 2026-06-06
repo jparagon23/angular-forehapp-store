@@ -179,6 +179,9 @@
           </svg>
           Guía: <strong>{{ g.trackingNumber }}</strong>
         </span>
+        <span *ngIf="!g.trackingNumber && (g.status === 'SHIPPED' || g.status === 'DELIVERED')" class="so-own-delivery-badge">
+          Entrega propia
+        </span>
       </div>
 
       <div class="so-cancellation-info" *ngIf="g.status === 'CANCELLED' && g.cancellationReason">
@@ -242,17 +245,18 @@
       Ingresa el número de guía para el pedido
       <strong>#{{ modalOrder()?.orderId }}</strong>.
     </p>
-    <label class="so-modal-label">Número de guía</label>
+    <label class="so-modal-label">Número de guía <span class="so-modal-optional">(opcional)</span></label>
     <input class="so-modal-input"
            type="text"
            placeholder="Ej. 9400111899223453234567"
            [value]="shipModalTracking()"
            (input)="shipModalTracking.set($any($event.target).value)"
            (keydown.enter)="confirmShip()" />
+    <p class="so-modal-hint">Déjalo en blanco si haces la entrega tú mismo.</p>
     <div class="so-modal-actions">
       <button class="so-btn so-btn-cancel" (click)="closeShipModal()">Cancelar</button>
       <button class="so-btn so-btn-ship"
-              [disabled]="!shipModalTracking().trim() || shipModalBusy()"
+              [disabled]="shipModalBusy()"
               (click)="confirmShip()">
         {{ shipModalBusy() ? 'Enviando...' : 'Confirmar envío' }}
       </button>

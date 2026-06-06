@@ -153,6 +153,11 @@
   svg { flex-shrink: 0; }
   strong { font-family: monospace; }
 }
+.so-own-delivery-badge {
+  display: inline-flex; align-items: center;
+  background: #f3e5f5; color: #6a1b9a;
+  padding: 3px 10px; border-radius: 20px; font-size: .78rem; font-weight: 600;
+}
 
 @keyframes so-rotate {
   to { transform: rotate(360deg); }
@@ -252,8 +257,12 @@
 .so-modal-input {
   width: 100%; padding: 10px 12px; border-radius: 8px;
   border: 1.5px solid #c5cae9; font-size: .9rem; font-family: monospace;
-  outline: none; box-sizing: border-box; margin-bottom: 20px;
+  outline: none; box-sizing: border-box; margin-bottom: 6px;
   &:focus { border-color: #1565c0; box-shadow: 0 0 0 3px rgba(21,101,192,.12); }
+}
+.so-modal-optional { font-weight: 400; text-transform: none; color: #aaa; letter-spacing: 0; }
+.so-modal-hint {
+  font-size: .78rem; color: #999; margin: 0 0 18px;
 }
 
 .so-modal-actions {

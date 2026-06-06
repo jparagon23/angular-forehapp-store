@@ -99,11 +99,11 @@ export class SellerOrdersComponent implements OnInit {
     const storeId = this.storeId();
     if (!storeId) return;
     const tracking = this.shipModalTracking().trim();
-    if (!tracking) return;
+    const trackingOrNull = tracking || null;
     this.setLoading(groupId, true);
-    this.orderService.shipSellerGroup(storeId, groupId, tracking).subscribe({
+    this.orderService.shipSellerGroup(storeId, groupId, trackingOrNull).subscribe({
       next: () => {
-        this.patchGroup(groupId, 'SHIPPED', { trackingNumber: tracking, shippedAt: new Date().toISOString() });
+        this.patchGroup(groupId, 'SHIPPED', { trackingNumber: trackingOrNull, shippedAt: new Date().toISOString() });
         this.closeShipModal();
         this.setLoading(groupId, false);
       },
