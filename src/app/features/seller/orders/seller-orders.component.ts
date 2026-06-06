@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { DatePipe, NgClass, NgFor, NgIf, TitleCasePipe } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -14,7 +14,7 @@ import { selectActiveSellerStoreId } from '../../../store/seller/seller.selector
   templateUrl: './seller-orders.component.html',
   styleUrl: './seller-orders.component.scss',
 })
-export class SellerOrdersComponent implements OnInit {
+export class SellerOrdersComponent {
   private orderService = inject(OrderService);
   private ngrx         = inject(Store);
 
@@ -57,13 +57,16 @@ export class SellerOrdersComponent implements OnInit {
     };
   });
 
-  ngOnInit() {
-    const storeId = this.storeId();
-    if (!storeId) { this.loading.set(false); return; }
-    this.orderService.getSellerOrderGroups(storeId).subscribe({
-      next:  groups => { this.groups.set(groups); this.loading.set(false); },
-      error: ()     => { this.error.set('No se pudieron cargar los pedidos.'); this.loading.set(false); },
-    });
+  constructor() {
+    effect(() => {
+      const storeId = this.storeId();
+      if (!storeId) return;
+      this.loading.set(true);
+      this.orderService.getSellerOrderGroups(storeId).subscribe({
+        next:  groups => { this.groups.set(groups); this.loading.set(false); },
+        error: ()     => { this.error.set('No se pudieron cargar los pedidos.'); this.loading.set(false); },
+      });
+    }, { allowSignalWrites: true });
   }
 
   toggleExpand(id: number) {
