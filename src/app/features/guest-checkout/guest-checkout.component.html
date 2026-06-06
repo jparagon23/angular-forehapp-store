@@ -191,6 +191,58 @@
             </label>
           </div>
 
+          <!-- Cupones por tienda (solo cuando hay estimado de envío) -->
+          <div class="gc-coupons-section" *ngIf="estimate() && estimateGroups.length">
+            <h3 class="gc-coupons-title">Cupón de descuento <span class="gc-coupons-opt">(opcional)</span></h3>
+            <div class="gc-coupon-group" *ngFor="let g of estimateGroups">
+              <ng-container *ngIf="!appliedCoupons[g.storeId]; else gcCouponApplied">
+                <p class="gc-coupon-store-label">{{ g.storeName }}</p>
+                <div class="gc-coupon-row">
+                  <input class="gc-coupon-input"
+                         type="text"
+                         placeholder="Código de cupón"
+                         [ngModel]="couponInputs[g.storeId] ?? ''"
+                         (ngModelChange)="couponInputs[g.storeId] = $event; couponErrors[g.storeId] = ''"
+                         [disabled]="couponLoading[g.storeId]"
+                         (keydown.enter)="applyCoupon(g.storeId, g.subtotal, g.shippingCost)"
+                         maxlength="50">
+                  <button class="gc-btn-apply"
+                          (click)="applyCoupon(g.storeId, g.subtotal, g.shippingCost)"
+                          [disabled]="couponLoading[g.storeId] || !(couponInputs[g.storeId] || '').trim()">
+                    <span *ngIf="!couponLoading[g.storeId]">Aplicar</span>
+                    <span class="gc-mini-spin" *ngIf="couponLoading[g.storeId]"></span>
+                  </button>
+                </div>
+                <p class="gc-coupon-error" *ngIf="couponErrors[g.storeId]">{{ couponErrors[g.storeId] }}</p>
+              </ng-container>
+              <ng-template #gcCouponApplied>
+                <div class="gc-coupon-tag">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  <span>
+                    <strong>{{ appliedCoupons[g.storeId].code }}</strong>
+                    <ng-container *ngIf="appliedCoupons[g.storeId].discountType === 'PERCENTAGE'">
+                      — {{ appliedCoupons[g.storeId].discountValue }}% descuento
+                    </ng-container>
+                    <ng-container *ngIf="appliedCoupons[g.storeId].discountType === 'FIXED_AMOUNT'">
+                      — {{ appliedCoupons[g.storeId].discountValue | currencyCop }} descuento
+                    </ng-container>
+                    <ng-container *ngIf="appliedCoupons[g.storeId].discountType === 'FREE_SHIPPING'">
+                      — Envío gratis
+                    </ng-container>
+                  </span>
+                  <span class="gc-coupon-saving">−{{ appliedCoupons[g.storeId].discountAmount | currencyCop }}</span>
+                  <button class="gc-btn-remove" (click)="removeCoupon(g.storeId)" title="Quitar cupón">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                </div>
+              </ng-template>
+            </div>
+          </div>
+
           <div class="gc-submit-error" *ngIf="submitError()">{{ submitError() }}</div>
 
           <div class="gc-card-footer">
@@ -231,6 +283,10 @@
               <span>Envío ({{ g.storeName }})</span>
               <span [class.sum-free]="g.freeShipping">{{ g.freeShipping ? 'Gratis' : (g.shippingCost | currencyCop) }}</span>
             </div>
+            <div class="sum-row sum-discount" *ngIf="totalCouponDiscount > 0">
+              <span>Descuento cupón</span>
+              <span class="sum-discount-val">−{{ totalCouponDiscount | currencyCop }}</span>
+            </div>
             <div class="sum-row sum-mp-surcharge" *ngIf="paymentMethod() === 'MERCADO_PAGO'">
               <span>Recargo MercadoPago (3.5%)</span>
               <span>{{ estimate()!.mercadoPagoSurcharge | currencyCop }}</span>
@@ -238,7 +294,7 @@
             <div class="sum-divider"></div>
             <div class="sum-row sum-grand">
               <strong>Total</strong>
-              <strong>{{ (paymentMethod() === 'MERCADO_PAGO' ? estimate()!.mercadoPagoGrandTotal : estimate()!.grandTotal) | currencyCop }}</strong>
+              <strong>{{ (paymentMethod() === 'MERCADO_PAGO' ? estimate()!.mercadoPagoGrandTotal : estimate()!.grandTotal) - totalCouponDiscount | currencyCop }}</strong>
             </div>
           </ng-container>
 

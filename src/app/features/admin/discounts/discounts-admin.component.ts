@@ -50,11 +50,14 @@ export class DiscountsAdminComponent implements OnInit {
   }
 
   discountLabel(c: CouponResponse): string {
-    return c.discountType === 'PORCENTAJE' ? `${c.discountValue}%` : `$${c.discountValue.toLocaleString('es-CO')}`;
+    if (c.discountType === 'PERCENTAGE')   return `${c.discountValue}%`;
+    if (c.discountType === 'FIXED_AMOUNT') return `$${c.discountValue.toLocaleString('es-CO')}`;
+    return 'Envío gratis';
   }
 
   statusIcon(c: CouponResponse): string {
-    if (c.status === 'INACTIVA') return 'inactiva';
+    if (c.status === 'INACTIVE') return 'inactiva';
+    if (c.status === 'EXPIRED')  return 'vencida';
     if (c.validUntil && new Date(c.validUntil) < new Date()) return 'vencida';
     return 'activa';
   }

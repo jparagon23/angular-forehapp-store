@@ -67,18 +67,13 @@
             </span>
           </td>
           <td class="td-actions">
-            <button class="btn-deact" *ngIf="c.status === 'ACTIVA'" (click)="deactivate(c)" title="Desactivar">
+            <button class="btn-deact" *ngIf="c.status === 'ACTIVE'" (click)="deactivate(c)" title="Desactivar">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                 <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
               </svg>
               Desactivar
             </button>
-            <button class="btn-react" *ngIf="c.status === 'INACTIVA'" (click)="reactivate(c)" title="Reactivar">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-              Reactivar
-            </button>
+            <span class="td-inactive-note" *ngIf="c.status === 'INACTIVE'">Desactivado</span>
           </td>
         </tr>
       </tbody>
@@ -112,17 +107,18 @@
         <div class="field">
           <label>Tipo <span class="req">*</span></label>
           <select formControlName="discountType">
-            <option value="PORCENTAJE">Porcentaje (%)</option>
-            <option value="MONTO_FIJO">Monto fijo ($)</option>
+            <option value="PERCENTAGE">Porcentaje (%)</option>
+            <option value="FIXED_AMOUNT">Monto fijo ($)</option>
+            <option value="FREE_SHIPPING">Envío gratis</option>
           </select>
         </div>
       </div>
 
-      <div class="field-row">
+      <div class="field-row" *ngIf="!isShipping">
         <div class="field">
           <label>
             Valor del descuento <span class="req">*</span>
-            <span class="hint">{{ form.get('discountType')?.value === 'PORCENTAJE' ? '(%)' : '($)' }}</span>
+            <span class="hint">{{ form.get('discountType')?.value === 'PERCENTAGE' ? '(%)' : '($)' }}</span>
           </label>
           <input type="number" formControlName="discountValue" placeholder="20" min="0.01"
                  [class.invalid]="hasError('discountValue')">
@@ -133,6 +129,12 @@
           <input type="number" formControlName="maxUsesPerUser" min="1" [class.invalid]="hasError('maxUsesPerUser')">
           <span class="err" *ngIf="hasError('maxUsesPerUser')">Mínimo 1</span>
         </div>
+      </div>
+
+      <div class="field" *ngIf="isShipping">
+        <label>Usos por persona <span class="req">*</span></label>
+        <input type="number" formControlName="maxUsesPerUser" min="1" [class.invalid]="hasError('maxUsesPerUser')">
+        <span class="err" *ngIf="hasError('maxUsesPerUser')">Mínimo 1</span>
       </div>
 
       <div class="field">

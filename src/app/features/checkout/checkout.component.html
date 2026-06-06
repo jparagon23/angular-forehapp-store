@@ -103,11 +103,14 @@
               </svg>
               <span>
                 {{ appliedCoupons[group.storeId].code }}
-                <ng-container *ngIf="appliedCoupons[group.storeId].discountType === 'PORCENTAJE'">
+                <ng-container *ngIf="appliedCoupons[group.storeId].discountType === 'PERCENTAGE'">
                   — {{ appliedCoupons[group.storeId].discountValue }}% descuento
                 </ng-container>
-                <ng-container *ngIf="appliedCoupons[group.storeId].discountType === 'MONTO_FIJO'">
+                <ng-container *ngIf="appliedCoupons[group.storeId].discountType === 'FIXED_AMOUNT'">
                   — {{ appliedCoupons[group.storeId].discountValue | currencyCop }} descuento
+                </ng-container>
+                <ng-container *ngIf="appliedCoupons[group.storeId].discountType === 'FREE_SHIPPING'">
+                  — Envío gratis
                 </ng-container>
               </span>
               <span class="coupon-saving">−{{ appliedCoupons[group.storeId].discountAmount | currencyCop }}</span>
