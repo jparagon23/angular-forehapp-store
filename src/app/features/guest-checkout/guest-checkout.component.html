@@ -181,12 +181,18 @@
 
           <div class="gc-payment-opts">
             <label class="gc-pay-opt" *ngFor="let opt of paymentOptions"
-                   [class.selected]="paymentMethod() === opt.value">
+                   [class.selected]="paymentMethod() === opt.value"
+                   [class.gc-pay-opt-disabled]="opt.value === 'CASH_ON_DELIVERY' && !isCaliSelected()">
               <input type="radio" name="paymentMethod" [value]="opt.value"
-                     [ngModel]="paymentMethod()" (ngModelChange)="paymentMethod.set($event)">
+                     [ngModel]="paymentMethod()" (ngModelChange)="paymentMethod.set($event)"
+                     [disabled]="opt.value === 'CASH_ON_DELIVERY' && !isCaliSelected()">
               <div class="pay-opt-body">
                 <span class="pay-opt-label">{{ opt.label }}</span>
                 <span class="pay-opt-desc">{{ opt.desc }}</span>
+                <span class="pay-opt-city-note"
+                      *ngIf="opt.value === 'CASH_ON_DELIVERY' && !isCaliSelected()">
+                  Solo disponible para entregas en Cali
+                </span>
               </div>
             </label>
           </div>

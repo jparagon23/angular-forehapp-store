@@ -330,7 +330,13 @@
     background: #f7fbf7;
   }
 
-  &:hover { border-color: #81c784; }
+  &:hover:not(.gc-pay-opt-disabled) { border-color: #81c784; }
+
+  &.gc-pay-opt-disabled {
+    opacity: .5; cursor: not-allowed;
+    background: #fafafa;
+    &:hover { border-color: #dde; }
+  }
 }
 
 .pay-opt-body {
@@ -348,6 +354,13 @@
 .pay-opt-desc {
   font-size: .8rem;
   color: #888;
+}
+
+.pay-opt-city-note {
+  font-size: .76rem;
+  color: #e65100;
+  font-weight: 600;
+  margin-top: 2px;
 }
 
 // ── Coupon section (step 3) ────────────────────────────────────────────────

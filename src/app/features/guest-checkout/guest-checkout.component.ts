@@ -81,9 +81,12 @@ export class GuestCheckoutComponent implements OnInit {
   selectedCountryId = signal<number | null>(null);
   selectedStateId   = signal<number | null>(null);
   selectedCityId    = signal<number | null>(null);
+  selectedCityName  = signal<string>('');
   street           = signal('');
   complement       = signal('');
   reference        = signal('');
+
+  isCaliSelected = computed(() => this.selectedCityName().toLowerCase().includes('cali'));
   loadingStates    = signal(false);
   loadingCities    = signal(false);
 
@@ -244,6 +247,11 @@ export class GuestCheckoutComponent implements OnInit {
   onCityChange(id: string) {
     const cid = Number(id);
     this.selectedCityId.set(cid || null);
+    const city = this.cities().find(c => c.id === cid);
+    this.selectedCityName.set(city?.name ?? '');
+    if (this.paymentMethod() === 'CASH_ON_DELIVERY' && !this.isCaliSelected()) {
+      this.paymentMethod.set(null);
+    }
     this.estimate.set(null);
     this.estimateError.set('');
     if (!cid) return;
