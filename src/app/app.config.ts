@@ -1,4 +1,8 @@
-import { APP_INITIALIZER, ApplicationConfig, ErrorHandler } from '@angular/core';
+import { APP_INITIALIZER, ApplicationConfig, ErrorHandler, LOCALE_ID } from '@angular/core';
+import { registerLocaleData } from '@angular/common';
+import localeEsCO from '@angular/common/locales/es-CO';
+
+registerLocaleData(localeEsCO);
 import { ChunkErrorHandler } from './core/handlers/chunk-error.handler';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { provideStore } from '@ngrx/store';
@@ -56,6 +60,7 @@ export const appConfig: ApplicationConfig = {
     provideEffects([ProductsEffects, OrdersEffects, CustomersEffects, DiscountsEffects, SellerEffects, AddressesEffects, CartEffects, WishlistEffects, StoresEffects, CategoriesEffects, UserStatsEffects]),
     provideStoreDevtools({ maxAge: 25, logOnly: false }),
     { provide: ErrorHandler, useClass: ChunkErrorHandler },
+    { provide: LOCALE_ID, useValue: 'es-CO' },
     {
       provide: APP_INITIALIZER,
       useFactory: authInitFactory,
