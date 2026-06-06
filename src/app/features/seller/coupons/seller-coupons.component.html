@@ -58,7 +58,7 @@
             <span *ngIf="!c.validUntil" class="no-exp">Sin vencimiento</span>
           </td>
           <td>
-            <span class="status-badge" [class]="'status-' + statusIcon(c)">
+            <span class="status-badge" [ngClass]="'status-' + statusIcon(c)">
               <ng-container [ngSwitch]="statusIcon(c)">
                 <ng-container *ngSwitchCase="'activa'">Activa</ng-container>
                 <ng-container *ngSwitchCase="'vencida'">Vencida</ng-container>
