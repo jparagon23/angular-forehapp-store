@@ -20,6 +20,8 @@ import { NavbarComponent } from '../../shared/components/navbar/navbar.component
 import { resolveRole } from '../../core/utils/jwt.utils';
 import { loadCart } from '../../store/cart/cart.actions';
 import { validateEmail, EmailValidationResult } from '../../core/utils/email.utils';
+import { CouponService } from '../../core/services/coupon.service';
+import { AppliedCoupon, CouponValidationResponse } from '../../core/models/coupon.model';
 
 @Component({
   selector: 'app-guest-checkout',
@@ -31,6 +33,7 @@ import { validateEmail, EmailValidationResult } from '../../core/utils/email.uti
 export class GuestCheckoutComponent implements OnInit {
   private guestCart        = inject(GuestCartService);
   private guestCheckout    = inject(GuestCheckoutService);
+  private couponService    = inject(CouponService);
   private authApi          = inject(AuthApiService);
   private locationService  = inject(LocationService);
   private tokenStore       = inject(TokenStore);
@@ -103,6 +106,69 @@ export class GuestCheckoutComponent implements OnInit {
 
   submitting   = signal(false);
   submitError  = signal('');
+
+  // ── Coupons (per store group) ────────────────────────────────────────────────
+  couponInputs:   Record<number, string>        = {};
+  couponLoading:  Record<number, boolean>       = {};
+  couponErrors:   Record<number, string>        = {};
+  appliedCoupons: Record<number, AppliedCoupon> = {};
+
+  get totalCouponDiscount(): number {
+    return Object.values(this.appliedCoupons).reduce((s, c) => s + c.discountAmount, 0);
+  }
+
+  applyCoupon(storeId: number, subtotal: number, shippingCost: number) {
+    const code = (this.couponInputs[storeId] ?? '').trim().toUpperCase();
+    if (!code) return;
+    this.couponLoading[storeId] = true;
+    this.couponErrors[storeId]  = '';
+    this.couponService.validateGuest({
+      email: this.email().trim(),
+      code,
+      storeId,
+      orderAmount: subtotal,
+      shippingCost,
+    }).subscribe({
+      next: (res: CouponValidationResponse) => {
+        this.appliedCoupons[storeId] = {
+          storeId,
+          code:           res.code,
+          discountAmount: res.discountAmount,
+          finalAmount:    res.finalAmount,
+          discountType:   res.discountType,
+          discountValue:  res.discountValue,
+        };
+        this.couponLoading[storeId] = false;
+      },
+      error: (err) => {
+        this.couponErrors[storeId]  = this.couponErrorMessage(err?.error?.message ?? '');
+        this.couponLoading[storeId] = false;
+        delete this.appliedCoupons[storeId];
+      },
+    });
+  }
+
+  removeCoupon(storeId: number) {
+    delete this.appliedCoupons[storeId];
+    this.couponInputs[storeId] = '';
+    this.couponErrors[storeId] = '';
+  }
+
+  private couponErrorMessage(msg: string): string {
+    const map: Record<string, string> = {
+      'Coupon not found': 'El código ingresado no existe',
+      'Coupon is not valid for this store': 'Este cupón no aplica para esta tienda',
+      'Coupon is not active': 'Este cupón no está activo',
+      'Coupon is not yet valid': 'Este cupón aún no está vigente',
+      'Coupon has expired': 'Este cupón ha vencido',
+      'Coupon has reached its usage limit': 'Este cupón ya no tiene usos disponibles',
+      'You have already used this coupon': 'Ya usaste este cupón anteriormente',
+      "Cart has no items from the coupon's store": 'Tu carrito no tiene productos de la tienda de este cupón',
+    };
+    const minMatch = msg.match(/Order amount does not meet the minimum required: (.+)/);
+    if (minMatch) return `Tu compra debe ser mínimo $${Number(minMatch[1]).toLocaleString('es-CO')} para usar este cupón`;
+    return map[msg] ?? (msg || 'Cupón no válido');
+  }
 
   // ── Step 4 — Confirmation ────────────────────────────────────────────────────
   createdOrder = signal<OrderResponse | null>(null);
@@ -233,6 +299,9 @@ export class GuestCheckoutComponent implements OnInit {
     this.submitting.set(true);
     this.submitError.set('');
 
+    const appliedList = Object.values(this.appliedCoupons);
+    const coupon      = appliedList.length > 0 ? appliedList[0] : null;
+
     const body = {
       name:               this.name().trim(),
       lastname:           this.lastname().trim(),
@@ -244,6 +313,8 @@ export class GuestCheckoutComponent implements OnInit {
       shippingReference:  this.reference().trim() || undefined,
       items:              this.cartItems().map(i => ({ variantId: i.variantId, quantity: i.quantity })),
       paymentMethod:      method,
+      couponCode:         coupon?.code,
+      couponStoreId:      coupon?.storeId,
     };
 
     this.guestCheckout.createOrder(body).pipe(take(1)).subscribe({

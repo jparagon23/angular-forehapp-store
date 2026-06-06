@@ -20,8 +20,12 @@ export class OrderService {
   private http = inject(HttpClient);
   private base = environment.apiBaseUrl;
 
-  createOrder(addressId: number, paymentMethod: PaymentMethod): Observable<OrderResponse> {
-    return this.http.post<OrderResponse>(`${this.base}/orders`, { addressId, paymentMethod });
+  createOrder(addressId: number, paymentMethod: PaymentMethod, couponCode?: string, couponStoreId?: number): Observable<OrderResponse> {
+    return this.http.post<OrderResponse>(`${this.base}/orders`, {
+      addressId,
+      paymentMethod,
+      ...(couponCode && couponStoreId ? { couponCode, couponStoreId } : {}),
+    });
   }
 
   confirmCashPayment(orderId: number): Observable<void> {

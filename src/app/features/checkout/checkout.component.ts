@@ -140,11 +140,9 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       filter(order => order !== null),
       take(1),
     ).subscribe(order => {
-      this.redeemAll(order!.orderId).then(() => {
-        if (order!.checkoutUrl) {
-          window.location.href = order!.checkoutUrl;
-        }
-      });
+      if (order!.checkoutUrl) {
+        window.location.href = order!.checkoutUrl;
+      }
     });
 
     // Fallback: si el back rechaza por ORDER_BUYER_PHONE_REQUIRED, mostrar modal
@@ -275,7 +273,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     if (!code) return;
     this.couponLoading[storeId] = true;
     this.couponErrors[storeId]  = '';
-    this.couponService.validate({ code, storeId, orderAmount: subtotal }).subscribe({
+    const shippingCost = this.getGroupShipping(storeId)?.shippingCost ?? 0;
+    this.couponService.validate({ code, storeId, orderAmount: subtotal, shippingCost }).subscribe({
       next: (res: CouponValidationResponse) => {
         this.appliedCoupons[storeId] = {
           storeId,
@@ -288,12 +287,27 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         this.couponLoading[storeId] = false;
       },
       error: (err) => {
-        const msg = err?.error?.message ?? 'Cupón no válido';
-        this.couponErrors[storeId]  = msg;
+        this.couponErrors[storeId]  = this.couponErrorMessage(err?.error?.message ?? '');
         this.couponLoading[storeId] = false;
         delete this.appliedCoupons[storeId];
       },
     });
+  }
+
+  private couponErrorMessage(msg: string): string {
+    const map: Record<string, string> = {
+      'Coupon not found': 'El código ingresado no existe',
+      'Coupon is not valid for this store': 'Este cupón no aplica para esta tienda',
+      'Coupon is not active': 'Este cupón no está activo',
+      'Coupon is not yet valid': 'Este cupón aún no está vigente',
+      'Coupon has expired': 'Este cupón ha vencido',
+      'Coupon has reached its usage limit': 'Este cupón ya no tiene usos disponibles',
+      'You have already used this coupon': 'Ya usaste este cupón anteriormente',
+      "Cart has no items from the coupon's store": 'Tu carrito no tiene productos de la tienda de este cupón',
+    };
+    const minMatch = msg.match(/Order amount does not meet the minimum required: (.+)/);
+    if (minMatch) return `Tu compra debe ser mínimo $${Number(minMatch[1]).toLocaleString('es-CO')} para usar este cupón`;
+    return map[msg] ?? (msg || 'Cupón no válido');
   }
 
   removeCoupon(storeId: number) {
@@ -348,20 +362,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     return this.appliedCoupons[storeId]?.finalAmount ?? subtotal;
   }
 
-  private async redeemAll(orderId: number): Promise<void> {
-    const groups = Object.values(this.appliedCoupons);
-    await Promise.all(
-      groups.map(c =>
-        this.couponService.redeem({
-          code:        c.code,
-          storeId:     c.storeId,
-          orderAmount: c.finalAmount + c.discountAmount,
-          orderId,
-        }).toPromise().catch(() => {})
-      )
-    );
-  }
-
   isSelectedAddressCali(addresses: Address[]): boolean {
     const addr = this.getSelected(addresses);
     return addr?.city?.name?.toLowerCase() === 'cali';
@@ -377,7 +377,14 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   private dispatchCreateOrder() {
-    this.store.dispatch(createOrder({ addressId: this.selectedAddressId!, paymentMethod: this.selectedPaymentMethod! }));
+    const applied = Object.values(this.appliedCoupons);
+    const coupon  = applied.length > 0 ? applied[0] : null;
+    this.store.dispatch(createOrder({
+      addressId:     this.selectedAddressId!,
+      paymentMethod: this.selectedPaymentMethod!,
+      couponCode:    coupon?.code,
+      couponStoreId: coupon?.storeId,
+    }));
   }
 
   savePhone() {

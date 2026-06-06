@@ -1,5 +1,5 @@
-export type DiscountType = 'PORCENTAJE' | 'MONTO_FIJO';
-export type CouponStatus = 'ACTIVA' | 'INACTIVA';
+export type DiscountType = 'PERCENTAGE' | 'FIXED_AMOUNT' | 'FREE_SHIPPING';
+export type CouponStatus = 'ACTIVE' | 'INACTIVE' | 'EXPIRED';
 
 export interface CouponResponse {
   couponId: number;
@@ -34,20 +34,22 @@ export interface ValidateCouponRequest {
   code: string;
   storeId: number;
   orderAmount: number;
+  shippingCost?: number;
 }
 
-export interface RedeemCouponRequest {
+export interface ValidateGuestCouponRequest {
+  email: string;
   code: string;
   storeId: number;
   orderAmount: number;
-  orderId?: number;
+  shippingCost?: number;
 }
 
 export interface CreateCouponRequest {
   code: string;
   description?: string;
   discountType: DiscountType;
-  discountValue: number;
+  discountValue?: number;
   minOrderAmount?: number;
   maxUses?: number;
   maxUsesPerUser: number;

@@ -105,6 +105,8 @@ export interface GuestOrderRequest {
   shippingReference?: string;
   items: GuestOrderItem[];
   paymentMethod: PaymentMethod;
+  couponCode?: string;
+  couponStoreId?: number;
 }
 
 export interface GuestEstimateRequest {

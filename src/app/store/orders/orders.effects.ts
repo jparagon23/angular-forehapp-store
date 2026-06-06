@@ -36,8 +36,8 @@ export class OrdersEffects {
   createOrder$ = createEffect(() =>
     this.actions$.pipe(
       ofType(OrdersActions.createOrder),
-      switchMap(({ addressId, paymentMethod }) =>
-        this.orderService.createOrder(addressId, paymentMethod).pipe(
+      switchMap(({ addressId, paymentMethod, couponCode, couponStoreId }) =>
+        this.orderService.createOrder(addressId, paymentMethod, couponCode, couponStoreId).pipe(
           map(order => OrdersActions.createOrderSuccess({ order })),
           catchError(error => {
             const msg = error?.error?.message ?? error?.message ?? 'Error al crear la orden';

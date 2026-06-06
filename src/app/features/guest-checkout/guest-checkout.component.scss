@@ -350,6 +350,56 @@
   color: #888;
 }
 
+// ── Coupon section (step 3) ────────────────────────────────────────────────
+.gc-coupons-section {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #f0f0f0;
+}
+.gc-coupons-title {
+  font-size: .78rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .4px; color: #666; margin: 0 0 12px;
+}
+.gc-coupons-opt { font-weight: 400; text-transform: none; color: #aaa; letter-spacing: 0; }
+.gc-coupon-group { margin-bottom: 12px; }
+.gc-coupon-store-label { font-size: .78rem; color: #888; margin: 0 0 5px; }
+.gc-coupon-row {
+  display: flex; gap: 6px; align-items: center;
+}
+.gc-coupon-input {
+  flex: 1; padding: 8px 10px; border-radius: 7px;
+  border: 1.5px solid #e0e0e0; font-size: .85rem; font-family: monospace;
+  outline: none;
+  &:focus { border-color: #1565c0; box-shadow: 0 0 0 3px rgba(21,101,192,.1); }
+  &:disabled { background: #f9f9f9; color: #aaa; }
+}
+.gc-btn-apply {
+  padding: 8px 14px; border-radius: 7px; border: none; cursor: pointer;
+  background: #1565c0; color: #fff; font-size: .82rem; font-weight: 700;
+  display: flex; align-items: center; gap: 5px;
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}
+.gc-mini-spin {
+  width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.4);
+  border-top-color: #fff; border-radius: 50%;
+  animation: gc-rotate .7s linear infinite; display: inline-block;
+}
+@keyframes gc-rotate { to { transform: rotate(360deg); } }
+.gc-coupon-error { font-size: .77rem; color: #c62828; margin: 4px 0 0; }
+.gc-coupon-tag {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  background: #e8f5e9; border-radius: 8px; padding: 8px 12px;
+  font-size: .82rem; color: #2e7d32;
+  svg { flex-shrink: 0; }
+  span { flex: 1; }
+}
+.gc-coupon-saving { font-weight: 700; white-space: nowrap; }
+.gc-btn-remove {
+  background: none; border: none; cursor: pointer; color: #999;
+  display: flex; align-items: center; padding: 2px;
+  &:hover { color: #c62828; }
+}
+
 // ── Submit error ───────────────────────────────────────────────────────────
 .gc-submit-error {
   background: #fdecea;
@@ -522,6 +572,8 @@
 
 .sum-free { color: #2e7d32; font-weight: 700; }
 .sum-mp-surcharge { color: #7b1fa2; font-weight: 600; }
+.sum-discount { color: #2e7d32; }
+.sum-discount-val { font-weight: 700; color: #2e7d32; }
 
 .sum-grand {
   font-size: .95rem;

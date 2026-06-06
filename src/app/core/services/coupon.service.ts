@@ -7,9 +7,9 @@ import {
   CouponResponse,
   CouponValidationResponse,
   CreateCouponRequest,
-  RedeemCouponRequest,
   UpdateCouponRequest,
   ValidateCouponRequest,
+  ValidateGuestCouponRequest,
 } from '../models/coupon.model';
 
 @Injectable({ providedIn: 'root' })
@@ -21,8 +21,8 @@ export class CouponService {
     return this.http.post<CouponValidationResponse>(`${this.base}/coupons/validate`, req);
   }
 
-  redeem(req: RedeemCouponRequest): Observable<CouponValidationResponse> {
-    return this.http.post<CouponValidationResponse>(`${this.base}/coupons/redeem`, req);
+  validateGuest(req: ValidateGuestCouponRequest): Observable<CouponValidationResponse> {
+    return this.http.post<CouponValidationResponse>(`${this.base}/coupons/validate/guest`, req);
   }
 
   // Seller endpoints
@@ -46,10 +46,6 @@ export class CouponService {
 
   deactivateCoupon(storeId: number, couponId: number): Observable<CouponResponse> {
     return this.http.patch<CouponResponse>(`${this.base}/stores/${storeId}/coupons/${couponId}/deactivate`, {});
-  }
-
-  reactivateCoupon(storeId: number, couponId: number): Observable<CouponResponse> {
-    return this.http.patch<CouponResponse>(`${this.base}/stores/${storeId}/coupons/${couponId}`, { status: 'ACTIVA' });
   }
 
   // Admin endpoint
