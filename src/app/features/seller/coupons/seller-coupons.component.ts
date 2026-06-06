@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { NgClass, NgFor, NgIf, NgSwitch, NgSwitchCase, DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
@@ -20,7 +20,7 @@ import { selectActiveSellerStoreId } from '../../../store/seller/seller.selector
   templateUrl: './seller-coupons.component.html',
   styleUrl: './seller-coupons.component.scss',
 })
-export class SellerCouponsComponent implements OnInit {
+export class SellerCouponsComponent {
   private couponService = inject(CouponService);
   private fb            = inject(FormBuilder);
   private ngrx          = inject(Store);
@@ -46,7 +46,9 @@ export class SellerCouponsComponent implements OnInit {
     validUntil:     [''],
   });
 
-  ngOnInit() { this.load(); }
+  constructor() {
+    effect(() => { if (this.storeId()) this.load(); }, { allowSignalWrites: true });
+  }
 
   load() {
     const storeId = this.storeId();
