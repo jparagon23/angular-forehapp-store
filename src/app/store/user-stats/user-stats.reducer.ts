@@ -1,6 +1,7 @@
 import { createReducer, on } from '@ngrx/store';
 import { UserStats } from '../../core/models/user-stats.model';
 import * as UserStatsActions from './user-stats.actions';
+import { logout } from '../auth/auth.actions';
 
 export interface UserStatsState {
   stats: UserStats | null;
@@ -15,4 +16,6 @@ export const userStatsReducer = createReducer(
   on(UserStatsActions.loadUserStats, state => ({ ...state, loading: true, error: null })),
   on(UserStatsActions.loadUserStatsSuccess, (state, { stats }) => ({ ...state, stats, loading: false })),
   on(UserStatsActions.loadUserStatsFailure, (state, { error }) => ({ ...state, loading: false, error })),
+
+  on(logout, () => initialState),
 );
