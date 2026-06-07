@@ -1,6 +1,7 @@
 import { createReducer, on } from '@ngrx/store';
 import { CartResponse } from '../../core/models/cart.model';
 import * as CartActions from './cart.actions';
+import { logout } from '../auth/auth.actions';
 
 export interface CartState {
   cart: CartResponse | null;
@@ -40,4 +41,6 @@ export const cartReducer = createReducer(
   on(CartActions.clearCartItems, state => ({ ...state, loading: true, error: null })),
   on(CartActions.clearCartItemsSuccess, (state, { cart }) => ({ ...state, cart, loading: false })),
   on(CartActions.clearCartItemsFailure, (state, { error }) => ({ ...state, error, loading: false })),
+
+  on(logout, () => initialState),
 );

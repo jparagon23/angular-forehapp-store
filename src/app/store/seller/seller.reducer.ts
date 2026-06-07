@@ -12,6 +12,7 @@ import {
   sellerActionFailure,
   setActiveSellerStore,
 } from './seller.actions';
+import { logout } from '../auth/auth.actions';
 
 export interface SellerState {
   activeStoreId: number | null;
@@ -62,4 +63,6 @@ export const sellerReducer = createReducer(
     ),
   })),
   on(sellerActionFailure, (state, { error }) => ({ ...state, error, loading: false, inventoryLoading: false })),
+
+  on(logout, () => initialState),
 );

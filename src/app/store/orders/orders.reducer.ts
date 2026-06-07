@@ -1,6 +1,7 @@
 import { createReducer, on } from '@ngrx/store';
 import { Order, OrderResponse } from '../../core/models/order.model';
 import * as OrdersActions from './orders.actions';
+import { logout } from '../auth/auth.actions';
 
 export interface OrdersState {
   orders: Order[];
@@ -41,4 +42,6 @@ export const ordersReducer = createReducer(
   on(OrdersActions.resetCreateOrder, state => ({
     ...state, creatingOrder: false, createdOrder: null, createOrderError: null,
   })),
+
+  on(logout, () => initialState),
 );

@@ -1,6 +1,7 @@
 import { createReducer, on } from '@ngrx/store';
 import { Address } from '../../core/models/address.model';
 import * as AddressesActions from './addresses.actions';
+import { logout } from '../auth/auth.actions';
 
 export interface AddressesState {
   addresses: Address[];
@@ -50,4 +51,6 @@ export const addressesReducer = createReducer(
     addresses: state.addresses.map(a => ({ ...a, isDefault: a.id === address.id })),
   })),
   on(AddressesActions.setDefaultAddressFailure, (state, { error }) => ({ ...state, error })),
+
+  on(logout, () => initialState),
 );
