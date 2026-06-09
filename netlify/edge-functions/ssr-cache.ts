@@ -13,7 +13,9 @@ export default async function handler(request: Request, context: Context): Promi
     headers: response.headers,
   });
 
-  cached.headers.set('Cache-Control',           BROWSER_CC);
+  // Cookies prevent CDN caching — public SSR pages don't need them
+  cached.headers.delete('set-cookie');
+  cached.headers.set('Cache-Control',             BROWSER_CC);
   cached.headers.set('Netlify-CDN-Cache-Control', CDN_CACHE);
 
   return cached;
