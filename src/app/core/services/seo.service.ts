@@ -1,5 +1,6 @@
-﻿import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { Title, Meta } from '@angular/platform-browser';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { environment } from '../../../environments/environment';
 
 const SITE_NAME = 'ForehApp Store';
@@ -17,8 +18,10 @@ export interface SeoConfig {
 
 @Injectable({ providedIn: 'root' })
 export class SeoService {
-  private titleSvc = inject(Title);
-  private meta     = inject(Meta);
+  private titleSvc   = inject(Title);
+  private meta       = inject(Meta);
+  private doc        = inject(DOCUMENT);
+  private platformId = inject(PLATFORM_ID);
 
   set(cfg: SeoConfig) {
     const full = cfg.title.includes(SITE_NAME) ? cfg.title : `${cfg.title} | ${SITE_NAME}`;
@@ -51,17 +54,19 @@ export class SeoService {
   }
 
   setJsonLd(data: Record<string, unknown>) {
-    let script = document.querySelector<HTMLScriptElement>('script[data-seo="ld"]');
+    if (!isPlatformBrowser(this.platformId)) return;
+    let script = this.doc.querySelector<HTMLScriptElement>('script[data-seo="ld"]');
     if (!script) {
-      script = document.createElement('script');
+      script = this.doc.createElement('script');
       script.type = 'application/ld+json';
       script.dataset['seo'] = 'ld';
-      document.head.appendChild(script);
+      this.doc.head.appendChild(script);
     }
     script.text = JSON.stringify(data);
   }
 
   clearJsonLd() {
-    document.querySelector('script[data-seo="ld"]')?.remove();
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.doc.querySelector('script[data-seo="ld"]')?.remove();
   }
 }

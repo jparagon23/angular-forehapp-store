@@ -1,7 +1,7 @@
-import { Component, computed, DestroyRef, HostListener, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, HostListener, inject, PLATFORM_ID, signal } from '@angular/core';
 import { Router, RouterLink, NavigationEnd } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { AsyncPipe, NgFor, NgIf, TitleCasePipe, UpperCasePipe } from '@angular/common';
+import { AsyncPipe, isPlatformBrowser, NgFor, NgIf, TitleCasePipe, UpperCasePipe } from '@angular/common';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject } from 'rxjs';
 import { filter, map, startWith, take, debounceTime, distinctUntilChanged, switchMap, catchError, of } from 'rxjs';
@@ -34,6 +34,7 @@ export class NavbarComponent {
   private tokenStore     = inject(TokenStore);
   private productService = inject(ProductService);
   private destroyRef     = inject(DestroyRef);
+  private platformId     = inject(PLATFORM_ID);
 
   accountOpen  = false;
   locationOpen = false;
@@ -52,7 +53,7 @@ export class NavbarComponent {
   addressesLoading$ = this.store.select(selectAddressesLoading);
 
   categoriesSig = toSignal(this.store.select(selectAllCategories), { initialValue: [] as Category[] });
-  private windowWidth = signal(window.innerWidth);
+  private windowWidth = signal(isPlatformBrowser(this.platformId) ? window.innerWidth : 1200);
   private maxVisible  = computed(() => {
     const w = this.windowWidth();
     if (w >= 960) return 5;
@@ -154,7 +155,7 @@ export class NavbarComponent {
   }
 
 @HostListener('window:resize')
-  onResize() { this.windowWidth.set(window.innerWidth); }
+  onResize() { if (isPlatformBrowser(this.platformId)) this.windowWidth.set(window.innerWidth); }
 
   @HostListener('document:click')
   onDocumentClick() {

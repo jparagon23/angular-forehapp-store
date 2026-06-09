@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { CartItemResponse, CartResponse, CartSellerGroup } from '../models/cart.model';
 
 export interface GuestCartItem {
@@ -14,13 +15,17 @@ const KEY = 'forehapp_guest_cart';
 
 @Injectable({ providedIn: 'root' })
 export class GuestCartService {
+  private platformId = inject(PLATFORM_ID);
+  private get ok() { return isPlatformBrowser(this.platformId); }
 
   getItems(): GuestCartItem[] {
+    if (!this.ok) return [];
     try { return JSON.parse(localStorage.getItem(KEY) ?? '[]'); }
     catch { return []; }
   }
 
   addItem(item: GuestCartItem): void {
+    if (!this.ok) return;
     const items = this.getItems();
     const existing = items.find(i => i.variantId === item.variantId);
     if (existing) {
@@ -32,16 +37,19 @@ export class GuestCartService {
   }
 
   updateItem(variantId: number, quantity: number): void {
+    if (!this.ok) return;
     const items = this.getItems();
     const found = items.find(i => i.variantId === variantId);
     if (found) { found.quantity = quantity; this.save(items); }
   }
 
   removeItem(variantId: number): void {
+    if (!this.ok) return;
     this.save(this.getItems().filter(i => i.variantId !== variantId));
   }
 
   clear(): void {
+    if (!this.ok) return;
     localStorage.removeItem(KEY);
   }
 
@@ -51,7 +59,7 @@ export class GuestCartService {
       return { cartId: null, status: 'GUEST', updatedAt: null, total: 0, sellerGroups: [] };
     }
     const cartItems: CartItemResponse[] = items.map(i => ({
-      itemId:        -i.variantId,   // negativo = ítem guest (nunca choca con IDs del server)
+      itemId:        -i.variantId,
       variantId:     i.variantId,
       sku:           i.sku,
       productTitle:  i.productTitle,
