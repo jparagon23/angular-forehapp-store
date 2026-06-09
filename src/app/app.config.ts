@@ -38,6 +38,7 @@ import { CategoriesEffects } from './store/categories/categories.effects';
 import { userStatsReducer } from './store/user-stats/user-stats.reducer';
 import { UserStatsEffects } from './store/user-stats/user-stats.effects';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { provideClientHydration } from '@angular/platform-browser';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -66,6 +67,6 @@ export const appConfig: ApplicationConfig = {
       useFactory: authInitFactory,
       deps: [TokenStore, AuthApiService, Store],
       multi: true,
-    },
+    }, provideClientHydration(),
   ]
 };

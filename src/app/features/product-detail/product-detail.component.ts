@@ -1,5 +1,6 @@
 ﻿import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { environment } from '../../../environments/environment';
 import { Store } from '@ngrx/store';
 import { AsyncPipe, DatePipe, NgFor, NgIf, TitleCasePipe } from '@angular/common';
 import { Observable, combineLatest, filter, map, take } from 'rxjs';
@@ -160,7 +161,7 @@ export class ProductDetailComponent implements OnInit {
           title: `${p.name} — ${p.brand}`,
           description: p.desc || `Compra ${p.name} de ${p.brand} en ForehApp Store Colombia`,
           image: p.images?.[0]?.url || p.image,
-          url: window.location.href,
+          url: environment.siteUrl + this.router.url,
           type: 'product',
         });
         this.seo.setJsonLd({
@@ -178,7 +179,7 @@ export class ProductDetailComponent implements OnInit {
             availability: p.stock > 0
               ? 'https://schema.org/InStock'
               : 'https://schema.org/OutOfStock',
-            url: window.location.href,
+            url: environment.siteUrl + this.router.url,
           },
         });
       });
