@@ -9,7 +9,7 @@ import { SellerProductService } from '../../../../core/services/seller-product.s
 import {
   Category, CategoryAttribute,
   InventoryMovement, InventoryRequest, MovementReason, MovementsPage,
-  ProductImage, ProductVariant, SellerProduct, UpdateVariantRequest,
+  ProductImage, ProductVariant, SellerProduct, SellerProductDetail, UpdateVariantRequest,
 } from '../../../../core/models/seller-product.model';
 import { selectActiveSellerStoreId } from '../../../../store/seller/seller.selectors';
 
@@ -28,7 +28,7 @@ export class ProductEditComponent implements OnInit {
 
   private storeId = toSignal(this.ngrx.select(selectActiveSellerStoreId), { initialValue: null });
 
-  product   = signal<SellerProduct | null>(null);
+  product   = signal<SellerProductDetail | null>(null);
   loading   = signal(true);
   loadError = signal<string | null>(null);
 
@@ -166,7 +166,8 @@ export class ProductEditComponent implements OnInit {
       freeShipping: freeShipping ?? false,
     }).subscribe({
       next: p => {
-        this.product.set(p);
+        const cur = this.product();
+        if (cur) this.product.set({ ...cur, ...p });
         this.saving.set(false);
         this.saveOk.set(true);
         setTimeout(() => this.saveOk.set(false), 3000);
@@ -195,12 +196,14 @@ export class ProductEditComponent implements OnInit {
       freeShipping: freeShipping ?? false,
     }).subscribe({
       next: p => {
-        this.product.set(p);
+        const cur = this.product();
+        if (cur) this.product.set({ ...cur, ...p });
         this.saving.set(false);
         this.publishing.set(true);
         this.service.publishProduct(storeId, this.productId).subscribe({
           next: published => {
-            this.product.set(published);
+            const c = this.product();
+            if (c) this.product.set({ ...c, ...published });
             this.publishing.set(false);
             this.publishOk.set(true);
             setTimeout(() => this.publishOk.set(false), 4000);

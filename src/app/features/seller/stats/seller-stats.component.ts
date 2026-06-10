@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { filter, take } from 'rxjs';
+import { filter, forkJoin, take } from 'rxjs';
 import ApexCharts from 'apexcharts';
 
 import { loadSellerProducts } from '../../../store/seller/seller.actions';
@@ -88,15 +88,14 @@ export class SellerStatsComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error   = false;
 
-    this.svc.getSellerSummary(storeId, range).subscribe({
-      next: s => { this.summary = s; },
-      error: () => { this.error = true; },
-    });
-
-    this.svc.getSellerTopProducts(storeId, range, 8).subscribe({
-      next: products => {
-        this.topProducts = products;
-        this.buildChart(products);
+    forkJoin({
+      summary:     this.svc.getSellerSummary(storeId, range),
+      topProducts: this.svc.getSellerTopProducts(storeId, range, 8),
+    }).subscribe({
+      next: ({ summary, topProducts }) => {
+        this.summary     = summary;
+        this.topProducts = topProducts;
+        this.buildChart(topProducts);
         this.loading = false;
       },
       error: () => { this.loading = false; this.error = true; },

@@ -123,7 +123,7 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
     </svg>
-    <input type="text" placeholder="Buscar por nombre, marca, categoría o SKU..."
+    <input type="text" placeholder="Buscar por nombre, marca o categoría..."
            [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)">
     <button class="sp-search-clear" *ngIf="searchQuery()" (click)="searchQuery.set('')" title="Limpiar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
@@ -219,9 +219,7 @@
         <th class="sp-th-sort" (click)="sort('variants')">
           Variantes <span class="sp-sort-icon">{{ sortField() === 'variants' ? (sortDir() === 'asc' ? '↑' : '↓') : '↕' }}</span>
         </th>
-        <th class="sp-th-sort" (click)="sort('price')">
-          Precio desde <span class="sp-sort-icon">{{ sortField() === 'price' ? (sortDir() === 'asc' ? '↑' : '↓') : '↕' }}</span>
-        </th>
+        <th>Envío</th>
         <th class="sp-th-sort" (click)="sort('createdAt')">
           Creado <span class="sp-sort-icon">{{ sortField() === 'createdAt' ? (sortDir() === 'asc' ? '↑' : '↓') : '↕' }}</span>
         </th>
@@ -251,16 +249,12 @@
                    style="transition: transform .18s">
                 <polyline points="6 9 12 15 18 9"/>
               </svg>
-              {{ activeVariantCount(p.variants) }} variante{{ activeVariantCount(p.variants) !== 1 ? 's' : '' }}
-              <span class="sp-inactive-hint"
-                    *ngIf="p.variants.length > activeVariantCount(p.variants)">
-                · {{ p.variants.length - activeVariantCount(p.variants) }} inactiva{{ (p.variants.length - activeVariantCount(p.variants)) !== 1 ? 's' : '' }}
-              </span>
+              {{ p.variantCount }} variante{{ p.variantCount !== 1 ? 's' : '' }}
             </button>
           </td>
           <td>
-            {{ minPrice(p.variants) | currency:'USD':'symbol':'1.2-2' }}
             <span class="free-ship-badge" *ngIf="p.freeShipping" title="Envío gratis">🚚 Gratis</span>
+            <span *ngIf="!p.freeShipping">—</span>
           </td>
           <td>{{ p.createdAt | date:'dd/MM/yy' }}</td>
           <td>
@@ -278,7 +272,8 @@
         <!-- Fila expandible de variantes -->
         <tr *ngIf="expandedId() === p.id" class="sp-variants-row">
           <td colspan="7">
-            <div class="sp-variants-detail" *ngIf="p.variants.length; else noVariants">
+            <div class="sp-detail-loading" *ngIf="detailLoading()">Cargando variantes…</div>
+            <div class="sp-variants-detail" *ngIf="!detailLoading() && expandedDetail()?.variants?.length; else noVariants">
               <table class="sp-variants-table">
                 <thead>
                   <tr>
@@ -292,7 +287,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <ng-container *ngFor="let v of p.variants">
+                  <ng-container *ngFor="let v of expandedDetail()!.variants">
                     <tr [class.sp-variant-inactive]="!v.active" [class.sp-variant-editing]="editingVariantId() === v.id">
                       <td class="sp-sku">{{ v.sku ?? '—' }}</td>
                       <td>
@@ -376,7 +371,7 @@
               </table>
             </div>
             <ng-template #noVariants>
-              <p class="sp-no-variants">Este producto aún no tiene variantes. <a routerLink="../products/create">Agregar variantes →</a></p>
+              <p class="sp-no-variants" *ngIf="!detailLoading()">Este producto aún no tiene variantes. <a routerLink="../products/create">Agregar variantes →</a></p>
             </ng-template>
           </td>
         </tr>

@@ -44,10 +44,14 @@ export interface SellerProduct {
   category: string;
   status: ProductStatus;
   createdAt: string;
-  variants: ProductVariant[];
+  variantCount: number;
   thumbnailUrl?: string | null;
   freeShipping: boolean;
-  images?: ProductImage[];
+}
+
+export interface SellerProductDetail extends SellerProduct {
+  variants: ProductVariant[];
+  images: ProductImage[];
 }
 
 export interface CreateProductRequest {

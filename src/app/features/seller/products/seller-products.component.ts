@@ -7,6 +7,7 @@ import { Actions, ofType } from '@ngrx/effects';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import {
   adjustSellerInventory,
+  adjustSellerInventorySuccess,
   changeSellerProductStatus,
   changeSellerProductStatusSuccess,
   deleteSellerProduct,
@@ -22,7 +23,7 @@ import {
 import { ToastComponent } from '../../../shared/components/toast/toast.component';
 import {
   InventoryMovement, InventoryRequest, MovementReason,
-  MovementsPage, ProductStatus, ProductVariant, SellerProduct, UpdateVariantRequest,
+  MovementsPage, ProductStatus, ProductVariant, SellerProduct, SellerProductDetail, UpdateVariantRequest,
 } from '../../../core/models/seller-product.model';
 import { SellerProductService } from '../../../core/services/seller-product.service';
 
@@ -64,7 +65,7 @@ export class SellerProductsComponent implements OnInit {
 
   searchQuery  = signal('');
   statusFilter = signal<ProductStatus | null>(null);
-  sortField    = signal<'title' | 'category' | 'status' | 'variants' | 'price' | 'createdAt' | null>(null);
+  sortField    = signal<'title' | 'category' | 'status' | 'variants' | 'createdAt' | null>(null);
   sortDir      = signal<'asc' | 'desc'>('asc');
 
   private readonly STATUS_ORDER: Record<ProductStatus, number> = {
@@ -81,8 +82,7 @@ export class SellerProductsComponent implements OnInit {
       const matchesSearch = !q
         || p.title.toLowerCase().includes(q)
         || p.brand.toLowerCase().includes(q)
-        || p.category.toLowerCase().includes(q)
-        || p.variants.some(v => (v.sku ?? '').toLowerCase().includes(q));
+        || p.category.toLowerCase().includes(q);
       const matchesStatus = !status || p.status === status;
       return matchesSearch && matchesStatus;
     });
@@ -95,8 +95,7 @@ export class SellerProductsComponent implements OnInit {
         case 'title':    cmp = a.title.localeCompare(b.title, 'es'); break;
         case 'category': cmp = a.category.localeCompare(b.category, 'es'); break;
         case 'status':   cmp = this.STATUS_ORDER[a.status] - this.STATUS_ORDER[b.status]; break;
-        case 'variants': cmp = this.activeVariantCount(a.variants) - this.activeVariantCount(b.variants); break;
-        case 'price':    cmp = this.minPrice(a.variants) - this.minPrice(b.variants); break;
+        case 'variants': cmp = a.variantCount - b.variantCount; break;
         case 'createdAt': cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(); break;
       }
       return dir === 'asc' ? cmp : -cmp;
@@ -105,7 +104,7 @@ export class SellerProductsComponent implements OnInit {
 
   hasFilters = computed(() => !!this.searchQuery() || this.statusFilter() !== null);
 
-  sort(field: 'title' | 'category' | 'status' | 'variants' | 'price' | 'createdAt') {
+  sort(field: 'title' | 'category' | 'status' | 'variants' | 'createdAt') {
     if (this.sortField() === field) {
       this.sortDir.update(d => d === 'asc' ? 'desc' : 'asc');
     } else {
@@ -117,7 +116,9 @@ export class SellerProductsComponent implements OnInit {
   toastMsg  = signal('');
   toastType = signal<'success' | 'error'>('success');
 
-  expandedId = signal<number | null>(null);
+  expandedId     = signal<number | null>(null);
+  expandedDetail = signal<SellerProductDetail | null>(null);
+  detailLoading  = signal(false);
 
   // Movements history modal state
   movOpen         = signal(false);
@@ -161,6 +162,9 @@ export class SellerProductsComponent implements OnInit {
         this.toastType.set('success');
         this.toastMsg.set(label[product.status] ?? 'Estado actualizado');
       });
+
+    this.actions$.pipe(ofType(adjustSellerInventorySuccess), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.reloadDetail());
   }
 
   ngOnInit() { this.store.dispatch(loadSellerProducts()); }
@@ -168,7 +172,29 @@ export class SellerProductsComponent implements OnInit {
   clearFilters() { this.searchQuery.set(''); this.statusFilter.set(null); }
 
   toggleExpand(id: number) {
-    this.expandedId.update(cur => cur === id ? null : id);
+    if (this.expandedId() === id) {
+      this.expandedId.set(null);
+      this.expandedDetail.set(null);
+    } else {
+      this.expandedId.set(id);
+      this.expandedDetail.set(null);
+      this.loadDetail(id);
+    }
+  }
+
+  private loadDetail(productId: number) {
+    const storeId = this.storeId();
+    if (!storeId) return;
+    this.detailLoading.set(true);
+    this.sellerService.getProduct(storeId, productId).subscribe({
+      next: detail => { this.expandedDetail.set(detail); this.detailLoading.set(false); },
+      error: ()     => { this.detailLoading.set(false); },
+    });
+  }
+
+  private reloadDetail() {
+    const id = this.expandedId();
+    if (id) this.loadDetail(id);
   }
 
   openMovements(p: SellerProduct, v: ProductVariant, e: Event) {
@@ -275,7 +301,7 @@ export class SellerProductsComponent implements OnInit {
     call.subscribe({
       next: () => {
         this.togglingVariantId.set(null);
-        this.store.dispatch(loadSellerProducts());
+        this.reloadDetail();
       },
       error: err => {
         const code: string = err.error?.errorCode ?? '';
@@ -325,7 +351,7 @@ export class SellerProductsComponent implements OnInit {
         this.editPriceForm.reset();
         this.toastType.set('success');
         this.toastMsg.set('Precio actualizado correctamente');
-        this.store.dispatch(loadSellerProducts());
+        this.reloadDetail();
       },
       error: err => {
         this.variantUpdateError.set(err.error?.message ?? 'Error al actualizar el precio.');
@@ -347,6 +373,7 @@ export class SellerProductsComponent implements OnInit {
         this.toastType.set('success');
         this.toastMsg.set('Variante eliminada correctamente');
         this.store.dispatch(loadSellerProducts());
+        this.reloadDetail();
       },
       error: err => {
         this.deletingVariantId.set(null);

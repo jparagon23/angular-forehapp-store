@@ -6,7 +6,7 @@ import {
   Attribute, AttributeValue, Brand, BrandLine, Category, CategoryAttribute,
   CreateProductRequest, CreateVariantRequest, UpdateVariantRequest,
   InventoryRequest, MovementReason, MovementsPage,
-  ProductImage, ProductVariant, SellerProduct,
+  ProductImage, ProductVariant, SellerProduct, SellerProductDetail,
 } from '../models/seller-product.model';
 
 @Injectable({ providedIn: 'root' })
@@ -111,8 +111,8 @@ export class SellerProductService {
     return this.http.get<SellerProduct[]>(`${this.BASE}/stores/${storeId}/products`);
   }
 
-  getProduct(storeId: number, id: number): Observable<SellerProduct> {
-    return this.http.get<SellerProduct>(`${this.BASE}/stores/${storeId}/products/${id}`);
+  getProduct(storeId: number, id: number): Observable<SellerProductDetail> {
+    return this.http.get<SellerProductDetail>(`${this.BASE}/stores/${storeId}/products/${id}`);
   }
 
   createProduct(storeId: number, req: CreateProductRequest): Observable<SellerProduct> {

@@ -51,17 +51,7 @@ export const sellerReducer = createReducer(
     products: state.products.map(p => p.id === product.id ? product : p),
   })),
   on(adjustSellerInventory, state => ({ ...state, inventoryLoading: true, error: null })),
-  on(adjustSellerInventorySuccess, (state, { productId, variantId, quantity }) => ({
-    ...state,
-    inventoryLoading: false,
-    products: state.products.map(p =>
-      p.id === productId
-        ? { ...p, variants: p.variants.map(v =>
-              v.id === variantId ? { ...v, stock: v.stock + quantity } : v
-            )}
-        : p
-    ),
-  })),
+  on(adjustSellerInventorySuccess, state => ({ ...state, inventoryLoading: false })),
   on(sellerActionFailure, (state, { error }) => ({ ...state, error, loading: false, inventoryLoading: false })),
 
   on(logout, () => initialState),
