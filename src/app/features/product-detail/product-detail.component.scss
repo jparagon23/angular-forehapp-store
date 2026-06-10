@@ -536,25 +536,6 @@
   .related-grid { gap: 10px; }
 }
 
-// ── Product tags ──────────────────────────────────────────
-.product-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 0 0 14px;
-}
-
-.product-tag {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 20px;
-  background: #f5f5f5;
-  color: #888;
-  font-size: .75rem;
-  font-weight: 600;
-  letter-spacing: .02em;
-}
-
 .site-footer {
   background: var(--dark); color: #aaa;
   text-align: center; padding: 26px; font-size: .85rem;

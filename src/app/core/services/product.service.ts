@@ -147,7 +147,6 @@ export class ProductService {
           variations,
           variants:   raw.variants ?? [],
           store:      raw.store ? (raw.store as ProductStore) : undefined,
-          tags:       raw.tags ?? [],
         } as Product;
       })
     );
