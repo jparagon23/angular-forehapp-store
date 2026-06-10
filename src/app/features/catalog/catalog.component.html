@@ -85,6 +85,7 @@
             <span class="prod-emoji">{{ product.emoji }}</span>
             <div class="img-skeleton" *ngIf="product.image"></div>
             <img class="prod-img" [src]="product.image" [alt]="product.name"
+                 loading="lazy" decoding="async"
                  (load)="onImgLoad($event)" (error)="onImgError($event)">
             <button class="wish-btn" [class.active]="isWishlisted(product.id)"
                     (click)="toggleWishlist(product, $event)" aria-label="Lista de deseos">
@@ -190,7 +191,7 @@
 
   <!-- Secciones cargadas -->
   <div *ngIf="!sectionsLoading()" class="ds-wrap">
-    <section *ngFor="let section of sections()" class="ds-section">
+    <section *ngFor="let section of sections(); let si = index" class="ds-section">
 
       <div class="ds-section-header">
         <div class="ds-section-info">
@@ -212,6 +213,7 @@
             <span class="prod-emoji">{{ product.emoji }}</span>
             <div class="img-skeleton"></div>
             <img class="prod-img" [src]="product.image" [alt]="product.name"
+                 [loading]="si === 0 ? 'eager' : 'lazy'" decoding="async"
                  (load)="onImgLoad($event)" (error)="onImgError($event)">
             <button class="wish-btn" [class.active]="isWishlisted(product.id)"
                     (click)="toggleWishlist(product, $event)" aria-label="Lista de deseos">
