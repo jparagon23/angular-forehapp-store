@@ -13,6 +13,7 @@ const CSR_ROUTES = [
   '/account',
   '/orders',
   '/stores',
+  '/product',
 ];
 
 export function app(): express.Express {

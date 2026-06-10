@@ -15,7 +15,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const backend    = inject(HttpBackend);
 
   const token    = tokenStore.accessToken;
-  const authReq  = token
+  const isPublic = req.url.includes('/products/public');
+  const authReq  = (token && !isPublic)
     ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
     : req;
 
