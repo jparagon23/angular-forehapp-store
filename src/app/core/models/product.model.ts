@@ -40,4 +40,5 @@ export interface Product {
   variations?: ProductVariations;
   variants?: DetailVariant[];
   store?: ProductStore;
+  tags?: string[];
 }

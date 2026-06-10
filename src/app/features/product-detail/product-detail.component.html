@@ -76,6 +76,11 @@
         </div>
         <span class="store-name">{{ product.store.name }}</span>
       </div>
+
+      <div class="product-tags" *ngIf="product.tags?.length">
+        <span class="product-tag" *ngFor="let tag of product.tags">{{ tag }}</span>
+      </div>
+
       <div class="product-price-block">
         <ng-container *ngIf="selectedVariant(product) as v">
           <span class="product-compare-price"

@@ -136,6 +136,46 @@
   </form>
 </div>
 
+<!-- ══ Etiquetas ══════════════════════════════════════════════ -->
+<div class="edit-card" *ngIf="!loading() && !loadError()">
+  <h2 class="edit-card-title">Etiquetas</h2>
+  <p class="edit-card-hint">Mejoran la búsqueda del producto. Máximo 20 tags · hasta 50 caracteres cada uno.</p>
+
+  <div class="tag-chips" *ngIf="tags().length">
+    <span class="tag-chip" *ngFor="let tag of tags()">
+      {{ tag }}
+      <button class="tag-chip-remove" (click)="removeTag(tag)" [disabled]="savingTags()" title="Quitar">✕</button>
+    </span>
+  </div>
+
+  <div class="tag-input-row">
+    <input
+      class="tag-input"
+      type="text"
+      placeholder="Ej: creatina, proteina…"
+      [value]="tagInput()"
+      (input)="tagInput.set($any($event.target).value)"
+      (keydown.enter)="addTag()"
+      [disabled]="savingTags() || tags().length >= 20"
+      maxlength="50" />
+    <button class="btn-action btn-add-tag"
+            (click)="addTag()"
+            [disabled]="savingTags() || !tagInput().trim() || tags().length >= 20">
+      + Agregar
+    </button>
+    <span class="tag-count">{{ tags().length }}/20</span>
+  </div>
+
+  <div class="form-error form-error--global" *ngIf="tagsError()">{{ tagsError() }}</div>
+  <div class="save-ok" *ngIf="tagsOk()">Etiquetas guardadas correctamente.</div>
+
+  <div class="edit-actions">
+    <button class="btn-primary" (click)="saveTags()" [disabled]="savingTags()">
+      {{ savingTags() ? 'Guardando…' : 'Guardar etiquetas' }}
+    </button>
+  </div>
+</div>
+
 <!-- ══ Variantes ══════════════════════════════════════════════ -->
 <div class="edit-card" *ngIf="!loading() && !loadError()">
   <h2 class="edit-card-title">Variantes</h2>

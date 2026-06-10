@@ -161,6 +161,12 @@ export class SellerProductService {
     return this.http.delete<void>(`${this.BASE}/stores/${storeId}/products/${productId}/variants/${variantId}`);
   }
 
+  // ── Tags ─────────────────────────────────────────────────────────────────
+
+  setProductTags(storeId: number, productId: number, tags: string[]): Observable<string[]> {
+    return this.http.put<string[]>(`${this.BASE}/stores/${storeId}/products/${productId}/tags`, { tags });
+  }
+
   // ── Images ────────────────────────────────────────────────────────────────
 
   getImages(storeId: number, productId: number): Observable<ProductImage[]> {

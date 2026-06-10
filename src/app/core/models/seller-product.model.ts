@@ -52,6 +52,7 @@ export interface SellerProduct {
 export interface SellerProductDetail extends SellerProduct {
   variants: ProductVariant[];
   images: ProductImage[];
+  tags?: string[];
 }
 
 export interface CreateProductRequest {

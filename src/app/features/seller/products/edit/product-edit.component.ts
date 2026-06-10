@@ -99,6 +99,48 @@ export class ProductEditComponent implements OnInit {
   movReasonFilter = signal<MovementReason | null>(null);
   readonly movPageSize = 10;
 
+  // ── Etiquetas ────────────────────────────────────────────────
+  tags       = signal<string[]>([]);
+  tagInput   = signal('');
+  savingTags = signal(false);
+  tagsError  = signal<string | null>(null);
+  tagsOk     = signal(false);
+
+  addTag() {
+    const val = this.tagInput().trim().toLowerCase();
+    if (!val) return;
+    if (val.length > 50) { this.tagsError.set('El tag no puede superar 50 caracteres.'); return; }
+    if (this.tags().includes(val)) { this.tagInput.set(''); return; }
+    if (this.tags().length >= 20) { this.tagsError.set('Máximo 20 tags por producto.'); return; }
+    this.tags.update(t => [...t, val]);
+    this.tagInput.set('');
+    this.tagsError.set(null);
+  }
+
+  removeTag(tag: string) {
+    this.tags.update(t => t.filter(x => x !== tag));
+  }
+
+  saveTags() {
+    const storeId = this.storeId();
+    if (!storeId) return;
+    this.savingTags.set(true);
+    this.tagsError.set(null);
+    this.tagsOk.set(false);
+    this.service.setProductTags(storeId, this.productId, this.tags()).subscribe({
+      next: tags => {
+        this.tags.set(tags);
+        this.savingTags.set(false);
+        this.tagsOk.set(true);
+        setTimeout(() => this.tagsOk.set(false), 3000);
+      },
+      error: err => {
+        this.tagsError.set(err.error?.error ?? err.error?.message ?? 'Error al guardar etiquetas.');
+        this.savingTags.set(false);
+      },
+    });
+  }
+
   // ── Imágenes ─────────────────────────────────────────────────
   images         = signal<ProductImage[]>([]);
   loadingImages  = signal(true);
@@ -124,6 +166,7 @@ export class ProductEditComponent implements OnInit {
       next: ({ product, categories }) => {
         this.product.set(product);
         this.variants.set(product.variants);
+        this.tags.set(product.tags ?? []);
         this.infoForm.patchValue({ title: product.title, description: product.description ?? '', freeShipping: product.freeShipping });
 
         const match = categories.find((c: Category) => c.name === product.category);
