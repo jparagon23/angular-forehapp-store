@@ -15,6 +15,9 @@ export interface OrderItemResponse {
   variantId: number;
   sku: string | null;
   productTitle: string;
+  categoryName: string;
+  brandName: string;
+  lineName: string | null;
   attributes: VariantAttributeDto[];
   quantity: number;
   unitPrice: number;

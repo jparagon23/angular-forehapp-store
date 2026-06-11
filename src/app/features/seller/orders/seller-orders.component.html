@@ -204,6 +204,15 @@
             <td class="so-sku">{{ item.sku ?? '—' }}</td>
             <td>
               {{ item.productTitle }}
+              <div class="so-item-meta">
+                {{ item.brandName }}
+                <span class="so-item-meta-sep">·</span>
+                {{ item.categoryName }}
+                <ng-container *ngIf="item.lineName">
+                  <span class="so-item-meta-sep">·</span>
+                  {{ item.lineName }}
+                </ng-container>
+              </div>
               <div class="so-attr-tags" *ngIf="item.attributes?.length">
                 <span class="so-attr-tag" *ngFor="let attr of item.attributes">
                   {{ attr.attribute }}: {{ attr.value }}
