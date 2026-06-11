@@ -78,6 +78,9 @@ export interface SellerOrderGroupDetail {
   orderPaymentStatus: OrderApiStatus;
   subtotal: number;
   shippingCost: number;
+  orderTotal: number;
+  couponCode: string | null;
+  couponDiscount: number | null;
   trackingNumber: string | null;
   preparedAt: string | null;
   shippedAt: string | null;

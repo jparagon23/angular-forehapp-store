@@ -74,7 +74,7 @@
 
       <div class="so-date" *ngIf="relevantDate(g)">{{ relevantDate(g) | date:'dd MMM yyyy' }}</div>
       <div class="so-items-count">{{ g.items.length }} ítem{{ g.items.length !== 1 ? 's' : '' }}</div>
-      <div class="so-total">{{ g.subtotal | currencyCop }}</div>
+      <div class="so-total">{{ g.orderTotal | currencyCop }}</div>
       <span class="so-badge" [ngClass]="statusClass(g.status)">{{ statusLabel(g.status) }}</span>
       <span class="so-pay-badge" [ngClass]="paymentClass(g)">
         <svg *ngIf="g.paymentMethod === 'CASH_ON_DELIVERY'" width="13" height="13"
@@ -217,13 +217,28 @@
         </tbody>
       </table>
 
-      <div class="so-card-total">
-        Subtotal del grupo: <strong>{{ g.subtotal | currencyCop }}</strong>
-      </div>
-      <div class="so-shipping-row">
-        <span>Envío:</span>
-        <span *ngIf="g.shippingCost === 0" class="so-free-badge">Gratis</span>
-        <strong *ngIf="g.shippingCost > 0">{{ g.shippingCost | currencyCop }}</strong>
+      <div class="so-breakdown">
+        <div class="so-breakdown-row">
+          <span>Subtotal productos</span>
+          <span>{{ g.subtotal | currencyCop }}</span>
+        </div>
+        <div class="so-breakdown-row">
+          <span>Envío</span>
+          <span *ngIf="g.shippingCost === 0" class="so-free-badge">Gratis</span>
+          <span *ngIf="g.shippingCost > 0">{{ g.shippingCost | currencyCop }}</span>
+        </div>
+        <div class="so-breakdown-row so-coupon-row" *ngIf="g.couponCode">
+          <span>
+            Cupón
+            <span class="so-coupon-code">{{ g.couponCode }}</span>
+          </span>
+          <span class="so-coupon-discount">− {{ g.couponDiscount | currencyCop }}</span>
+        </div>
+        <div class="so-breakdown-divider"></div>
+        <div class="so-breakdown-row so-breakdown-total">
+          <span>Total a cobrar</span>
+          <strong>{{ g.orderTotal | currencyCop }}</strong>
+        </div>
       </div>
     </div>
 
