@@ -23,5 +23,5 @@ export default async function handler(request: Request, context: Context): Promi
 
 export const config: Config = {
   // Solo rutas públicas cuyo contenido no depende de sesión de usuario
-  path: ['/', '/product/*'],
+  path: ['/'],
 };
