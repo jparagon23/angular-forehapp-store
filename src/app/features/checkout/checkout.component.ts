@@ -3,10 +3,12 @@ import { Router, RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { AsyncPipe, NgFor, NgIf, UpperCasePipe } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Subscription } from 'rxjs';
-import { filter, skip, take } from 'rxjs/operators';
+import { forkJoin, Observable, of, Subscription } from 'rxjs';
+import { catchError, filter, map, skip, startWith, switchMap, take } from 'rxjs/operators';
 import { CartService } from '../../core/services/cart.service';
+import { ProductService } from '../../core/services/product.service';
 import { CartSellerGroup, ShippingEstimateGroup, ShippingEstimateResponse } from '../../core/models/cart.model';
+import { Product } from '../../core/models/product.model';
 import { selectSellerGroups, selectCartTotal, selectCartCount } from '../../store/cart/cart.selectors';
 import { removeCartItem } from '../../store/cart/cart.actions';
 import { selectIsLoggedIn, selectAuthUser } from '../../store/auth/auth.selectors';
@@ -43,6 +45,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private couponService   = inject(CouponService);
   private locationService = inject(LocationService);
   private cartService     = inject(CartService);
+  private productSvc      = inject(ProductService);
   private authApi         = inject(AuthApiService);
   private tokenStore      = inject(TokenStore);
   private seo             = inject(SeoService);
@@ -50,6 +53,35 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   sellerGroups$ = this.store.select(selectSellerGroups);
   total$        = this.store.select(selectCartTotal);
   count$        = this.store.select(selectCartCount);
+
+  recommendations$: Observable<Record<number, Product[]>> = this.sellerGroups$.pipe(
+    switchMap(groups => {
+      const shortfallGroups = groups.filter(
+        g => g.freeShippingMinAmount != null && g.subtotal < g.freeShippingMinAmount!
+      );
+      if (!shortfallGroups.length) return of({} as Record<number, Product[]>);
+
+      const requests = shortfallGroups.map(group =>
+        this.productSvc.getProducts({
+          storeId:           group.storeId,
+          maxPrice:          group.freeShippingMinAmount! - group.subtotal,
+          excludeProductIds: group.items.map(i => i.productId),
+          sortBy:            'PRICE_DESC',
+          size:              4,
+        }).pipe(
+          map(products => ({ storeId: group.storeId, products })),
+          catchError(() => of({ storeId: group.storeId, products: [] as Product[] }))
+        )
+      );
+
+      return forkJoin(requests).pipe(
+        map(results =>
+          results.reduce((acc, r) => ({ ...acc, [r.storeId]: r.products }), {} as Record<number, Product[]>)
+        )
+      );
+    }),
+    startWith({} as Record<number, Product[]>)
+  );
   authUser$     = this.store.select(selectAuthUser);
   isLoggedIn$   = this.store.select(selectIsLoggedIn);
   authUser      = toSignal(this.store.select(selectAuthUser), { initialValue: null });
@@ -194,6 +226,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   getGroupShipping(storeId: number): ShippingEstimateGroup | null {
     return this.shippingEstimate()?.sellerGroups.find(g => g.storeId === storeId) ?? null;
   }
+
+  goToProduct(id: number) { this.router.navigate(['/product', id]); }
 
   fspPct(group: CartSellerGroup): number {
     if (!group.freeShippingMinAmount) return 0;
