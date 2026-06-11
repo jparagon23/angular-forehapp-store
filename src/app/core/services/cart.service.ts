@@ -9,6 +9,7 @@ import { CartItemResponse, CartResponse, CartSellerGroup, ShippingEstimateRespon
 interface BatchItem {
   id: number;
   variantId: number;
+  productId: number;
   sku: string | null;
   productTitle: string;
   quantity: number;
@@ -67,6 +68,7 @@ export class CartService {
       items:      g.items.map((i): CartItemResponse => ({
         itemId:        i.id,
         variantId:     i.variantId,
+        productId:     i.productId,
         sku:           i.sku,
         productTitle:  i.productTitle,
         quantity:      i.quantity,

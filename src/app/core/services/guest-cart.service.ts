@@ -61,6 +61,7 @@ export class GuestCartService {
     const cartItems: CartItemResponse[] = items.map(i => ({
       itemId:        -i.variantId,
       variantId:     i.variantId,
+      productId:     0,
       sku:           i.sku,
       productTitle:  i.productTitle,
       quantity:      i.quantity,
