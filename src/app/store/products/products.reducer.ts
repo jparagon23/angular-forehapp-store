@@ -31,7 +31,14 @@ export const productsReducer = createReducer(
       image:    state.entities[p.id]?.image    || p.image,
       images:   state.entities[p.id]?.images   ?? p.images,
     }));
-    return adapter.setAll(enriched, { ...state, loading: false });
+    const next = adapter.setAll(enriched, { ...state, loading: false });
+    // Si el producto seleccionado no está en el nuevo catálogo, reinsertarlo para
+    // evitar que setAll lo elimine y cause un falso "no encontrado"
+    if (state.selectedId != null && !products.some(p => p.id === state.selectedId)) {
+      const selected = state.entities[state.selectedId];
+      if (selected) return adapter.upsertOne(selected, next);
+    }
+    return next;
   }),
   on(ProductsActions.loadProductsFailure, (state, { error }) =>
     ({ ...state, loading: false, error })),
