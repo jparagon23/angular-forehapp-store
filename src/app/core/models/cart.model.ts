@@ -1,6 +1,7 @@
 export interface CartItemResponse {
   itemId: number;
   variantId: number;
+  productId: number;
   sku: string | null;
   productTitle: string;
   quantity: number;

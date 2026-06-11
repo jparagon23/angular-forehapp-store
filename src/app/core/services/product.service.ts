@@ -39,6 +39,10 @@ export interface ProductFilters {
   brandId?: number;
   sortBy?: SortBy;
   freeShipping?: boolean;
+  storeId?: number;
+  maxPrice?: number;
+  excludeProductIds?: number[];
+  size?: number;
 }
 
 export interface BrandFacet { id: number; name: string; count: number; }
@@ -82,9 +86,14 @@ export class ProductService {
 
   getProducts(filters?: ProductFilters): Observable<Product[]> {
     const params: Record<string, string> = {};
-    if (filters?.search)     params['search']     = filters.search;
-    if (filters?.categoryId) params['categoryId'] = String(filters.categoryId);
-    if (filters?.brandId)    params['brandId']    = String(filters.brandId);
+    if (filters?.search)                      params['search']            = filters.search;
+    if (filters?.categoryId)                  params['categoryId']        = String(filters.categoryId);
+    if (filters?.brandId)                     params['brandId']           = String(filters.brandId);
+    if (filters?.storeId)                     params['storeId']           = String(filters.storeId);
+    if (filters?.maxPrice != null)            params['maxPrice']          = String(filters.maxPrice);
+    if (filters?.excludeProductIds?.length)   params['excludeProductIds'] = filters.excludeProductIds.join(',');
+    if (filters?.sortBy)                      params['sortBy']            = filters.sortBy;
+    if (filters?.size)                        params['size']              = String(filters.size);
 
     return this.http.get<PageResponse<ApiProductSummary>>(`${this.BASE}/products/public`, { params }).pipe(
       map(res => res.content.map(p => this.mapProduct(p)))

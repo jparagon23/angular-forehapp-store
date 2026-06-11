@@ -45,6 +45,7 @@
 
       <!-- Items grouped by seller -->
       <div class="cart-body" *ngIf="groups.length > 0">
+        <ng-container *ngIf="recommendations$ | async as recs">
         <div class="seller-group" *ngFor="let group of groups">
 
           <div class="seller-header">
@@ -123,11 +124,25 @@
               <div class="fsp-track">
                 <div class="fsp-fill" [style.width.%]="fspPct(group)"></div>
               </div>
+              <div class="rec-section" *ngIf="recs[group.storeId]?.length">
+                <p class="rec-label">Agrega para completar</p>
+                <div class="rec-list">
+                  <button class="rec-card" *ngFor="let p of recs[group.storeId]" (click)="goToProduct(p.id)">
+                    <div class="rec-img">
+                      <img *ngIf="p.image" [src]="p.image" [alt]="p.name" loading="lazy">
+                      <span *ngIf="!p.image">{{ p.emoji }}</span>
+                    </div>
+                    <p class="rec-name">{{ p.name }}</p>
+                    <p class="rec-price">{{ p.price | currencyCop }}</p>
+                  </button>
+                </div>
+              </div>
             </ng-container>
 
           </div>
 
         </div>
+        </ng-container>
       </div>
 
       <!-- Footer -->
