@@ -27,3 +27,24 @@
   margin-top: 10px; padding: 10px 14px; border-radius: 8px;
   background: #fff2f2; border: 1px solid #ffc9c9; color: #c0392b; font-size: .85rem;
 }
+
+.hint { display: block; font-size: .78rem; color: #aaa; margin-top: 4px; }
+
+.owner-search-row {
+  display: flex; gap: 8px; align-items: center;
+  input { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: .92rem; outline: none; &:focus { border-color: var(--green); } }
+}
+.search-error { font-size: .82rem; color: #c0392b; margin-top: 6px; }
+
+.owner-found {
+  display: flex; align-items: center; gap: 12px;
+  background: #edf7ea; border: 1px solid #c3e6b0; border-radius: 10px; padding: 10px 14px;
+}
+.owner-avatar {
+  width: 36px; height: 36px; border-radius: 50%; background: var(--green); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 1rem; flex-shrink: 0;
+}
+.owner-info { display: flex; flex-direction: column; flex: 1; gap: 2px; }
+.owner-name  { font-weight: 700; font-size: .92rem; color: var(--dark); }
+.owner-email { font-size: .78rem; color: #666; }

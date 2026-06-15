@@ -1,20 +1,24 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { DatePipe, NgFor, NgIf } from '@angular/common';
+import { DatePipe, NgFor, NgIf, UpperCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { finalize } from 'rxjs/operators';
 import { AmbassadorService } from '../../../core/services/ambassador.service';
 import { AmbassadorResponse, CommissionResponse } from '../../../core/models/ambassador.model';
+import { StoreService } from '../../../core/services/store.service';
+import { UserSearchResult } from '../../../core/models/store.model';
 import { AdminTopbarComponent } from '../shared/admin-topbar.component';
 import { CurrencyCopPipe } from '../../../shared/pipes/currency-cop.pipe';
 
 @Component({
   selector: 'app-ambassadors-admin',
   standalone: true,
-  imports: [NgFor, NgIf, DatePipe, FormsModule, AdminTopbarComponent, CurrencyCopPipe],
+  imports: [NgFor, NgIf, DatePipe, FormsModule, UpperCasePipe, AdminTopbarComponent, CurrencyCopPipe],
   templateUrl: './ambassadors-admin.component.html',
   styleUrl: './ambassadors-admin.component.scss',
 })
 export class AmbassadorsAdminComponent implements OnInit {
-  private svc = inject(AmbassadorService);
+  private svc      = inject(AmbassadorService);
+  private storeSvc = inject(StoreService);
 
   ambassadors = signal<AmbassadorResponse[]>([]);
   loading     = signal(true);
@@ -23,9 +27,13 @@ export class AmbassadorsAdminComponent implements OnInit {
   creating     = signal(false);
   createError  = signal('');
   createSaving = signal(false);
-  newProfileId = signal('');
   newCode      = signal('');
   newPct       = signal('');
+
+  searchEmail  = '';
+  searching    = false;
+  foundUser: UserSearchResult | null = null;
+  searchError  = '';
 
   selected    = signal<AmbassadorResponse | null>(null);
   commissions = signal<CommissionResponse[]>([]);
@@ -42,24 +50,44 @@ export class AmbassadorsAdminComponent implements OnInit {
     });
   }
 
-  openCreate()  { this.creating.set(true);  this.createError.set(''); }
+  openCreate() { this.creating.set(true); this.createError.set(''); }
   closeCreate() {
     this.creating.set(false);
-    this.newProfileId.set(''); this.newCode.set(''); this.newPct.set('');
+    this.newCode.set(''); this.newPct.set('');
     this.createError.set('');
+    this.clearUser();
+  }
+
+  searchUser() {
+    const email = this.searchEmail.trim();
+    if (!email) return;
+    this.searching   = true;
+    this.foundUser   = null;
+    this.searchError = '';
+    this.storeSvc.searchUserByEmail(email).pipe(
+      finalize(() => this.searching = false)
+    ).subscribe({
+      next:  user => this.foundUser = user,
+      error: ()   => this.searchError = 'No se encontró ningún usuario con ese correo.',
+    });
+  }
+
+  clearUser() {
+    this.foundUser   = null;
+    this.searchError = '';
+    this.searchEmail = '';
   }
 
   submitCreate() {
-    const profileId = parseInt(this.newProfileId(), 10);
-    const code      = this.newCode().trim().toUpperCase();
-    const pct       = parseFloat(this.newPct());
-    if (!profileId || !code || isNaN(pct) || pct <= 0 || pct > 100) {
-      this.createError.set('Completa todos los campos correctamente.');
+    const code = this.newCode().trim().toUpperCase();
+    const pct  = parseFloat(this.newPct());
+    if (!this.foundUser || !code || isNaN(pct) || pct <= 0 || pct > 100) {
+      this.createError.set('Busca un usuario y completa todos los campos.');
       return;
     }
     this.createSaving.set(true);
     this.createError.set('');
-    this.svc.createAmbassador({ profileId, referralCode: code, commissionPercentage: pct }).subscribe({
+    this.svc.createAmbassador({ profileId: this.foundUser.id, referralCode: code, commissionPercentage: pct }).subscribe({
       next: amb => {
         this.ambassadors.update(list => [amb, ...list]);
         this.closeCreate();

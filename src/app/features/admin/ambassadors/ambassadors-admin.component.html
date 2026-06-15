@@ -116,26 +116,55 @@
 <div class="modal-overlay" [class.open]="creating()">
   <div class="modal">
     <h2>Crear embajador</h2>
-    <div class="form-grid">
-      <div class="form-group">
-        <label>ID de perfil</label>
-        <input type="number" placeholder="ej. 42"
-          [value]="newProfileId()"
-          (input)="newProfileId.set($any($event.target).value)">
+
+    <!-- 1. Buscar usuario -->
+    <div class="form-group">
+      <label>Usuario</label>
+
+      <div class="owner-search-row" *ngIf="!foundUser">
+        <input
+          type="email"
+          [(ngModel)]="searchEmail"
+          placeholder="correo@ejemplo.com"
+          (keyup.enter)="searchUser()"
+          [disabled]="searching">
+        <button
+          type="button"
+          class="btn btn-outline btn-sm"
+          [disabled]="!searchEmail.trim() || searching"
+          (click)="searchUser()">
+          {{ searching ? 'Buscando…' : 'Buscar' }}
+        </button>
       </div>
+      <span class="hint" *ngIf="!foundUser">Busca al futuro embajador por su correo</span>
+      <p class="search-error" *ngIf="searchError">{{ searchError }}</p>
+
+      <div class="owner-found" *ngIf="foundUser">
+        <div class="owner-avatar">{{ foundUser.name.charAt(0) | uppercase }}</div>
+        <div class="owner-info">
+          <span class="owner-name">{{ foundUser.name }} {{ foundUser.lastname }}</span>
+          <span class="owner-email">{{ foundUser.email }}</span>
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" (click)="clearUser()">Cambiar</button>
+      </div>
+    </div>
+
+    <!-- 2. Código y comisión -->
+    <div class="form-grid" style="margin-top:14px">
       <div class="form-group">
         <label>Código referido</label>
         <input type="text" placeholder="ej. LAURA2025"
           [value]="newCode()"
           (input)="newCode.set($any($event.target).value)">
       </div>
-      <div class="form-group full">
-        <label>Porcentaje de comisión (%)</label>
+      <div class="form-group">
+        <label>Comisión (%)</label>
         <input type="number" placeholder="ej. 5" min="0.1" max="100" step="0.5"
           [value]="newPct()"
           (input)="newPct.set($any($event.target).value)">
       </div>
     </div>
+
     <div class="create-error" *ngIf="createError()">{{ createError() }}</div>
     <div class="modal-actions">
       <button class="btn btn-outline" (click)="closeCreate()" [disabled]="createSaving()">Cancelar</button>
