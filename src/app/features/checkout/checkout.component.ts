@@ -28,6 +28,7 @@ import { AuthApiService } from '../../core/services/auth-api.service';
 import { TokenStore } from '../../core/services/token-store.service';
 import { updateUser } from '../../store/auth/auth.actions';
 import { apiCode } from '../../core/models/api-error.model';
+import { getActiveReferralCode } from '../../core/utils/referral.utils';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { SeoService } from '../../core/services/seo.service';
 
@@ -418,6 +419,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       paymentMethod: this.selectedPaymentMethod!,
       couponCode:    coupon?.code,
       couponStoreId: coupon?.storeId,
+      referralCode:  getActiveReferralCode() ?? undefined,
     }));
   }
 

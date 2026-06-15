@@ -1,0 +1,29 @@
+@use '../shared/admin-styles';
+
+.ad-loading {
+  display: flex; align-items: center; gap: 8px;
+  color: #aaa; font-size: .88rem; padding: 20px 0;
+}
+.mini-spin {
+  width: 14px; height: 14px;
+  border: 2px solid #e0e0e0; border-top-color: var(--green);
+  border-radius: 50%; animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.ad-error { padding: 12px 16px; border-radius: 8px; background: #fff2f2; border: 1px solid #ffc9c9; color: #c0392b; font-size: .88rem; }
+.ad-empty { color: #aaa; padding: 24px 0; font-size: .9rem; }
+
+.comm-title { display: flex; align-items: center; gap: 12px; }
+
+.code-chip {
+  display: inline-block; background: #eaf7e3; color: #2a7a2a;
+  font-weight: 800; font-size: .8rem; padding: 2px 8px;
+  border-radius: 5px; letter-spacing: .5px; font-family: monospace;
+}
+.email-sub { display: block; font-size: .75rem; color: #aaa; margin-top: 1px; }
+
+.create-error {
+  margin-top: 10px; padding: 10px 14px; border-radius: 8px;
+  background: #fff2f2; border: 1px solid #ffc9c9; color: #c0392b; font-size: .85rem;
+}

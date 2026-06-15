@@ -3,6 +3,7 @@ import { Router, RouterOutlet, NavigationStart, NavigationEnd, NavigationCancel,
 import { NgIf } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
+import { saveReferralCode } from './core/utils/referral.utils';
 
 @Component({
   selector: 'app-root',
@@ -38,8 +39,14 @@ export class AppComponent {
     this.router.events.pipe(
       takeUntilDestroyed(),
     ).subscribe(event => {
-      if (event instanceof NavigationStart)                                             this.navigating.set(true);
-      if (event instanceof NavigationEnd || event instanceof NavigationCancel || event instanceof NavigationError) this.navigating.set(false);
+      if (event instanceof NavigationStart) this.navigating.set(true);
+      if (event instanceof NavigationCancel || event instanceof NavigationError) this.navigating.set(false);
+      if (event instanceof NavigationEnd) {
+        this.navigating.set(false);
+        const qs  = event.urlAfterRedirects.split('?')[1] ?? '';
+        const ref = new URLSearchParams(qs).get('ref');
+        if (ref) saveReferralCode(ref);
+      }
     });
   }
 }

@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { sellerGuard } from './core/guards/seller.guard';
 import { adminGuard } from './core/guards/admin.guard';
 import { authGuard } from './core/guards/auth.guard';
+import { ambassadorGuard } from './core/guards/ambassador.guard';
 
 export const routes: Routes = [
   {
@@ -134,7 +135,13 @@ export const routes: Routes = [
       { path: 'returns',  loadComponent: () => import('./features/admin/returns/returns-admin.component').then(m => m.ReturnsAdminComponent) },
       { path: 'stores',   loadComponent: () => import('./features/admin/stores/stores-admin.component').then(m => m.StoresAdminComponent) },
       { path: 'shipping-zones', loadComponent: () => import('./features/admin/shipping-zones/shipping-zones.component').then(m => m.ShippingZonesComponent) },
+      { path: 'ambassadors',    loadComponent: () => import('./features/admin/ambassadors/ambassadors-admin.component').then(m => m.AmbassadorsAdminComponent) },
     ]
+  },
+  {
+    path: 'ambassador',
+    loadComponent: () => import('./features/ambassador/ambassador.component').then(m => m.AmbassadorComponent),
+    canActivate: [ambassadorGuard],
   },
   { path: '**', redirectTo: '' },
 ];

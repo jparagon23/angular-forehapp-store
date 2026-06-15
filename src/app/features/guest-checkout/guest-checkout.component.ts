@@ -22,6 +22,7 @@ import { loadCart } from '../../store/cart/cart.actions';
 import { validateEmail, EmailValidationResult } from '../../core/utils/email.utils';
 import { CouponService } from '../../core/services/coupon.service';
 import { AppliedCoupon, CouponValidationResponse } from '../../core/models/coupon.model';
+import { getActiveReferralCode } from '../../core/utils/referral.utils';
 
 @Component({
   selector: 'app-guest-checkout',
@@ -323,6 +324,7 @@ export class GuestCheckoutComponent implements OnInit {
       paymentMethod:      method,
       couponCode:         coupon?.code,
       couponStoreId:      coupon?.storeId,
+      referralCode:       getActiveReferralCode() ?? undefined,
     };
 
     this.guestCheckout.createOrder(body).pipe(take(1)).subscribe({

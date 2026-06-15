@@ -1,0 +1,147 @@
+<app-admin-topbar title="Programa de Embajadores"></app-admin-topbar>
+
+<div class="content">
+
+  <!-- Commissions panel -->
+  <ng-container *ngIf="selected() as amb">
+    <div class="table-card">
+      <div class="table-header">
+        <div class="comm-title">
+          <h3>Comisiones de <strong>{{ amb.name }}</strong></h3>
+          <span class="code-chip">{{ amb.referralCode }}</span>
+        </div>
+        <button class="btn btn-outline btn-sm" (click)="closeCommissions()">← Volver</button>
+      </div>
+
+      <div class="ad-loading" *ngIf="commLoading()">
+        <div class="mini-spin"></div> Cargando comisiones...
+      </div>
+      <div class="ad-empty" *ngIf="!commLoading() && commissions().length === 0">
+        Sin comisiones registradas para este embajador.
+      </div>
+
+      <table *ngIf="!commLoading() && commissions().length > 0">
+        <thead>
+          <tr>
+            <th>Orden</th>
+            <th>Total orden</th>
+            <th>Comisión</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of commissions()">
+            <td>#{{ c.orderId }}</td>
+            <td>{{ c.orderTotal | currencyCop }}</td>
+            <td><strong>{{ c.commissionAmount | currencyCop }}</strong></td>
+            <td>{{ c.createdAt | date:'dd/MM/yy' }}</td>
+            <td>
+              <span class="status-badge" [class]="c.status === 'PAID' ? 's-done' : 's-pending'">
+                {{ c.status === 'PAID' ? 'Pagado' : 'Pendiente' }}
+              </span>
+            </td>
+            <td>
+              <button *ngIf="c.status === 'PENDING'"
+                class="btn btn-green btn-sm"
+                [disabled]="payingId() === c.id"
+                (click)="pay(c)">
+                {{ payingId() === c.id ? '...' : 'Marcar pagado' }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+
+  <!-- Ambassadors table -->
+  <div class="table-card" *ngIf="!selected()">
+    <div class="table-header">
+      <h3>Embajadores</h3>
+      <button class="btn btn-green btn-sm" (click)="openCreate()">+ Crear embajador</button>
+    </div>
+
+    <div class="ad-loading" *ngIf="loading()">
+      <div class="mini-spin"></div> Cargando...
+    </div>
+    <div class="ad-error"  *ngIf="error() && !loading()">{{ error() }}</div>
+    <div class="ad-empty"  *ngIf="!loading() && !error() && ambassadors().length === 0">
+      Sin embajadores registrados.
+    </div>
+
+    <table *ngIf="!loading() && ambassadors().length > 0">
+      <thead>
+        <tr>
+          <th>Embajador</th>
+          <th>Código</th>
+          <th>Comisión</th>
+          <th>Órdenes</th>
+          <th>Ganado</th>
+          <th>Pendiente</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let a of ambassadors()">
+          <td>
+            <strong>{{ a.name }}</strong>
+            <span class="email-sub">{{ a.email }}</span>
+          </td>
+          <td><span class="code-chip">{{ a.referralCode }}</span></td>
+          <td>{{ a.commissionPercentage }}%</td>
+          <td>{{ a.totalOrders }}</td>
+          <td>{{ a.totalEarned | currencyCop }}</td>
+          <td><strong>{{ a.pendingAmount | currencyCop }}</strong></td>
+          <td>
+            <span class="status-badge" [class]="a.status === 'ACTIVE' ? 's-done' : 's-canceled'">
+              {{ a.status === 'ACTIVE' ? 'Activo' : 'Inactivo' }}
+            </span>
+          </td>
+          <td class="action-btns">
+            <button class="btn btn-outline btn-sm" (click)="viewCommissions(a)">Comisiones</button>
+            <button class="btn btn-sm" [class]="a.status === 'ACTIVE' ? 'btn-red' : 'btn-green'" (click)="toggleStatus(a)">
+              {{ a.status === 'ACTIVE' ? 'Desactivar' : 'Activar' }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Create modal -->
+<div class="modal-overlay" [class.open]="creating()">
+  <div class="modal">
+    <h2>Crear embajador</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>ID de perfil</label>
+        <input type="number" placeholder="ej. 42"
+          [value]="newProfileId()"
+          (input)="newProfileId.set($any($event.target).value)">
+      </div>
+      <div class="form-group">
+        <label>Código referido</label>
+        <input type="text" placeholder="ej. LAURA2025"
+          [value]="newCode()"
+          (input)="newCode.set($any($event.target).value)">
+      </div>
+      <div class="form-group full">
+        <label>Porcentaje de comisión (%)</label>
+        <input type="number" placeholder="ej. 5" min="0.1" max="100" step="0.5"
+          [value]="newPct()"
+          (input)="newPct.set($any($event.target).value)">
+      </div>
+    </div>
+    <div class="create-error" *ngIf="createError()">{{ createError() }}</div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" (click)="closeCreate()" [disabled]="createSaving()">Cancelar</button>
+      <button class="btn btn-green" (click)="submitCreate()" [disabled]="createSaving()">
+        {{ createSaving() ? 'Creando...' : 'Crear embajador' }}
+      </button>
+    </div>
+  </div>
+</div>

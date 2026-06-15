@@ -113,6 +113,7 @@ export interface GuestOrderRequest {
   paymentMethod: PaymentMethod;
   couponCode?: string;
   couponStoreId?: number;
+  referralCode?: string;
 }
 
 export interface GuestEstimateRequest {

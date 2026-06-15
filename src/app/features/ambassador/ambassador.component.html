@@ -1,0 +1,93 @@
+<app-navbar></app-navbar>
+
+<div class="amb-page">
+  <div class="amb-inner">
+
+    <div class="page-header">
+      <h1>Mi panel de embajador</h1>
+    </div>
+
+    <div class="amb-loading" *ngIf="loading()">
+      <div class="mini-spin"></div> Cargando...
+    </div>
+    <div class="amb-error" *ngIf="error() && !loading()">{{ error() }}</div>
+
+    <ng-container *ngIf="me() as stats">
+
+      <!-- Link card -->
+      <div class="link-card">
+        <div class="link-label">Tu link de referido</div>
+        <div class="link-row">
+          <span class="link-url">{{ myLink }}</span>
+          <button class="btn-copy" [class.copied]="copied()" (click)="copyLink()">
+            {{ copied() ? '¡Copiado!' : 'Copiar' }}
+          </button>
+        </div>
+        <div class="link-meta">
+          Código: <strong>{{ stats.referralCode }}</strong>
+          &nbsp;·&nbsp;
+          Comisión: <strong>{{ stats.commissionPercentage }}%</strong>
+        </div>
+      </div>
+
+      <!-- KPI cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon">📦</div>
+          <div class="kpi-val">{{ stats.totalOrders }}</div>
+          <div class="kpi-label">Órdenes generadas</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">💰</div>
+          <div class="kpi-val">{{ stats.totalEarned | currencyCop }}</div>
+          <div class="kpi-label">Total ganado</div>
+        </div>
+        <div class="kpi-card pending">
+          <div class="kpi-icon">⏳</div>
+          <div class="kpi-val">{{ stats.pendingAmount | currencyCop }}</div>
+          <div class="kpi-label">Pendiente de cobro</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">✅</div>
+          <div class="kpi-val">{{ stats.paidAmount | currencyCop }}</div>
+          <div class="kpi-label">Ya pagado</div>
+        </div>
+      </div>
+
+      <!-- Commissions table -->
+      <div class="table-card">
+        <div class="table-header">
+          <h3>Historial de comisiones</h3>
+        </div>
+        <div class="amb-empty" *ngIf="commissions().length === 0">
+          Aún no has generado comisiones.
+        </div>
+        <table *ngIf="commissions().length > 0">
+          <thead>
+            <tr>
+              <th>Orden</th>
+              <th>Total</th>
+              <th>Comisión</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of commissions()">
+              <td>#{{ c.orderId }}</td>
+              <td>{{ c.orderTotal | currencyCop }}</td>
+              <td><strong>{{ c.commissionAmount | currencyCop }}</strong></td>
+              <td>{{ c.createdAt | date:'dd/MM/yy' }}</td>
+              <td>
+                <span class="status-badge" [class]="c.status === 'PAID' ? 'paid' : 'pending'">
+                  {{ c.status === 'PAID' ? 'Pagado' : 'Pendiente' }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </ng-container>
+  </div>
+</div>
