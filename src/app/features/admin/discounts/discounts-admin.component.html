@@ -209,6 +209,13 @@
         </div>
 
         <div class="form-group" style="margin-top:12px">
+          <label>Compra mínima <span class="hint-opt">(opcional)</span></label>
+          <input type="number" placeholder="sin mínimo" min="0"
+            [value]="newMinOrderAmount()"
+            (input)="newMinOrderAmount.set($any($event.target).value)">
+        </div>
+
+        <div class="form-group" style="margin-top:12px">
           <label>Fundación <span class="req">*</span></label>
           <select [value]="newFoundationId()"
             (change)="newFoundationId.set($any($event.target).value)">

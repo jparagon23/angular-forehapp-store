@@ -46,14 +46,15 @@ export class DiscountsAdminComponent implements OnInit {
   foundLoading     = signal(false);
   createError      = signal('');
   createSaving     = signal(false);
-  newCode          = signal('');
-  newDescription   = signal('');
-  newFoundationId  = signal('');
-  newDiscountValue = signal('');
-  newMaxUses       = signal('');
-  newMaxPerUser    = signal('1');
-  newValidFrom     = signal('');
-  newValidUntil    = signal('');
+  newCode             = signal('');
+  newDescription      = signal('');
+  newFoundationId     = signal('');
+  newDiscountValue    = signal('');
+  newMinOrderAmount   = signal('');
+  newMaxUses          = signal('');
+  newMaxPerUser       = signal('1');
+  newValidFrom        = signal('');
+  newValidUntil       = signal('');
 
   ngOnInit() { this.load(); }
 
@@ -157,7 +158,8 @@ export class DiscountsAdminComponent implements OnInit {
 
   private resetForm() {
     this.newCode.set(''); this.newDescription.set(''); this.newFoundationId.set('');
-    this.newDiscountValue.set(''); this.newMaxUses.set(''); this.newMaxPerUser.set('1');
+    this.newDiscountValue.set(''); this.newMinOrderAmount.set('');
+    this.newMaxUses.set(''); this.newMaxPerUser.set('1');
     this.newValidFrom.set(''); this.newValidUntil.set('');
   }
 
@@ -178,13 +180,13 @@ export class DiscountsAdminComponent implements OnInit {
     this.couponService.createDonationCoupon({
       code,
       description:    this.newDescription().trim() || undefined,
-      discountType:   'DONATION',
       discountValue,
       foundationId,
-      maxUses:        this.newMaxUses() ? Number(this.newMaxUses()) : undefined,
+      minOrderAmount: this.newMinOrderAmount() ? Number(this.newMinOrderAmount()) : null,
+      maxUses:        this.newMaxUses() ? Number(this.newMaxUses()) : null,
       maxUsesPerUser: maxPerUser,
       validFrom,
-      validUntil:     this.newValidUntil() || undefined,
+      validUntil:     this.newValidUntil() || null,
     }).subscribe({
       next: coupon => {
         this.coupons.update(list => [coupon, ...list]);

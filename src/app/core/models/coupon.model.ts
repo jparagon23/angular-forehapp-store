@@ -64,13 +64,13 @@ export interface CreateCouponRequest {
 export interface CreateDonationCouponRequest {
   code: string;
   description?: string;
-  discountType: 'DONATION';
   discountValue: number;
   foundationId: number;
-  maxUses?: number;
+  minOrderAmount?: number | null;
+  maxUses?: number | null;
   maxUsesPerUser: number;
   validFrom: string;
-  validUntil?: string;
+  validUntil?: string | null;
 }
 
 export interface UpdateCouponRequest {
