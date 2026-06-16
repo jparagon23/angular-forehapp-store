@@ -282,9 +282,8 @@
                 <div class="gc-donation-body">
                   <p class="gc-donation-title">{{ appliedDonationCoupon()!.code }}</p>
                   <p class="gc-donation-desc">
-                    Con esta compra, <strong>{{ (appliedDonationCoupon()!.donationAmount ?? 0) | currencyCop }}</strong>
-                    serán donados a <strong>{{ appliedDonationCoupon()!.foundationName }}</strong>.
-                    Tú pagas el precio completo.
+                    Gracias a esta compra, <strong>{{ (appliedDonationCoupon()!.donationAmount ?? 0) | currencyCop }}</strong>
+                    serán donados por parte de Forehapp Store a <strong>{{ appliedDonationCoupon()!.foundationName }}</strong>.
                   </p>
                 </div>
                 <button class="gc-btn-remove" (click)="removeDonationCoupon()" title="Quitar">

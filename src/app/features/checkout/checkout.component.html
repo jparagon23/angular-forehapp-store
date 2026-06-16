@@ -89,7 +89,7 @@
               <input
                 class="coupon-input"
                 type="text"
-                placeholder="Cupón de {{ group.storeName }}"
+                placeholder="Cupón de descuento"
                 [(ngModel)]="couponInputs[group.storeId]"
                 (ngModelChange)="couponErrors[group.storeId] = ''"
                 (keydown.enter)="applyCoupon(group.storeId, group.subtotal)"
@@ -181,9 +181,8 @@
             <div class="donation-banner-body">
               <p class="donation-banner-title">{{ appliedDonationCoupon()!.code }}</p>
               <p class="donation-banner-desc">
-                Con esta compra, <strong>{{ (appliedDonationCoupon()!.donationAmount ?? 0) | currencyCop }}</strong>
-                serán donados a <strong>{{ appliedDonationCoupon()!.foundationName }}</strong>.
-                Tú pagas el precio completo.
+                Gracias a esta compra, <strong>{{ (appliedDonationCoupon()!.donationAmount ?? 0) | currencyCop }}</strong>
+                serán donados por parte de Forehapp Store a <strong>{{ appliedDonationCoupon()!.foundationName }}</strong>.
               </p>
             </div>
             <button class="btn-remove-coupon" (click)="removeDonationCoupon()" title="Quitar cupón">
