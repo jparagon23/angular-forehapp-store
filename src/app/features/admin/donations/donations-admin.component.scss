@@ -1,0 +1,74 @@
+@use '../shared/admin-styles';
+
+.tabs {
+  display: flex; gap: 4px; margin-bottom: 20px;
+  border-bottom: 2px solid #eaeaea; padding-bottom: 0;
+}
+.tab {
+  padding: 8px 18px; border: none; background: none; cursor: pointer;
+  font-size: .88rem; font-weight: 600; color: #888; border-radius: 6px 6px 0 0;
+  border-bottom: 3px solid transparent; margin-bottom: -2px;
+  transition: color .15s, border-color .15s;
+  &:hover { color: var(--dark); }
+  &.active { color: var(--dark); border-bottom-color: var(--green); font-weight: 800; }
+}
+
+.total-badge {
+  font-size: .78rem; font-weight: 700; color: #666;
+  background: #f0f0f0; padding: 2px 10px; border-radius: 20px;
+}
+
+.ad-loading {
+  display: flex; align-items: center; gap: 8px;
+  color: #aaa; font-size: .88rem; padding: 20px 0;
+}
+.mini-spin {
+  width: 14px; height: 14px;
+  border: 2px solid #e0e0e0; border-top-color: var(--green);
+  border-radius: 50%; animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.ad-error { padding: 12px 16px; border-radius: 8px; background: #fff2f2; border: 1px solid #ffc9c9; color: #c0392b; font-size: .88rem; }
+.ad-empty { color: #aaa; padding: 24px 0; font-size: .9rem; }
+
+.td-desc { font-size: .82rem; color: #777; max-width: 220px; }
+
+.code-chip {
+  display: inline-block; background: #e8f4ff; color: #1565c0;
+  font-weight: 800; font-size: .8rem; padding: 2px 8px;
+  border-radius: 5px; letter-spacing: .5px; font-family: monospace;
+}
+
+.donation-amt { color: #2e7d32; font-size: .95rem; }
+
+.rec-filter {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px;
+  label { font-size: .82rem; font-weight: 700; color: #555; }
+  select {
+    height: 34px; padding: 0 10px; border: 1.5px solid #dde; border-radius: 8px;
+    font-size: .85rem; background: #fff; cursor: pointer;
+    &:focus { outline: none; border-color: var(--green); }
+  }
+}
+
+.pagination {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  padding: 16px 0 4px; font-size: .85rem; color: #666;
+  button {
+    padding: 6px 14px; border-radius: 7px;
+    border: 1.5px solid #dde; background: #fafafa;
+    font-size: .83rem; font-weight: 700; cursor: pointer;
+    &:disabled { opacity: .4; cursor: not-allowed; }
+    &:not(:disabled):hover { border-color: var(--green); color: var(--green); }
+  }
+}
+
+.create-error {
+  margin-top: 10px; padding: 10px 14px; border-radius: 8px;
+  background: #fff2f2; border: 1px solid #ffc9c9; color: #c0392b; font-size: .85rem;
+}
+
+.hint-label { font-weight: 400; color: #bbb; font-size: .76rem; }
+.req { color: var(--green); }

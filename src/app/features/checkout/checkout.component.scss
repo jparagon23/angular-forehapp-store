@@ -175,6 +175,39 @@
   strong { font-size: .97rem; font-weight: 800; color: var(--dark); }
 }
 
+// ── Donation coupon section ───────────────────────────────
+.donation-coupon-section {
+  border-top: 1px dashed #ddeedd;
+  padding: 12px 14px 14px;
+  background: #fafdf9;
+}
+
+.donation-coupon-label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: .78rem; font-weight: 700; color: #2d7a2d;
+  text-transform: uppercase; letter-spacing: .5px;
+  margin-bottom: 8px;
+  svg { stroke: #3aab3a; flex-shrink: 0; }
+}
+
+.donation-banner {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: linear-gradient(135deg, #f0faf0, #e8f5e8);
+  border: 1.5px solid #a0d890; border-radius: 10px;
+  padding: 12px 14px;
+}
+.donation-banner-icon { font-size: 1.4rem; flex-shrink: 0; line-height: 1; }
+.donation-banner-body { flex: 1; min-width: 0; }
+.donation-banner-title {
+  font-size: .82rem; font-weight: 800; color: #1a6b1a;
+  font-family: monospace; letter-spacing: .3px;
+  margin-bottom: 4px;
+}
+.donation-banner-desc {
+  font-size: .82rem; color: #3a6a3a; line-height: 1.45;
+  strong { color: #1a6b1a; }
+}
+
 // ── Discount row in summary ───────────────────────────────
 .discount-row { color: #27ae60; }
 .discount-val { font-weight: 800; }

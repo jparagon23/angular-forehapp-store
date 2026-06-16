@@ -1,10 +1,10 @@
-export type DiscountType = 'PERCENTAGE' | 'FIXED_AMOUNT' | 'FREE_SHIPPING';
+export type DiscountType = 'PERCENTAGE' | 'FIXED_AMOUNT' | 'FREE_SHIPPING' | 'DONATION';
 export type CouponStatus = 'ACTIVE' | 'INACTIVE' | 'EXPIRED';
 
 export interface CouponResponse {
   couponId: number;
-  storeId: number;
-  storeName: string;
+  storeId: number | null;
+  storeName: string | null;
   code: string;
   description: string | null;
   discountType: DiscountType;
@@ -28,11 +28,15 @@ export interface CouponValidationResponse {
   discountAmount: number;
   finalAmount: number;
   message: string;
+  isDonation: boolean;
+  donationAmount: number | null;
+  foundationId: number | null;
+  foundationName: string | null;
 }
 
 export interface ValidateCouponRequest {
   code: string;
-  storeId: number;
+  storeId: number | null;
   orderAmount: number;
   shippingCost?: number;
 }
@@ -40,7 +44,7 @@ export interface ValidateCouponRequest {
 export interface ValidateGuestCouponRequest {
   email: string;
   code: string;
-  storeId: number;
+  storeId: number | null;
   orderAmount: number;
   shippingCost?: number;
 }
@@ -51,6 +55,17 @@ export interface CreateCouponRequest {
   discountType: DiscountType;
   discountValue?: number;
   minOrderAmount?: number;
+  maxUses?: number;
+  maxUsesPerUser: number;
+  validFrom: string;
+  validUntil?: string;
+}
+
+export interface CreateDonationCouponRequest {
+  code: string;
+  description?: string;
+  discountValue: number;
+  foundationId: number;
   maxUses?: number;
   maxUsesPerUser: number;
   validFrom: string;
@@ -74,10 +89,13 @@ export interface CouponPageResponse {
 }
 
 export interface AppliedCoupon {
-  storeId: number;
+  storeId: number | null;
   code: string;
   discountAmount: number;
   finalAmount: number;
   discountType: DiscountType;
   discountValue: number;
+  isDonation?: boolean;
+  donationAmount?: number;
+  foundationName?: string;
 }

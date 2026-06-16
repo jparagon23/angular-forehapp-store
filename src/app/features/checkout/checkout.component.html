@@ -144,6 +144,57 @@
       </div>
       </ng-container>
 
+      <!-- Donation coupon (global, not per-store) -->
+      <div class="donation-coupon-section">
+        <p class="donation-coupon-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z"/>
+          </svg>
+          ¿Tienes un cupón de donación?
+        </p>
+        <ng-container *ngIf="!appliedDonationCoupon(); else donationApplied">
+          <div class="coupon-input-row">
+            <input
+              class="coupon-input"
+              type="text"
+              placeholder="Código de donación"
+              [value]="donationCouponInput()"
+              (input)="donationCouponInput.set($any($event.target).value.toUpperCase()); donationCouponError.set('')"
+              (keydown.enter)="applyDonationCoupon()"
+              [disabled]="donationCouponLoading()"
+              [class.has-error]="donationCouponError()"
+              maxlength="50"
+            />
+            <button
+              class="btn-apply-coupon"
+              (click)="applyDonationCoupon()"
+              [disabled]="donationCouponLoading() || !donationCouponInput().trim()">
+              <span *ngIf="!donationCouponLoading()">Aplicar</span>
+              <span class="mini-spin" *ngIf="donationCouponLoading()"></span>
+            </button>
+          </div>
+          <p class="coupon-error" *ngIf="donationCouponError()">{{ donationCouponError() }}</p>
+        </ng-container>
+        <ng-template #donationApplied>
+          <div class="donation-banner">
+            <div class="donation-banner-icon">💚</div>
+            <div class="donation-banner-body">
+              <p class="donation-banner-title">{{ appliedDonationCoupon()!.code }}</p>
+              <p class="donation-banner-desc">
+                Con esta compra, <strong>{{ (appliedDonationCoupon()!.donationAmount ?? 0) | currencyCop }}</strong>
+                serán donados a <strong>{{ appliedDonationCoupon()!.foundationName }}</strong>.
+                Tú pagas el precio completo.
+              </p>
+            </div>
+            <button class="btn-remove-coupon" (click)="removeDonationCoupon()" title="Quitar cupón">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        </ng-template>
+      </div>
+
       <!-- Summary rows -->
       <div class="summary-rows">
         <div class="sum-row">

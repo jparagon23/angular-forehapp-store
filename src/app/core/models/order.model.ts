@@ -112,7 +112,7 @@ export interface GuestOrderRequest {
   items: GuestOrderItem[];
   paymentMethod: PaymentMethod;
   couponCode?: string;
-  couponStoreId?: number;
+  couponStoreId?: number | null;
   referralCode?: string;
 }
 

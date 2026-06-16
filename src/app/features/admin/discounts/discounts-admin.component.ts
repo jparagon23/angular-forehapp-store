@@ -1,18 +1,22 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { NgFor, NgIf, NgSwitch, NgSwitchCase, DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { CouponService } from '../../../core/services/coupon.service';
 import { CouponResponse } from '../../../core/models/coupon.model';
+import { DonationService } from '../../../core/services/donation.service';
+import { Foundation } from '../../../core/models/donation.model';
 import { AdminTopbarComponent } from '../shared/admin-topbar.component';
 
 @Component({
   selector: 'app-discounts-admin',
   standalone: true,
-  imports: [NgFor, NgIf, NgSwitch, NgSwitchCase, DatePipe, AdminTopbarComponent],
+  imports: [NgFor, NgIf, NgSwitch, NgSwitchCase, DatePipe, FormsModule, AdminTopbarComponent],
   templateUrl: './discounts-admin.component.html',
   styleUrl: './discounts-admin.component.scss',
 })
 export class DiscountsAdminComponent implements OnInit {
-  private couponService = inject(CouponService);
+  private couponService  = inject(CouponService);
+  private donationService = inject(DonationService);
 
   coupons = signal<CouponResponse[]>([]);
   loading = signal(true);
@@ -20,6 +24,21 @@ export class DiscountsAdminComponent implements OnInit {
   page    = signal(0);
   total   = signal(0);
   readonly size = 20;
+
+  // Create donation coupon modal
+  creating         = signal(false);
+  foundations      = signal<Foundation[]>([]);
+  foundLoading     = signal(false);
+  createError      = signal('');
+  createSaving     = signal(false);
+  newCode          = signal('');
+  newDescription   = signal('');
+  newFoundationId  = signal('');
+  newDiscountValue = signal('');
+  newMaxUses       = signal('');
+  newMaxPerUser    = signal('1');
+  newValidFrom     = signal('');
+  newValidUntil    = signal('');
 
   ngOnInit() { this.load(); }
 
@@ -49,9 +68,74 @@ export class DiscountsAdminComponent implements OnInit {
     }
   }
 
+  openCreateDonation() {
+    this.creating.set(true);
+    this.createError.set('');
+    this.resetForm();
+    if (this.foundations().length === 0) {
+      this.foundLoading.set(true);
+      this.donationService.listFoundations().subscribe({
+        next: list => { this.foundations.set(list); this.foundLoading.set(false); },
+        error: ()   => this.foundLoading.set(false),
+      });
+    }
+  }
+
+  closeCreate() {
+    this.creating.set(false);
+    this.createError.set('');
+    this.resetForm();
+  }
+
+  private resetForm() {
+    this.newCode.set(''); this.newDescription.set(''); this.newFoundationId.set('');
+    this.newDiscountValue.set(''); this.newMaxUses.set(''); this.newMaxPerUser.set('1');
+    this.newValidFrom.set(''); this.newValidUntil.set('');
+  }
+
+  submitCreate() {
+    const code         = this.newCode().trim().toUpperCase();
+    const foundationId = Number(this.newFoundationId());
+    const discountValue = parseFloat(this.newDiscountValue());
+    const maxPerUser   = parseInt(this.newMaxPerUser(), 10);
+    const validFrom    = this.newValidFrom();
+
+    if (!code || !foundationId || isNaN(discountValue) || discountValue <= 0 || discountValue > 100 || !validFrom || isNaN(maxPerUser) || maxPerUser < 1) {
+      this.createError.set('Completa todos los campos obligatorios correctamente.');
+      return;
+    }
+
+    this.createSaving.set(true);
+    this.createError.set('');
+    this.couponService.createDonationCoupon({
+      code,
+      description:   this.newDescription().trim() || undefined,
+      discountValue,
+      foundationId,
+      maxUses:       this.newMaxUses() ? Number(this.newMaxUses()) : undefined,
+      maxUsesPerUser: maxPerUser,
+      validFrom,
+      validUntil:    this.newValidUntil() || undefined,
+    }).subscribe({
+      next: coupon => {
+        this.coupons.update(list => [coupon, ...list]);
+        this.closeCreate();
+        this.createSaving.set(false);
+      },
+      error: err => {
+        const msg = err.error?.message ?? '';
+        this.createError.set(err.status === 409
+          ? (msg || 'Ya existe un cupón con ese código.')
+          : (msg || 'Error al crear el cupón.'));
+        this.createSaving.set(false);
+      },
+    });
+  }
+
   discountLabel(c: CouponResponse): string {
     if (c.discountType === 'PERCENTAGE')   return `${c.discountValue}%`;
     if (c.discountType === 'FIXED_AMOUNT') return `$${c.discountValue.toLocaleString('es-CO')}`;
+    if (c.discountType === 'DONATION')     return `${c.discountValue}% donación`;
     return 'Envío gratis';
   }
 

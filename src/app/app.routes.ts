@@ -131,6 +131,7 @@ export const routes: Routes = [
       { path: 'customers', loadComponent: () => import('./features/admin/customers/customers-admin.component').then(m => m.CustomersAdminComponent) },
       { path: 'users', loadComponent: () => import('./features/admin/users/users-admin.component').then(m => m.UsersAdminComponent) },
       { path: 'discounts', loadComponent: () => import('./features/admin/discounts/discounts-admin.component').then(m => m.DiscountsAdminComponent) },
+      { path: 'donations', loadComponent: () => import('./features/admin/donations/donations-admin.component').then(m => m.DonationsAdminComponent) },
       { path: 'reviews',  loadComponent: () => import('./features/admin/reviews/reviews-admin.component').then(m => m.ReviewsAdminComponent) },
       { path: 'returns',  loadComponent: () => import('./features/admin/returns/returns-admin.component').then(m => m.ReturnsAdminComponent) },
       { path: 'stores',   loadComponent: () => import('./features/admin/stores/stores-admin.component').then(m => m.StoresAdminComponent) },

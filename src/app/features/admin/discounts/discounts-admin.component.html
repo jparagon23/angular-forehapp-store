@@ -4,7 +4,10 @@
   <div class="table-card">
     <div class="table-header">
       <h3>Cupones de todos los sellers</h3>
-      <span class="total-badge" *ngIf="total() > 0">{{ total() }} total</span>
+      <div class="header-actions">
+        <span class="total-badge" *ngIf="total() > 0">{{ total() }} total</span>
+        <button class="btn btn-green btn-sm" (click)="openCreateDonation()">💚 Crear cupón de donación</button>
+      </div>
     </div>
 
     <!-- Loading -->
@@ -39,7 +42,7 @@
             <strong class="code-chip">{{ c.code }}</strong>
             <span class="code-desc" *ngIf="c.description">{{ c.description }}</span>
           </td>
-          <td class="td-seller">{{ c.storeName }}</td>
+          <td class="td-seller">{{ c.storeName || '— (donación)' }}</td>
           <td class="td-discount">{{ discountLabel(c) }}</td>
           <td class="td-uses">{{ usesLabel(c) }}</td>
           <td style="font-size:.82rem">
@@ -65,6 +68,99 @@
       <button [disabled]="page() === 0" (click)="prevPage()">← Anterior</button>
       <span>Página {{ page() + 1 }} de {{ totalPages }}</span>
       <button [disabled]="(page() + 1) * 20 >= total()" (click)="nextPage()">Siguiente →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create donation coupon modal -->
+<div class="modal-overlay" [class.open]="creating()">
+  <div class="modal">
+    <h2>💚 Crear cupón de donación</h2>
+
+    <div class="ad-loading" *ngIf="foundLoading()">
+      <div class="mini-spin"></div> Cargando fundaciones...
+    </div>
+
+    <ng-container *ngIf="!foundLoading()">
+      <div class="ad-empty" *ngIf="foundations().length === 0">
+        No hay fundaciones activas. Crea una en la sección <strong>Donaciones → Fundaciones</strong> primero.
+      </div>
+
+      <ng-container *ngIf="foundations().length > 0">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Código <span class="req">*</span></label>
+            <input type="text" placeholder="ej. DONA10"
+              [value]="newCode()"
+              (input)="newCode.set($any($event.target).value.toUpperCase())"
+              maxlength="50">
+          </div>
+          <div class="form-group">
+            <label>% Donación <span class="req">*</span></label>
+            <input type="number" placeholder="ej. 10" min="1" max="100" step="1"
+              [value]="newDiscountValue()"
+              (input)="newDiscountValue.set($any($event.target).value)">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:12px">
+          <label>Fundación <span class="req">*</span></label>
+          <select [value]="newFoundationId()"
+            (change)="newFoundationId.set($any($event.target).value)">
+            <option value="">-- Seleccionar fundación --</option>
+            <option *ngFor="let f of foundations()" [value]="f.id" [disabled]="f.status === 'INACTIVE'">
+              {{ f.name }}{{ f.status === 'INACTIVE' ? ' (inactiva)' : '' }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-top:12px">
+          <label>Descripción <span class="hint-opt">(opcional)</span></label>
+          <input type="text" placeholder="ej. Tu compra ayuda a Fundación Sonrisas"
+            [value]="newDescription()"
+            (input)="newDescription.set($any($event.target).value)"
+            maxlength="255">
+        </div>
+
+        <div class="form-grid" style="margin-top:12px">
+          <div class="form-group">
+            <label>Máx. usos totales <span class="hint-opt">(opcional)</span></label>
+            <input type="number" placeholder="sin límite" min="1"
+              [value]="newMaxUses()"
+              (input)="newMaxUses.set($any($event.target).value)">
+          </div>
+          <div class="form-group">
+            <label>Máx. usos por usuario <span class="req">*</span></label>
+            <input type="number" min="1"
+              [value]="newMaxPerUser()"
+              (input)="newMaxPerUser.set($any($event.target).value)">
+          </div>
+        </div>
+
+        <div class="form-grid" style="margin-top:12px">
+          <div class="form-group">
+            <label>Válido desde <span class="req">*</span></label>
+            <input type="date"
+              [value]="newValidFrom()"
+              (input)="newValidFrom.set($any($event.target).value)">
+          </div>
+          <div class="form-group">
+            <label>Válido hasta <span class="hint-opt">(opcional)</span></label>
+            <input type="date"
+              [value]="newValidUntil()"
+              (input)="newValidUntil.set($any($event.target).value)">
+          </div>
+        </div>
+      </ng-container>
+    </ng-container>
+
+    <div class="create-error" *ngIf="createError()">{{ createError() }}</div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" (click)="closeCreate()" [disabled]="createSaving()">Cancelar</button>
+      <button class="btn btn-green" (click)="submitCreate()"
+        [disabled]="createSaving() || foundLoading() || foundations().length === 0">
+        {{ createSaving() ? 'Creando...' : 'Crear cupón' }}
+      </button>
     </div>
   </div>
 </div>

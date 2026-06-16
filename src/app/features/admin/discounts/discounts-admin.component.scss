@@ -44,6 +44,28 @@
   &.status-inactiva { background: #f2f2f2; color: #999; }
 }
 
+.header-actions {
+  display: flex; align-items: center; gap: 10px;
+}
+
+.create-error {
+  margin-top: 10px; padding: 10px 14px; border-radius: 8px;
+  background: #fff2f2; border: 1px solid #ffc9c9; color: #c0392b; font-size: .85rem;
+}
+.hint-opt { font-weight: 400; color: #bbb; font-size: .76rem; }
+.req      { color: var(--green); }
+
+.ad-loading {
+  display: flex; align-items: center; gap: 8px;
+  color: #aaa; font-size: .88rem; padding: 12px 0;
+}
+.mini-spin {
+  width: 14px; height: 14px;
+  border: 2px solid #e0e0e0; border-top-color: var(--green);
+  border-radius: 50%; animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 .pagination {
   display: flex; align-items: center; justify-content: center; gap: 12px;
   padding: 16px 0 4px;

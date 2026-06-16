@@ -1,0 +1,170 @@
+<app-admin-topbar title="Programa de Donaciones"></app-admin-topbar>
+
+<div class="content">
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab" [class.active]="activeTab() === 'foundations'" (click)="switchTab('foundations')">
+      🏢 Fundaciones
+    </button>
+    <button class="tab" [class.active]="activeTab() === 'records'" (click)="switchTab('records')">
+      📋 Registros de donación
+    </button>
+  </div>
+
+  <!-- ── FOUNDATIONS TAB ─────────────────────────────────── -->
+  <ng-container *ngIf="activeTab() === 'foundations'">
+    <div class="table-card">
+      <div class="table-header">
+        <h3>Fundaciones</h3>
+        <button class="btn btn-green btn-sm" (click)="openCreate()">+ Nueva fundación</button>
+      </div>
+
+      <div class="ad-loading" *ngIf="foundLoading()">
+        <div class="mini-spin"></div> Cargando...
+      </div>
+      <div class="ad-error"  *ngIf="foundError() && !foundLoading()">{{ foundError() }}</div>
+      <div class="ad-empty"  *ngIf="!foundLoading() && !foundError() && foundations().length === 0">
+        No hay fundaciones registradas. Crea una para poder crear cupones de donación.
+      </div>
+
+      <table *ngIf="!foundLoading() && foundations().length > 0">
+        <thead>
+          <tr>
+            <th>Fundación</th>
+            <th>Descripción</th>
+            <th>Fecha creación</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let f of foundations()">
+            <td><strong>{{ f.name }}</strong></td>
+            <td class="td-desc">{{ f.description || '—' }}</td>
+            <td style="font-size:.82rem">{{ f.createdAt | date:'dd/MM/yy' }}</td>
+            <td>
+              <span class="status-badge" [class]="f.status === 'ACTIVE' ? 's-done' : 's-canceled'">
+                {{ f.status === 'ACTIVE' ? 'Activa' : 'Inactiva' }}
+              </span>
+            </td>
+            <td>
+              <button
+                class="btn btn-sm"
+                [class]="f.status === 'ACTIVE' ? 'btn-red' : 'btn-green'"
+                [disabled]="togglingId() === f.id"
+                (click)="toggleFoundationStatus(f)">
+                {{ togglingId() === f.id ? '...' : (f.status === 'ACTIVE' ? 'Desactivar' : 'Activar') }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+
+  <!-- ── RECORDS TAB ─────────────────────────────────────── -->
+  <ng-container *ngIf="activeTab() === 'records'">
+    <div class="table-card">
+      <div class="table-header">
+        <h3>Registros de donación</h3>
+        <span class="total-badge" *ngIf="recTotal() > 0">{{ recTotal() }} total</span>
+      </div>
+
+      <!-- Foundation filter -->
+      <div class="rec-filter">
+        <label>Filtrar por fundación:</label>
+        <select (change)="onFilterChange($event)">
+          <option value="">Todas las fundaciones</option>
+          <option *ngFor="let f of foundations()" [value]="f.id">{{ f.name }}</option>
+        </select>
+      </div>
+
+      <div class="ad-loading" *ngIf="recLoading()">
+        <div class="mini-spin"></div> Cargando registros...
+      </div>
+      <div class="ad-error"  *ngIf="recError() && !recLoading()">{{ recError() }}</div>
+      <div class="ad-empty"  *ngIf="!recLoading() && !recError() && records().length === 0">
+        No hay registros de donación.
+      </div>
+
+      <table *ngIf="!recLoading() && records().length > 0">
+        <thead>
+          <tr>
+            <th>Orden</th>
+            <th>Cupón</th>
+            <th>Fundación</th>
+            <th>Total orden</th>
+            <th>% Donación</th>
+            <th>Monto donación</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of records()">
+            <td>#{{ r.orderId }}</td>
+            <td><span class="code-chip">{{ r.couponCode }}</span></td>
+            <td><strong>{{ r.foundationName }}</strong></td>
+            <td>{{ r.orderTotal | currencyCop }}</td>
+            <td>{{ r.donationPercentage }}%</td>
+            <td><strong class="donation-amt">{{ r.donationAmount | currencyCop }}</strong></td>
+            <td style="font-size:.82rem">{{ r.createdAt | date:'dd/MM/yy' }}</td>
+            <td>
+              <span class="status-badge" [class]="r.status === 'PAID' ? 's-done' : 's-pending'">
+                {{ r.status === 'PAID' ? 'Pagado' : 'Pendiente' }}
+              </span>
+            </td>
+            <td>
+              <button *ngIf="r.status === 'PENDING'"
+                class="btn btn-green btn-sm"
+                [disabled]="payingId() === r.id"
+                (click)="payRecord(r)">
+                {{ payingId() === r.id ? '...' : 'Marcar pagado' }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="pagination" *ngIf="recTotalPages() > 1">
+        <button [disabled]="recPage() === 0" (click)="recPrev()">← Anterior</button>
+        <span>Página {{ recPage() + 1 }} de {{ recTotalPages() }}</span>
+        <button [disabled]="recPage() + 1 >= recTotalPages()" (click)="recNext()">Siguiente →</button>
+      </div>
+    </div>
+  </ng-container>
+
+</div>
+
+<!-- Create foundation modal -->
+<div class="modal-overlay" [class.open]="creating()">
+  <div class="modal">
+    <h2>Nueva fundación</h2>
+
+    <div class="form-group">
+      <label>Nombre <span class="req">*</span></label>
+      <input type="text" placeholder="ej. Fundación Sonrisas"
+        [value]="newName()"
+        (input)="newName.set($any($event.target).value)"
+        maxlength="100">
+    </div>
+
+    <div class="form-group" style="margin-top:12px">
+      <label>Descripción <span class="hint-label">(opcional)</span></label>
+      <input type="text" placeholder="Breve descripción de la fundación"
+        [value]="newDescription()"
+        (input)="newDescription.set($any($event.target).value)"
+        maxlength="255">
+    </div>
+
+    <div class="create-error" *ngIf="createError()">{{ createError() }}</div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" (click)="closeCreate()" [disabled]="createSaving()">Cancelar</button>
+      <button class="btn btn-green" (click)="submitCreate()" [disabled]="createSaving()">
+        {{ createSaving() ? 'Creando...' : 'Crear fundación' }}
+      </button>
+    </div>
+  </div>
+</div>

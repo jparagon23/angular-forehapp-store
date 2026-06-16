@@ -20,11 +20,11 @@ export class OrderService {
   private http = inject(HttpClient);
   private base = environment.apiBaseUrl;
 
-  createOrder(addressId: number, paymentMethod: PaymentMethod, couponCode?: string, couponStoreId?: number, referralCode?: string): Observable<OrderResponse> {
+  createOrder(addressId: number, paymentMethod: PaymentMethod, couponCode?: string, couponStoreId?: number | null, referralCode?: string): Observable<OrderResponse> {
     return this.http.post<OrderResponse>(`${this.base}/orders`, {
       addressId,
       paymentMethod,
-      ...(couponCode && couponStoreId ? { couponCode, couponStoreId } : {}),
+      ...(couponCode ? { couponCode, couponStoreId: couponStoreId ?? null } : {}),
       ...(referralCode ? { referralCode } : {}),
     });
   }

@@ -7,6 +7,7 @@ import {
   CouponResponse,
   CouponValidationResponse,
   CreateCouponRequest,
+  CreateDonationCouponRequest,
   UpdateCouponRequest,
   ValidateCouponRequest,
   ValidateGuestCouponRequest,
@@ -48,10 +49,14 @@ export class CouponService {
     return this.http.patch<CouponResponse>(`${this.base}/stores/${storeId}/coupons/${couponId}/deactivate`, {});
   }
 
-  // Admin endpoint
+  // Admin endpoints
   getAllCoupons(page = 0, size = 20): Observable<CouponPageResponse> {
     return this.http.get<CouponPageResponse>(`${this.base}/admin/coupons`, {
       params: { page: page.toString(), size: size.toString() },
     });
+  }
+
+  createDonationCoupon(req: CreateDonationCouponRequest): Observable<CouponResponse> {
+    return this.http.post<CouponResponse>(`${this.base}/admin/coupons/donation`, req);
   }
 }
