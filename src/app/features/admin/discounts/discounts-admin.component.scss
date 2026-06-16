@@ -45,7 +45,20 @@
 }
 
 .header-actions {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 8px;
+  flex-wrap: wrap;
+}
+
+.store-id-badge {
+  display: inline-block; font-size: .72rem; color: #aaa;
+  font-family: monospace; margin-left: 4px;
+}
+
+.type-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 20px;
+  font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .3px;
+  &.type-regular  { background: #f0f0f0; color: #666; }
+  &.type-donation { background: #e8f5e8; color: #276749; }
 }
 
 .create-error {

@@ -25,6 +25,21 @@ export class DiscountsAdminComponent implements OnInit {
   total   = signal(0);
   readonly size = 20;
 
+  // Create regular coupon modal
+  creatingRegular       = signal(false);
+  regError              = signal('');
+  regSaving             = signal(false);
+  regStoreId            = signal('');
+  regCode               = signal('');
+  regDescription        = signal('');
+  regDiscountType       = signal<'PERCENTAGE' | 'FIXED_AMOUNT' | 'FREE_SHIPPING'>('PERCENTAGE');
+  regDiscountValue      = signal('');
+  regMinOrderAmount     = signal('');
+  regMaxUses            = signal('');
+  regMaxPerUser         = signal('1');
+  regValidFrom          = signal('');
+  regValidUntil         = signal('');
+
   // Create donation coupon modal
   creating         = signal(false);
   foundations      = signal<Foundation[]>([]);
@@ -66,6 +81,59 @@ export class DiscountsAdminComponent implements OnInit {
       this.page.update(p => p - 1);
       this.load();
     }
+  }
+
+  openCreateRegular() {
+    this.creatingRegular.set(true);
+    this.regError.set('');
+    this.regStoreId.set(''); this.regCode.set(''); this.regDescription.set('');
+    this.regDiscountType.set('PERCENTAGE'); this.regDiscountValue.set('');
+    this.regMinOrderAmount.set(''); this.regMaxUses.set(''); this.regMaxPerUser.set('1');
+    this.regValidFrom.set(''); this.regValidUntil.set('');
+  }
+
+  closeCreateRegular() { this.creatingRegular.set(false); this.regError.set(''); }
+
+  submitCreateRegular() {
+    const storeId    = parseInt(this.regStoreId(), 10);
+    const code       = this.regCode().trim().toUpperCase();
+    const type       = this.regDiscountType();
+    const value      = type !== 'FREE_SHIPPING' ? parseFloat(this.regDiscountValue()) : undefined;
+    const maxPerUser = parseInt(this.regMaxPerUser(), 10);
+    const validFrom  = this.regValidFrom();
+
+    if (!storeId || !code || !validFrom || isNaN(maxPerUser) || maxPerUser < 1 ||
+        (type !== 'FREE_SHIPPING' && (value === undefined || isNaN(value) || value <= 0))) {
+      this.regError.set('Completa todos los campos obligatorios correctamente.');
+      return;
+    }
+
+    this.regSaving.set(true);
+    this.regError.set('');
+    this.couponService.createCoupon(storeId, {
+      code,
+      description:    this.regDescription().trim() || undefined,
+      discountType:   type,
+      discountValue:  value,
+      minOrderAmount: this.regMinOrderAmount() ? Number(this.regMinOrderAmount()) : undefined,
+      maxUses:        this.regMaxUses() ? Number(this.regMaxUses()) : undefined,
+      maxUsesPerUser: maxPerUser,
+      validFrom,
+      validUntil:     this.regValidUntil() || undefined,
+    }).subscribe({
+      next: coupon => {
+        this.coupons.update(list => [coupon, ...list]);
+        this.closeCreateRegular();
+        this.regSaving.set(false);
+      },
+      error: err => {
+        const msg = err.error?.message ?? '';
+        this.regError.set(err.status === 409
+          ? (msg || 'Ya existe un cupón con ese código en esta tienda.')
+          : (msg || 'Error al crear el cupón.'));
+        this.regSaving.set(false);
+      },
+    });
   }
 
   openCreateDonation() {

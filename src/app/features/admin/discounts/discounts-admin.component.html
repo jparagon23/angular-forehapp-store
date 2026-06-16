@@ -6,6 +6,7 @@
       <h3>Cupones de todos los sellers</h3>
       <div class="header-actions">
         <span class="total-badge" *ngIf="total() > 0">{{ total() }} total</span>
+        <button class="btn btn-outline btn-sm" (click)="openCreateRegular()">+ Crear cupón regular</button>
         <button class="btn btn-green btn-sm" (click)="openCreateDonation()">💚 Crear cupón de donación</button>
       </div>
     </div>
@@ -29,7 +30,8 @@
       <thead>
         <tr>
           <th>Código</th>
-          <th>Seller</th>
+          <th>Seller / Tienda</th>
+          <th>Tipo</th>
           <th>Descuento</th>
           <th>Usos</th>
           <th>Vigencia</th>
@@ -42,7 +44,15 @@
             <strong class="code-chip">{{ c.code }}</strong>
             <span class="code-desc" *ngIf="c.description">{{ c.description }}</span>
           </td>
-          <td class="td-seller">{{ c.storeName || '— (donación)' }}</td>
+          <td class="td-seller">
+            {{ c.storeName || '— (donación)' }}
+            <span class="store-id-badge" *ngIf="c.storeId">#{{ c.storeId }}</span>
+          </td>
+          <td>
+            <span class="type-badge" [class]="c.discountType === 'DONATION' ? 'type-donation' : 'type-regular'">
+              {{ c.discountType === 'DONATION' ? '💚 Donación' : 'Regular' }}
+            </span>
+          </td>
           <td class="td-discount">{{ discountLabel(c) }}</td>
           <td class="td-uses">{{ usesLabel(c) }}</td>
           <td style="font-size:.82rem">
@@ -68,6 +78,101 @@
       <button [disabled]="page() === 0" (click)="prevPage()">← Anterior</button>
       <span>Página {{ page() + 1 }} de {{ totalPages }}</span>
       <button [disabled]="(page() + 1) * 20 >= total()" (click)="nextPage()">Siguiente →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create regular coupon modal -->
+<div class="modal-overlay" [class.open]="creatingRegular()">
+  <div class="modal">
+    <h2>Crear cupón regular</h2>
+
+    <div class="form-group">
+      <label>ID de tienda <span class="req">*</span></label>
+      <input type="number" placeholder="ej. 3" min="1"
+        [value]="regStoreId()"
+        (input)="regStoreId.set($any($event.target).value)">
+      <span class="hint-opt">Consulta el ID en la sección Tiendas o en la tabla de cupones existentes.</span>
+    </div>
+
+    <div class="form-grid" style="margin-top:12px">
+      <div class="form-group">
+        <label>Código <span class="req">*</span></label>
+        <input type="text" placeholder="ej. VERANO20"
+          [value]="regCode()"
+          (input)="regCode.set($any($event.target).value.toUpperCase())"
+          maxlength="50">
+      </div>
+      <div class="form-group">
+        <label>Tipo de descuento <span class="req">*</span></label>
+        <select [value]="regDiscountType()"
+          (change)="regDiscountType.set($any($event.target).value)">
+          <option value="PERCENTAGE">Porcentaje (%)</option>
+          <option value="FIXED_AMOUNT">Monto fijo ($)</option>
+          <option value="FREE_SHIPPING">Envío gratis</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-grid" style="margin-top:12px">
+      <div class="form-group" *ngIf="regDiscountType() !== 'FREE_SHIPPING'">
+        <label>Valor <span class="req">*</span></label>
+        <input type="number" [placeholder]="regDiscountType() === 'PERCENTAGE' ? 'ej. 20' : 'ej. 10000'" min="0.01"
+          [value]="regDiscountValue()"
+          (input)="regDiscountValue.set($any($event.target).value)">
+      </div>
+      <div class="form-group">
+        <label>Compra mínima <span class="hint-opt">(opcional)</span></label>
+        <input type="number" placeholder="sin mínimo" min="0"
+          [value]="regMinOrderAmount()"
+          (input)="regMinOrderAmount.set($any($event.target).value)">
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-top:12px">
+      <label>Descripción <span class="hint-opt">(opcional)</span></label>
+      <input type="text" placeholder="ej. Descuento de temporada"
+        [value]="regDescription()"
+        (input)="regDescription.set($any($event.target).value)"
+        maxlength="255">
+    </div>
+
+    <div class="form-grid" style="margin-top:12px">
+      <div class="form-group">
+        <label>Máx. usos totales <span class="hint-opt">(opcional)</span></label>
+        <input type="number" placeholder="sin límite" min="1"
+          [value]="regMaxUses()"
+          (input)="regMaxUses.set($any($event.target).value)">
+      </div>
+      <div class="form-group">
+        <label>Máx. usos por usuario <span class="req">*</span></label>
+        <input type="number" min="1"
+          [value]="regMaxPerUser()"
+          (input)="regMaxPerUser.set($any($event.target).value)">
+      </div>
+    </div>
+
+    <div class="form-grid" style="margin-top:12px">
+      <div class="form-group">
+        <label>Válido desde <span class="req">*</span></label>
+        <input type="date"
+          [value]="regValidFrom()"
+          (input)="regValidFrom.set($any($event.target).value)">
+      </div>
+      <div class="form-group">
+        <label>Válido hasta <span class="hint-opt">(opcional)</span></label>
+        <input type="date"
+          [value]="regValidUntil()"
+          (input)="regValidUntil.set($any($event.target).value)">
+      </div>
+    </div>
+
+    <div class="create-error" *ngIf="regError()">{{ regError() }}</div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" (click)="closeCreateRegular()" [disabled]="regSaving()">Cancelar</button>
+      <button class="btn btn-green" (click)="submitCreateRegular()" [disabled]="regSaving()">
+        {{ regSaving() ? 'Creando...' : 'Crear cupón' }}
+      </button>
     </div>
   </div>
 </div>
