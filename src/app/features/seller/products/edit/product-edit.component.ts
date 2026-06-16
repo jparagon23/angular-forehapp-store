@@ -3,6 +3,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DatePipe, DecimalPipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { forkJoin } from 'rxjs';
+import { filter, take } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { SellerProductService } from '../../../../core/services/seller-product.service';
@@ -152,8 +153,13 @@ export class ProductEditComponent implements OnInit {
 
   ngOnInit() {
     this.productId = Number(this.route.snapshot.paramMap.get('id'));
-    this.loadAll();
-    this.loadImages();
+    this.ngrx.select(selectActiveSellerStoreId).pipe(
+      filter((id): id is number => id !== null),
+      take(1),
+    ).subscribe(() => {
+      this.loadAll();
+      this.loadImages();
+    });
   }
 
   private loadAll() {
