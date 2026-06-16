@@ -177,13 +177,14 @@ export class DiscountsAdminComponent implements OnInit {
     this.createError.set('');
     this.couponService.createDonationCoupon({
       code,
-      description:   this.newDescription().trim() || undefined,
+      description:    this.newDescription().trim() || undefined,
+      discountType:   'DONATION',
       discountValue,
       foundationId,
-      maxUses:       this.newMaxUses() ? Number(this.newMaxUses()) : undefined,
+      maxUses:        this.newMaxUses() ? Number(this.newMaxUses()) : undefined,
       maxUsesPerUser: maxPerUser,
       validFrom,
-      validUntil:    this.newValidUntil() || undefined,
+      validUntil:     this.newValidUntil() || undefined,
     }).subscribe({
       next: coupon => {
         this.coupons.update(list => [coupon, ...list]);

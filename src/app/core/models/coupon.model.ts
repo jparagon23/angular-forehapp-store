@@ -64,6 +64,7 @@ export interface CreateCouponRequest {
 export interface CreateDonationCouponRequest {
   code: string;
   description?: string;
+  discountType: 'DONATION';
   discountValue: number;
   foundationId: number;
   maxUses?: number;
