@@ -399,6 +399,31 @@
 }
 @keyframes gc-rotate { to { transform: rotate(360deg); } }
 .gc-coupon-error { font-size: .77rem; color: #c62828; margin: 4px 0 0; }
+
+.gc-donation-banner {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: linear-gradient(135deg, #f0faf0, #e8f5e8);
+  border: 1.5px solid #a0d890; border-radius: 10px;
+  padding: 10px 12px; margin-top: 6px;
+}
+.gc-donation-icon { font-size: 1.2rem; flex-shrink: 0; line-height: 1.2; }
+.gc-donation-body { flex: 1; min-width: 0; }
+.gc-donation-title {
+  font-size: .8rem; font-weight: 800; color: #1a6b1a;
+  font-family: monospace; letter-spacing: .3px; margin-bottom: 3px;
+}
+.gc-donation-desc {
+  font-size: .8rem; color: #3a6a3a; line-height: 1.4;
+  strong { color: #1a6b1a; }
+}
+
+.sum-donation-info {
+  display: flex; align-items: center; gap: 6px;
+  font-size: .82rem; color: #2e7d32; margin-top: 4px;
+  strong { font-weight: 700; }
+}
+.sum-donation-icon { font-size: .9rem; flex-shrink: 0; }
+
 .gc-coupon-tag {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
   background: #e8f5e9; border-radius: 8px; padding: 8px 12px;

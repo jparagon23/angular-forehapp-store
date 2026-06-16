@@ -117,6 +117,12 @@ export class GuestCheckoutComponent implements OnInit {
   couponErrors:   Record<number, string>        = {};
   appliedCoupons: Record<number, AppliedCoupon> = {};
 
+  // ── Donation coupon (global) ──────────────────────────────────────────────────
+  donationCouponInput   = signal('');
+  donationCouponLoading = signal(false);
+  donationCouponError   = signal('');
+  appliedDonationCoupon = signal<AppliedCoupon | null>(null);
+
   get totalCouponDiscount(): number {
     return Object.values(this.appliedCoupons).reduce((s, c) => s + c.discountAmount, 0);
   }
@@ -134,6 +140,11 @@ export class GuestCheckoutComponent implements OnInit {
       shippingCost,
     }).subscribe({
       next: (res: CouponValidationResponse) => {
+        if (res.isDonation) {
+          this.couponErrors[storeId] = 'Este es un cupón de donación. Ingrésalo en el campo "Cupón de donación" de más abajo.';
+          this.couponLoading[storeId] = false;
+          return;
+        }
         this.appliedCoupons[storeId] = {
           storeId,
           code:           res.code,
@@ -152,6 +163,51 @@ export class GuestCheckoutComponent implements OnInit {
     });
   }
 
+  applyDonationCoupon() {
+    const code = this.donationCouponInput().trim().toUpperCase();
+    if (!code) return;
+    this.donationCouponLoading.set(true);
+    this.donationCouponError.set('');
+    const shippingCost = this.estimate()?.shippingTotal ?? 0;
+    this.couponService.validateGuest({
+      email:       this.email().trim(),
+      code,
+      storeId:     null,
+      orderAmount: this.cartTotal(),
+      shippingCost,
+    }).subscribe({
+      next: (res: CouponValidationResponse) => {
+        if (!res.isDonation) {
+          this.donationCouponError.set('Este código no es un cupón de donación. Ingrésalo en el campo de la tienda correspondiente.');
+          this.donationCouponLoading.set(false);
+          return;
+        }
+        this.appliedDonationCoupon.set({
+          storeId:       null,
+          code:          res.code,
+          discountAmount: 0,
+          finalAmount:   res.finalAmount,
+          discountType:  'DONATION',
+          discountValue: res.discountValue,
+          isDonation:    true,
+          donationAmount: res.donationAmount ?? 0,
+          foundationName: res.foundationName ?? '',
+        });
+        this.donationCouponLoading.set(false);
+      },
+      error: (err) => {
+        this.donationCouponError.set(this.couponErrorMessage(err?.error?.message ?? ''));
+        this.donationCouponLoading.set(false);
+      },
+    });
+  }
+
+  removeDonationCoupon() {
+    this.appliedDonationCoupon.set(null);
+    this.donationCouponInput.set('');
+    this.donationCouponError.set('');
+  }
+
   removeCoupon(storeId: number) {
     delete this.appliedCoupons[storeId];
     this.couponInputs[storeId] = '';
@@ -168,6 +224,7 @@ export class GuestCheckoutComponent implements OnInit {
       'Coupon has reached its usage limit': 'Este cupón ya no tiene usos disponibles',
       'You have already used this coupon': 'Ya usaste este cupón anteriormente',
       "Cart has no items from the coupon's store": 'Tu carrito no tiene productos de la tienda de este cupón',
+      'Donation coupon cannot be combined with a referral code': 'El cupón de donación no es compatible con un enlace de embajador.',
     };
     const minMatch = msg.match(/Order amount does not meet the minimum required: (.+)/);
     if (minMatch) return `Tu compra debe ser mínimo $${Number(minMatch[1]).toLocaleString('es-CO')} para usar este cupón`;
@@ -308,8 +365,10 @@ export class GuestCheckoutComponent implements OnInit {
     this.submitting.set(true);
     this.submitError.set('');
 
-    const appliedList = Object.values(this.appliedCoupons);
-    const coupon      = appliedList.length > 0 ? appliedList[0] : null;
+    const donationCoupon  = this.appliedDonationCoupon();
+    const regularCoupons  = Object.values(this.appliedCoupons);
+    const regularCoupon   = regularCoupons.length > 0 ? regularCoupons[0] : null;
+    const activeCoupon    = donationCoupon ?? regularCoupon;
 
     const body = {
       name:               this.name().trim(),
@@ -322,9 +381,9 @@ export class GuestCheckoutComponent implements OnInit {
       shippingReference:  this.reference().trim() || undefined,
       items:              this.cartItems().map(i => ({ variantId: i.variantId, quantity: i.quantity })),
       paymentMethod:      method,
-      couponCode:         coupon?.code,
-      couponStoreId:      coupon?.storeId,
-      referralCode:       getActiveReferralCode() ?? undefined,
+      couponCode:         activeCoupon?.code,
+      couponStoreId:      donationCoupon ? null : activeCoupon?.storeId ?? undefined,
+      referralCode:       donationCoupon ? undefined : (getActiveReferralCode() ?? undefined),
     };
 
     this.guestCheckout.createOrder(body).pipe(take(1)).subscribe({
