@@ -300,8 +300,8 @@
                           {{ a.attribute }}: <strong>{{ a.value }}</strong>
                         </span>
                       </td>
-                      <td>{{ v.price | currency:'USD':'symbol':'1.2-2' }}</td>
-                      <td>{{ v.compareAtPrice ? (v.compareAtPrice | currency:'USD':'symbol':'1.2-2') : '—' }}</td>
+                      <td>{{ v.price | currencyCop }}</td>
+                      <td>{{ v.compareAtPrice ? (v.compareAtPrice | currencyCop) : '—' }}</td>
                       <td [class.sp-stock-warn]="v.stock === 0">{{ v.stock }}</td>
                       <td>
                         <div class="sp-actions">
