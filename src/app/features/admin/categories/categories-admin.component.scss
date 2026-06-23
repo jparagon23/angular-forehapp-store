@@ -1,0 +1,66 @@
+@use '../shared/admin-styles';
+
+.page-intro {
+  margin-bottom: 20px;
+  p { font-size: .9rem; color: var(--muted); }
+}
+
+.hint {
+  font-size: .82rem;
+  color: var(--muted);
+}
+
+.loading-row {
+  padding: 32px;
+  text-align: center;
+  color: var(--muted);
+  font-size: .9rem;
+}
+
+.pos-badge {
+  display: inline-block;
+  min-width: 26px;
+  text-align: center;
+  background: #f0f4f0;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.cat-name {
+  font-weight: 600;
+  color: var(--dark);
+}
+
+.order-input {
+  width: 90px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: .92rem;
+  outline: none;
+  font-family: inherit;
+  transition: border-color .2s;
+  &:focus { border-color: var(--green); }
+  &:disabled { background: #f5f7f5; }
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.feedback-ok {
+  font-size: .82rem;
+  font-weight: 700;
+  color: #276749;
+}
+
+.feedback-err {
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--red);
+}

@@ -1,0 +1,61 @@
+<app-admin-topbar title="Orden de Discovery"></app-admin-topbar>
+
+<div class="content">
+
+  <div class="page-intro">
+    <p>Configura el orden en que aparecen las categorías en la pantalla de discovery. El cambio se refleja de
+      inmediato en la tienda.</p>
+  </div>
+
+  <div *ngIf="error()" class="alert alert-warn">⚠️ {{ error() }}</div>
+
+  <div class="table-card">
+    <div class="table-header">
+      <h3>Categorías</h3>
+      <span class="hint">Edita el número de orden y guarda fila por fila.</span>
+    </div>
+
+    <div *ngIf="loading()" class="loading-row">Cargando...</div>
+
+    <table *ngIf="!loading()">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Categoría</th>
+          <th>Orden (sortOrder)</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of rows(); let i = index">
+          <td><span class="pos-badge">{{ i + 1 }}</span></td>
+          <td class="cat-name">{{ row.cat.name }}</td>
+          <td>
+            <input
+              class="order-input"
+              type="number"
+              min="1"
+              [(ngModel)]="row.inputValue"
+              (ngModelChange)="onInputChange(row)"
+              [disabled]="row.saving"
+            />
+          </td>
+          <td>
+            <div class="row-actions">
+              <button
+                class="btn btn-green btn-sm"
+                [disabled]="row.saving || row.inputValue === row.cat.sortOrder"
+                (click)="save(row)"
+              >
+                {{ row.saving ? 'Guardando…' : 'Guardar' }}
+              </button>
+              <span *ngIf="row.saved"   class="feedback-ok">✓ Guardado</span>
+              <span *ngIf="row.rowError" class="feedback-err">{{ row.rowError }}</span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>

@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
-  Attribute, AttributeValue, Brand, BrandLine, Category, CategoryAttribute,
+  AdminCategory, Attribute, AttributeValue, Brand, BrandLine, Category, CategoryAttribute,
   CreateProductRequest, CreateVariantRequest, UpdateVariantRequest,
   InventoryRequest, MovementReason, MovementsPage,
   ProductImage, ProductVariant, SellerProduct, SellerProductDetail,
@@ -99,6 +99,14 @@ export class SellerProductService {
 
   getCategories(): Observable<Category[]> {
     return this.http.get<Category[]>(`${this.BASE}/categories`);
+  }
+
+  getAdminCategories(): Observable<AdminCategory[]> {
+    return this.http.get<AdminCategory[]>(`${this.BASE}/admin/categories`);
+  }
+
+  updateDiscoveryOrder(id: number, sortOrder: number): Observable<AdminCategory> {
+    return this.http.patch<AdminCategory>(`${this.BASE}/admin/categories/${id}/discovery-order`, { sortOrder });
   }
 
   getCategoryAttributes(categoryId: number): Observable<CategoryAttribute[]> {

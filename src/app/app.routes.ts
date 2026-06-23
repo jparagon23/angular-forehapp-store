@@ -137,6 +137,7 @@ export const routes: Routes = [
       { path: 'stores',   loadComponent: () => import('./features/admin/stores/stores-admin.component').then(m => m.StoresAdminComponent) },
       { path: 'shipping-zones', loadComponent: () => import('./features/admin/shipping-zones/shipping-zones.component').then(m => m.ShippingZonesComponent) },
       { path: 'ambassadors',    loadComponent: () => import('./features/admin/ambassadors/ambassadors-admin.component').then(m => m.AmbassadorsAdminComponent) },
+      { path: 'categories',     loadComponent: () => import('./features/admin/categories/categories-admin.component').then(m => m.CategoriesAdminComponent) },
     ]
   },
   {
