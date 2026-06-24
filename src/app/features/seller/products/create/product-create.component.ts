@@ -1,28 +1,24 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { DecimalPipe, NgFor, NgIf } from '@angular/common';
+import { NgFor, NgIf } from '@angular/common';
 import { forkJoin } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { SellerProductService } from '../../../../core/services/seller-product.service';
 import {
-  Brand,
-  BrandLine,
-  Category,
-  CategoryAttribute,
-  ProductImage,
-  ProductVariant,
-  SellerProduct,
+  Brand, BrandLine, Category, CategoryAttribute,
+  ProductImage, ProductVariant, SellerProduct,
 } from '../../../../core/models/seller-product.model';
 import { selectActiveSellerStoreId } from '../../../../store/seller/seller.selectors';
+import { CurrencyCopPipe } from '../../../../shared/pipes/currency-cop.pipe';
 
 type WizardStep = 1 | 2 | 3 | 4;
 
 @Component({
   selector: 'app-product-create',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, NgFor, NgIf, RouterLink, DecimalPipe],
+  imports: [ReactiveFormsModule, FormsModule, NgFor, NgIf, RouterLink, CurrencyCopPipe],
   templateUrl: './product-create.component.html',
   styleUrl: './product-create.component.scss',
 })
@@ -38,13 +34,13 @@ export class ProductCreateComponent implements OnInit {
   step = signal<WizardStep>(1);
 
   // ── Step 1 – reference data ──────────────────────────────────
-  brands           = signal<Brand[]>([]);
-  categories       = signal<Category[]>([]);
-  brandLines       = signal<BrandLine[]>([]);
-  categoryAttrs    = signal<CategoryAttribute[]>([]);
-  loadingRef       = signal(false);
-  loadingLines     = signal(false);
-  loadingAttrs     = signal(false);
+  brands        = signal<Brand[]>([]);
+  categories    = signal<Category[]>([]);
+  brandLines    = signal<BrandLine[]>([]);
+  categoryAttrs = signal<CategoryAttribute[]>([]);
+  loadingRef    = signal(false);
+  loadingLines  = signal(false);
+  loadingAttrs  = signal(false);
 
   basicForm = this.fb.group({
     title:        ['', [Validators.required, Validators.maxLength(255)]],
@@ -67,9 +63,10 @@ export class ProductCreateComponent implements OnInit {
     stock:          [null as number | null, [Validators.required, Validators.min(0)]],
   });
   selectedAttrValues: Record<number, number | null> = {};
-  variants      = signal<ProductVariant[]>([]);
-  addingVariant = signal(false);
-  variantError  = signal<string | null>(null);
+  variants           = signal<ProductVariant[]>([]);
+  addingVariant      = signal(false);
+  variantError       = signal<string | null>(null);
+  justAddedVariantId = signal<number | null>(null);
 
   // ── Step 3 – images ──────────────────────────────────────────
   images         = signal<ProductImage[]>([]);
@@ -82,12 +79,25 @@ export class ProductCreateComponent implements OnInit {
   }
 
   // ── Step 4 – publish ─────────────────────────────────────────
-  publishing    = signal(false);
-  publishError  = signal<string | null>(null);
+  publishing   = signal(false);
+  publishError = signal<string | null>(null);
+  discarding   = signal(false);
 
-  get hasStock(): boolean    { return this.variants().some(v => v.stock > 0); }
-  get canPublish(): boolean {
-    return this.variants().length > 0 && this.images().length > 0 && this.hasStock;
+  get hasStock(): boolean   { return this.variants().some(v => v.stock > 0); }
+  get canPublish(): boolean { return this.variants().length > 0 && this.images().length > 0 && this.hasStock; }
+
+  // Label dinámico: indica al seller que "Continuar" también guardará el form si tiene datos
+  get continueLabel(): string {
+    return this.variantForm.dirty ? 'Guardar variante y continuar →' : 'Continuar → Imágenes';
+  }
+
+  private validateRequiredAttrs(): string | null {
+    const missing = this.categoryAttrs().filter(
+      a => a.required && !this.selectedAttrValues[a.attributeId]
+    );
+    return missing.length
+      ? `Atributos obligatorios sin completar: ${missing.map(a => a.name).join(', ')}`
+      : null;
   }
 
   ngOnInit() {
@@ -101,6 +111,11 @@ export class ProductCreateComponent implements OnInit {
         },
         error: () => this.loadingRef.set(false),
       });
+  }
+
+  // Navegar hacia atrás en el stepper (solo permite retroceder, nunca saltar adelante)
+  goToStep(target: WizardStep) {
+    if (target < this.step()) this.step.set(target);
   }
 
   onBrandChange(event: Event) {
@@ -175,11 +190,7 @@ export class ProductCreateComponent implements OnInit {
     });
   }
 
-  keepAsDraft() {
-    this.router.navigate(['/seller/products']);
-  }
-
-  discarding = signal(false);
+  keepAsDraft() { this.router.navigate(['/seller/products']); }
 
   cancelDraft() {
     const storeId = this.storeId();
@@ -192,9 +203,14 @@ export class ProductCreateComponent implements OnInit {
     });
   }
 
-  addVariant() {
+  // Lógica compartida para agregar variante. onSuccess se llama solo si la petición fue exitosa.
+  private doAddVariant(onSuccess: (v: ProductVariant) => void) {
     this.variantForm.markAllAsTouched();
     if (this.variantForm.invalid) return;
+
+    const attrError = this.validateRequiredAttrs();
+    if (attrError) { this.variantError.set(attrError); return; }
+
     const storeId = this.storeId();
     if (!storeId) return;
     const productId = this.draftProduct()!.id;
@@ -216,6 +232,9 @@ export class ProductCreateComponent implements OnInit {
         this.variantForm.reset();
         this.selectedAttrValues = {};
         this.addingVariant.set(false);
+        this.justAddedVariantId.set(variant.id);
+        setTimeout(() => this.justAddedVariantId.set(null), 1800);
+        onSuccess(variant);
       },
       error: err => {
         this.variantError.set(err.error?.message ?? 'SKU duplicado u otro error');
@@ -224,47 +243,18 @@ export class ProductCreateComponent implements OnInit {
     });
   }
 
-  goToImages() {
-    // Si el formulario tiene datos ingresados, guardar la variante antes de continuar
-    if (this.variantForm.dirty) {
-      this.variantForm.markAllAsTouched();
-      if (this.variantForm.invalid) return;
-      const storeId = this.storeId();
-      if (!storeId) return;
-      const productId = this.draftProduct()!.id;
-      const { sku, price, compareAtPrice, stock } = this.variantForm.value;
-      const attributeValueIds = Object.values(this.selectedAttrValues)
-        .filter((id): id is number => id !== null && id !== 0);
+  addVariant() { this.doAddVariant(() => {}); }
 
-      this.addingVariant.set(true);
-      this.variantError.set(null);
-      this.service.addVariant(storeId, productId, {
-        sku: sku || undefined,
-        price: price!,
-        compareAtPrice: compareAtPrice ?? undefined,
-        stock: stock!,
-        attributeValueIds,
-      }).subscribe({
-        next: variant => {
-          this.variants.update(v => [...v, variant]);
-          this.variantForm.reset();
-          this.selectedAttrValues = {};
-          this.addingVariant.set(false);
-          this.step.set(3);
-        },
-        error: err => {
-          this.variantError.set(err.error?.message ?? 'SKU duplicado u otro error');
-          this.addingVariant.set(false);
-        },
-      });
+  goToImages() {
+    if (this.variantForm.dirty) {
+      // El formulario tiene datos: guardar la variante y luego navegar
+      this.doAddVariant(() => this.step.set(3));
       return;
     }
-
-    // Formulario vacío: si ya hay variantes continuar, si no mostrar errores de validación
     if (this.variants().length > 0) {
       this.step.set(3);
     } else {
-      this.variantForm.markAllAsTouched();
+      this.variantError.set('Debes agregar al menos una variante para continuar.');
     }
   }
 

@@ -13,17 +13,29 @@
 
 <!-- ── Stepper ──────────────────────────────────────────────── -->
 <div class="wiz-steps">
-  <div class="wiz-step" [class.active]="step() >= 1" [class.done]="step() > 1">
+  <div class="wiz-step"
+       [class.active]="step() >= 1"
+       [class.done]="step() > 1"
+       [class.wiz-step--clickable]="step() > 1"
+       (click)="goToStep(1)">
     <div class="wiz-step-dot">{{ step() > 1 ? '✓' : '1' }}</div>
     <span>Datos básicos</span>
   </div>
   <div class="wiz-step-line" [class.done]="step() > 1"></div>
-  <div class="wiz-step" [class.active]="step() >= 2" [class.done]="step() > 2">
+  <div class="wiz-step"
+       [class.active]="step() >= 2"
+       [class.done]="step() > 2"
+       [class.wiz-step--clickable]="step() > 2"
+       (click)="goToStep(2)">
     <div class="wiz-step-dot">{{ step() > 2 ? '✓' : '2' }}</div>
     <span>Variantes</span>
   </div>
   <div class="wiz-step-line" [class.done]="step() > 2"></div>
-  <div class="wiz-step" [class.active]="step() >= 3" [class.done]="step() > 3">
+  <div class="wiz-step"
+       [class.active]="step() >= 3"
+       [class.done]="step() > 3"
+       [class.wiz-step--clickable]="step() > 3"
+       (click)="goToStep(3)">
     <div class="wiz-step-dot">{{ step() > 3 ? '✓' : '3' }}</div>
     <span>Imágenes</span>
   </div>
@@ -44,6 +56,7 @@
 
   <form [formGroup]="basicForm" (ngSubmit)="step1Submit()" novalidate *ngIf="!loadingRef()">
 
+    <!-- Título -->
     <div class="form-row">
       <div class="form-group form-group--full">
         <label>Título <span class="req">*</span></label>
@@ -53,28 +66,8 @@
       </div>
     </div>
 
+    <!-- Categoría y atributos -->
     <div class="form-row">
-      <div class="form-group form-group--full">
-        <label>Descripción</label>
-        <textarea formControlName="description" rows="3" placeholder="Describe tu producto…"></textarea>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group form-group--full">
-        <label class="toggle-label">
-          <input type="checkbox" formControlName="freeShipping" class="toggle-check" />
-          <span class="toggle-track">
-            <span class="toggle-thumb"></span>
-          </span>
-          <span class="toggle-text">Envío gratis para este producto</span>
-        </label>
-        <p class="toggle-hint">Si está activo, este producto no generará costo de envío independientemente de la zona.</p>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <!-- Categoría -->
       <div class="form-group">
         <label>Categoría <span class="req">*</span></label>
         <select formControlName="categoryId" (change)="onCategoryChange($event)">
@@ -84,7 +77,6 @@
         <span class="form-error" *ngIf="basicForm.get('categoryId')?.touched && basicForm.get('categoryId')?.hasError('required')">Selecciona una categoría.</span>
       </div>
 
-      <!-- Atributos de la categoría (informativo) -->
       <div class="form-group attr-info" *ngIf="categoryAttrs().length && !loadingAttrs()">
         <label>Atributos requeridos por variante</label>
         <div class="attr-pills">
@@ -96,8 +88,8 @@
       <div class="loading-inline" *ngIf="loadingAttrs()">Cargando atributos…</div>
     </div>
 
+    <!-- Marca y línea -->
     <div class="form-row">
-      <!-- Marca -->
       <div class="form-group">
         <label>Marca <span class="req">*</span></label>
         <select formControlName="brandId" (change)="onBrandChange($event)">
@@ -107,7 +99,6 @@
         <span class="form-error" *ngIf="basicForm.get('brandId')?.touched && basicForm.get('brandId')?.hasError('required')">Selecciona una marca.</span>
       </div>
 
-      <!-- Línea (opcional, aparece solo cuando hay categoría y marca) -->
       <div class="form-group" *ngIf="basicForm.get('categoryId')?.value && basicForm.get('brandId')?.value">
         <label>Línea <span class="opt">(opcional)</span></label>
         <span class="loading-inline" *ngIf="loadingLines()">Cargando…</span>
@@ -115,6 +106,28 @@
           <option [value]="null">— Sin línea —</option>
           <option *ngFor="let l of brandLines()" [value]="l.id">{{ l.name }}</option>
         </select>
+      </div>
+    </div>
+
+    <!-- Descripción -->
+    <div class="form-row">
+      <div class="form-group form-group--full">
+        <label>Descripción</label>
+        <textarea formControlName="description" rows="3" placeholder="Describe tu producto…"></textarea>
+      </div>
+    </div>
+
+    <!-- Envío gratis -->
+    <div class="form-row">
+      <div class="form-group form-group--full">
+        <label class="toggle-label">
+          <input type="checkbox" formControlName="freeShipping" class="toggle-check" />
+          <span class="toggle-track">
+            <span class="toggle-thumb"></span>
+          </span>
+          <span class="toggle-text">Envío gratis para este producto</span>
+        </label>
+        <p class="toggle-hint">Si está activo, este producto no generará costo de envío independientemente de la zona.</p>
       </div>
     </div>
 
@@ -133,15 +146,39 @@
 ══════════════════════════════════════════════════════════ -->
 <div class="wiz-card" *ngIf="step() === 2">
   <h2 class="wiz-card-title">Variantes</h2>
-  <p class="wiz-card-hint">Agrega al menos una variante (talla, color, etc.) para poder publicar.</p>
+
+  <!-- Explicación contextual -->
+  <div class="variant-explainer">
+    <p>
+      Una <strong>variante</strong> es cada presentación del producto con su propio precio y stock.
+      <span *ngIf="categoryAttrs().length">
+        La categoría <em>{{ draftProduct()?.category }}</em> requiere que especifiques
+        <strong *ngFor="let a of categoryAttrs(); let last = last">
+          {{ a.name }}<ng-container *ngIf="!last">, </ng-container>
+        </strong>
+        en cada variante.
+      </span>
+      <span *ngIf="!categoryAttrs().length">
+        Si el producto no tiene variaciones, agrega <strong>una sola variante</strong> con el precio y stock total.
+      </span>
+    </p>
+    <p class="variant-explainer-example" *ngIf="categoryAttrs().length">
+      Ej: si vendes una raqueta en tallas 4¼ y 4⅜, agrega <strong>dos variantes</strong>, una por talla.
+    </p>
+  </div>
 
   <!-- Lista de variantes agregadas -->
   <div class="variant-list" *ngIf="variants().length">
     <h3 class="variant-list-title">Variantes agregadas ({{ variants().length }})</h3>
-    <div class="variant-row" *ngFor="let v of variants()">
+    <div class="variant-row"
+         *ngFor="let v of variants()"
+         [class.variant-row--added]="justAddedVariantId() === v.id">
       <div class="variant-info">
         <strong>{{ v.sku ?? '—' }}</strong>
-        <span>$ {{ v.price | number:'1.2-2' }}</span>
+        <span class="variant-price">{{ v.price | currencyCop }}</span>
+        <span class="variant-compare" *ngIf="v.compareAtPrice">
+          <s>{{ v.compareAtPrice | currencyCop }}</s>
+        </span>
         <span>Stock: {{ v.stock }}</span>
         <span class="variant-attrs" *ngIf="v.attributes?.length">
           <ng-container *ngFor="let a of v.attributes; let last = last">
@@ -155,7 +192,9 @@
 
   <!-- Formulario nueva variante -->
   <form [formGroup]="variantForm" (ngSubmit)="addVariant()" novalidate class="variant-form">
-    <h3 class="variant-form-title">Nueva variante</h3>
+    <h3 class="variant-form-title">
+      {{ variants().length ? 'Agregar otra variante' : 'Nueva variante' }}
+    </h3>
 
     <div class="form-row">
       <div class="form-group">
@@ -165,12 +204,14 @@
       </div>
       <div class="form-group">
         <label>Precio <span class="req">*</span></label>
-        <input formControlName="price" type="number" min="0.01" step="0.01" placeholder="0.00" />
+        <input formControlName="price" type="number" min="0.01" step="0.01" placeholder="0" />
+        <span class="field-hint">En pesos colombianos (COP)</span>
         <span class="form-error" *ngIf="variantForm.get('price')?.touched && variantForm.get('price')?.invalid">Precio mayor a 0 requerido.</span>
       </div>
       <div class="form-group">
         <label>Precio tachado <span class="opt">(opcional)</span></label>
-        <input formControlName="compareAtPrice" type="number" min="0.01" step="0.01" placeholder="0.00" />
+        <input formControlName="compareAtPrice" type="number" min="0.01" step="0.01" placeholder="0" />
+        <span class="field-hint">Precio original antes de descuento, en COP</span>
       </div>
       <div class="form-group">
         <label>Stock <span class="req">*</span></label>
@@ -182,7 +223,11 @@
     <!-- Atributos de categoría -->
     <div class="form-row" *ngIf="categoryAttrs().length">
       <div class="form-group" *ngFor="let attr of categoryAttrs()">
-        <label>{{ attr.name }} <span class="req" *ngIf="attr.required">*</span></label>
+        <label>
+          {{ attr.name }}
+          <span class="req" *ngIf="attr.required">*</span>
+          <span class="opt" *ngIf="!attr.required">(opcional)</span>
+        </label>
         <select [(ngModel)]="selectedAttrValues[attr.attributeId]" [ngModelOptions]="{standalone: true}">
           <option [value]="null">— Seleccionar —</option>
           <option *ngFor="let v of attr.values" [value]="v.id">{{ v.description }}</option>
@@ -193,12 +238,12 @@
     <div class="form-error form-error--global" *ngIf="variantError()">{{ variantError() }}</div>
 
     <div class="wiz-actions">
-      <button type="button" class="btn-ghost" (click)="step.set(1)" [disabled]="addingVariant()">← Datos básicos</button>
+      <button type="button" class="btn-ghost" (click)="goToStep(1)" [disabled]="addingVariant()">← Datos básicos</button>
       <button type="submit" class="btn-secondary" [disabled]="addingVariant()">
         {{ addingVariant() ? 'Agregando…' : '+ Agregar variante' }}
       </button>
       <button type="button" class="btn-primary" (click)="goToImages()" [disabled]="addingVariant()">
-        Continuar → Imágenes
+        {{ addingVariant() ? 'Guardando…' : continueLabel }}
       </button>
     </div>
   </form>
@@ -211,7 +256,6 @@
   <h2 class="wiz-card-title">Imágenes del producto</h2>
   <p class="wiz-card-hint">Sube al menos una imagen. Formatos: JPEG, PNG, WebP. Máx. 5 MB por archivo.</p>
 
-  <!-- Grid de imágenes -->
   <div class="img-grid" *ngIf="images().length || uploadingImage()">
     <div class="img-item" *ngFor="let img of images()">
       <div class="img-skeleton" *ngIf="!loadedImageIds().has(img.id)"></div>
@@ -239,7 +283,7 @@
   <div class="form-error form-error--global" *ngIf="imageError()">{{ imageError() }}</div>
 
   <div class="wiz-actions">
-    <button type="button" class="btn-ghost" (click)="step.set(2)">← Volver a variantes</button>
+    <button type="button" class="btn-ghost" (click)="goToStep(2)">← Volver a variantes</button>
     <button type="button" class="btn-primary" (click)="step.set(4)" [disabled]="!images().length">
       Continuar → Publicar
     </button>
@@ -290,7 +334,7 @@
   <div class="form-error form-error--global" *ngIf="publishError()">{{ publishError() }}</div>
 
   <div class="wiz-actions">
-    <button type="button" class="btn-ghost" (click)="step.set(3)">← Volver a imágenes</button>
+    <button type="button" class="btn-ghost" (click)="goToStep(3)">← Volver a imágenes</button>
     <button type="button" class="btn-secondary" (click)="keepAsDraft()">Guardar borrador</button>
     <button type="button" class="btn-primary" (click)="publish()" [disabled]="!canPublish || publishing()">
       {{ publishing() ? 'Publicando…' : '🚀 Publicar producto' }}
