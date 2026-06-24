@@ -1,0 +1,88 @@
+<div class="scr-page">
+
+  <div class="scr-header">
+    <div>
+      <h1 class="scr-title">Mis solicitudes de catálogo</h1>
+      <p class="scr-sub">Solicitudes de marcas y categorías que has enviado al administrador.</p>
+    </div>
+  </div>
+
+  <!-- Tabs de filtro -->
+  <div class="scr-tabs">
+    <button class="scr-tab" [class.active]="activeTab() === 'ALL'"      (click)="setTab('ALL')">Todas</button>
+    <button class="scr-tab" [class.active]="activeTab() === 'PENDING'"  (click)="setTab('PENDING')">Pendientes</button>
+    <button class="scr-tab" [class.active]="activeTab() === 'APPROVED'" (click)="setTab('APPROVED')">Aprobadas</button>
+    <button class="scr-tab" [class.active]="activeTab() === 'REJECTED'" (click)="setTab('REJECTED')">Rechazadas</button>
+  </div>
+
+  <!-- Loading -->
+  <div class="scr-loading" *ngIf="loading()">
+    <div class="spinner"></div> Cargando solicitudes…
+  </div>
+
+  <!-- Error -->
+  <div class="scr-error" *ngIf="!loading() && error()">{{ error() }}</div>
+
+  <!-- Empty -->
+  <div class="scr-empty" *ngIf="!loading() && !error() && !requests().length">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+    </svg>
+    <p>No hay solicitudes
+      <ng-container *ngIf="activeTab() !== 'ALL'"> en este estado</ng-container>.
+    </p>
+    <span>Puedes solicitar una marca o categoría desde el formulario de creación de producto.</span>
+  </div>
+
+  <!-- Tabla -->
+  <div class="scr-table-wrap" *ngIf="!loading() && !error() && requests().length">
+    <table class="scr-table">
+      <thead>
+        <tr>
+          <th>Tipo</th>
+          <th>Nombre sugerido</th>
+          <th>Estado</th>
+          <th>Fecha</th>
+          <th>Motivo de rechazo</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of requests()">
+          <td>
+            <span class="type-badge" [class.type-brand]="r.type === 'BRAND'" [class.type-cat]="r.type === 'CATEGORY'">
+              {{ typeLabel(r) }}
+            </span>
+          </td>
+          <td class="td-name">{{ r.suggestedName }}</td>
+          <td>
+            <span class="status-badge"
+                  [class.s-pending]="r.status === 'PENDING'"
+                  [class.s-approved]="r.status === 'APPROVED'"
+                  [class.s-rejected]="r.status === 'REJECTED'">
+              {{ r.status === 'PENDING' ? '🟡 Pendiente' : r.status === 'APPROVED' ? '🟢 Aprobada' : '🔴 Rechazada' }}
+            </span>
+          </td>
+          <td class="td-date">{{ r.createdAt | date:'dd/MM/yyyy' }}</td>
+          <td class="td-reason">
+            <span *ngIf="r.rejectionReason" class="reason-text">"{{ r.rejectionReason }}"</span>
+            <span *ngIf="!r.rejectionReason" class="no-reason">—</span>
+          </td>
+          <td>
+            <button
+              *ngIf="r.status === 'PENDING'"
+              class="btn-cancel-req"
+              [disabled]="canceling() === r.id"
+              (click)="cancel(r)"
+            >
+              {{ canceling() === r.id ? 'Cancelando…' : 'Cancelar' }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<app-toast [message]="toastMsg()" [type]="toastType()"></app-toast>

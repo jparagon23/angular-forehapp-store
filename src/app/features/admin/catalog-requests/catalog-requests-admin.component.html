@@ -1,0 +1,119 @@
+<app-admin-topbar title="Solicitudes de Catálogo"></app-admin-topbar>
+
+<div class="content">
+
+  <!-- Tabs de estado -->
+  <div class="cr-tabs">
+    <button class="cr-tab" [class.active]="activeTab() === 'PENDING'"  (click)="setTab('PENDING')">Pendientes</button>
+    <button class="cr-tab" [class.active]="activeTab() === 'APPROVED'" (click)="setTab('APPROVED')">Aprobadas</button>
+    <button class="cr-tab" [class.active]="activeTab() === 'REJECTED'" (click)="setTab('REJECTED')">Rechazadas</button>
+    <button class="cr-tab" [class.active]="activeTab() === 'ALL'"      (click)="setTab('ALL')">Todas</button>
+  </div>
+
+  <!-- Filtro por tipo -->
+  <div class="cr-filters">
+    <select class="cr-filter-select" [(ngModel)]="typeFilter" (change)="applyTypeFilter()">
+      <option value="">Todos los tipos</option>
+      <option value="BRAND">Marcas</option>
+      <option value="CATEGORY">Categorías</option>
+    </select>
+  </div>
+
+  <div *ngIf="error()" class="alert alert-warn">⚠️ {{ error() }}</div>
+
+  <div class="table-card">
+    <div class="table-header">
+      <h3>
+        {{ activeTab() === 'PENDING' ? 'Pendientes' : activeTab() === 'APPROVED' ? 'Aprobadas' : activeTab() === 'REJECTED' ? 'Rechazadas' : 'Todas' }}
+        <span class="cr-count" *ngIf="!loading()">{{ requests().length }}</span>
+      </h3>
+    </div>
+
+    <div class="cr-loading" *ngIf="loading()">
+      <div class="mini-spin"></div> Cargando…
+    </div>
+
+    <div class="cr-empty" *ngIf="!loading() && !requests().length">
+      No hay solicitudes en este estado.
+    </div>
+
+    <table *ngIf="!loading() && requests().length">
+      <thead>
+        <tr>
+          <th>Seller</th>
+          <th>Tienda</th>
+          <th>Tipo</th>
+          <th>Nombre sugerido</th>
+          <th>Fecha</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of requests()">
+          <td>{{ r.requestedByName }}</td>
+          <td>{{ r.storeName }}</td>
+          <td>
+            <span class="type-badge" [class.type-brand]="r.type === 'BRAND'" [class.type-cat]="r.type === 'CATEGORY'">
+              {{ typeLabel(r.type) }}
+            </span>
+          </td>
+          <td class="cr-name">{{ r.suggestedName }}</td>
+          <td>{{ r.createdAt | date:'dd/MM/yy' }}</td>
+          <td>
+            <span class="status-badge"
+                  [class.s-pending]="r.status === 'PENDING'"
+                  [class.s-done]="r.status === 'APPROVED'"
+                  [class.s-canceled]="r.status === 'REJECTED'">
+              {{ r.status === 'PENDING' ? 'Pendiente' : r.status === 'APPROVED' ? 'Aprobada' : 'Rechazada' }}
+            </span>
+          </td>
+          <td>
+            <div class="action-btns" *ngIf="r.status === 'PENDING'">
+              <button class="btn btn-green btn-sm"
+                      [disabled]="approving() === r.id"
+                      (click)="approve(r)">
+                {{ approving() === r.id ? '…' : '✅ Aprobar' }}
+              </button>
+              <button class="btn btn-red btn-sm"
+                      [disabled]="approving() === r.id"
+                      (click)="openRejectModal(r)">
+                ❌ Rechazar
+              </button>
+            </div>
+            <span *ngIf="r.status !== 'PENDING'" class="cr-resolved-note">
+              {{ r.resolvedAt | date:'dd/MM/yy' }}
+              <span *ngIf="r.rejectionReason" class="cr-reason">· {{ r.rejectionReason }}</span>
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- Modal de rechazo -->
+<div class="modal-overlay" [class.open]="rejectModal() !== null">
+  <div class="modal" *ngIf="rejectModal()">
+    <h2>Rechazar solicitud</h2>
+    <p class="cr-modal-desc">
+      Solicitud de <strong>{{ typeLabel(rejectModal()!.type) }}</strong>:
+      "<strong>{{ rejectModal()!.suggestedName }}</strong>" de {{ rejectModal()!.requestedByName }}
+    </p>
+    <div class="form-group">
+      <label>Motivo <span class="form-group" style="font-weight:400; text-transform:none">(opcional)</span></label>
+      <input type="text" [(ngModel)]="rejectReason" maxlength="255"
+             placeholder="Ej: Ya existe como Nike, búscala en el selector." />
+    </div>
+    <div class="form-error" *ngIf="rejectError()">{{ rejectError() }}</div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" (click)="closeRejectModal()" [disabled]="rejecting()">Cancelar</button>
+      <button class="btn btn-red" (click)="submitReject()" [disabled]="rejecting()">
+        {{ rejecting() ? 'Rechazando…' : 'Confirmar rechazo' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<app-toast [message]="toastMsg()" [type]="toastType()"></app-toast>

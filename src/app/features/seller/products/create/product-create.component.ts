@@ -12,21 +12,25 @@ import {
 } from '../../../../core/models/seller-product.model';
 import { selectActiveSellerStoreId } from '../../../../store/seller/seller.selectors';
 import { CurrencyCopPipe } from '../../../../shared/pipes/currency-cop.pipe';
+import { ToastComponent } from '../../../../shared/components/toast/toast.component';
+import { CatalogRequestService } from '../../../../core/services/catalog-request.service';
+import { CatalogRequestType } from '../../../../core/models/catalog-request.model';
 
 type WizardStep = 1 | 2 | 3 | 4;
 
 @Component({
   selector: 'app-product-create',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, NgFor, NgIf, RouterLink, CurrencyCopPipe],
+  imports: [ReactiveFormsModule, FormsModule, NgFor, NgIf, RouterLink, CurrencyCopPipe, ToastComponent],
   templateUrl: './product-create.component.html',
   styleUrl: './product-create.component.scss',
 })
 export class ProductCreateComponent implements OnInit {
-  private service = inject(SellerProductService);
-  private router  = inject(Router);
-  private fb      = inject(FormBuilder);
-  private ngrx    = inject(Store);
+  private service        = inject(SellerProductService);
+  private catalogService = inject(CatalogRequestService);
+  private router         = inject(Router);
+  private fb             = inject(FormBuilder);
+  private ngrx           = inject(Store);
 
   private storeId = toSignal(this.ngrx.select(selectActiveSellerStoreId), { initialValue: null });
 
@@ -82,6 +86,14 @@ export class ProductCreateComponent implements OnInit {
   publishing   = signal(false);
   publishError = signal<string | null>(null);
   discarding   = signal(false);
+
+  // ── Catalog request modal ─────────────────────────────────────
+  requestType   = signal<CatalogRequestType | null>(null);
+  requestName   = signal('');
+  requestSaving = signal(false);
+  requestError  = signal('');
+  toastMsg      = signal('');
+  toastType     = signal<'success' | 'error'>('success');
 
   get hasStock(): boolean   { return this.variants().some(v => v.stock > 0); }
   get canPublish(): boolean { return this.variants().length > 0 && this.images().length > 0 && this.hasStock; }
@@ -302,6 +314,46 @@ export class ProductCreateComponent implements OnInit {
     const productId = this.draftProduct()!.id;
     this.service.deleteImage(storeId, productId, imageId).subscribe({
       next: () => this.images.update(i => i.filter(x => x.id !== imageId)),
+    });
+  }
+
+  openRequest(type: CatalogRequestType) {
+    this.requestType.set(type);
+    this.requestName.set('');
+    this.requestError.set('');
+  }
+
+  closeRequest() { this.requestType.set(null); }
+
+  submitRequest() {
+    const name = this.requestName().trim();
+    if (name.length < 2) { this.requestError.set('El nombre debe tener al menos 2 caracteres.'); return; }
+    const storeId = this.storeId();
+    if (!storeId) return;
+    const type = this.requestType();
+    if (!type) return;
+
+    this.requestSaving.set(true);
+    this.requestError.set('');
+    this.catalogService.createRequest(storeId, { type, suggestedName: name }).subscribe({
+      next: () => {
+        this.closeRequest();
+        this.requestSaving.set(false);
+        const label = type === 'BRAND' ? 'marca' : 'categoría';
+        this.toastMsg.set(`Solicitud de ${label} enviada. Te avisaremos cuando sea aprobada.`);
+        this.toastType.set('success');
+      },
+      error: err => {
+        const code: string = err.error?.errorCode ?? '';
+        if (code === 'CATALOG_REQUEST_NAME_ALREADY_EXISTS' || code === 'BRAND_ALREADY_EXISTS' || code === 'CATEGORY_ALREADY_EXISTS') {
+          this.requestError.set('Ya existe esa marca/categoría. Búscala en el selector.');
+        } else if (code === 'CATALOG_REQUEST_ALREADY_PENDING') {
+          this.requestError.set('Ya hay una solicitud pendiente para ese nombre. Te avisaremos cuando se resuelva.');
+        } else {
+          this.requestError.set(err.error?.message ?? 'Error al enviar la solicitud.');
+        }
+        this.requestSaving.set(false);
+      },
     });
   }
 

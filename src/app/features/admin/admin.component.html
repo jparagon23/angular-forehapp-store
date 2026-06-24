@@ -16,8 +16,12 @@
     <div class="nav-section">Catálogo</div>
     <a class="nav-item" routerLink="products" routerLinkActive="active"><span class="nav-icon">🎾</span> Productos</a>
     <a class="nav-item" routerLink="inventory" routerLinkActive="active"><span class="nav-icon">🗃️</span> Inventario</a>
-    <a class="nav-item" routerLink="brands"      routerLinkActive="active"><span class="nav-icon">🏷️</span> Catálogo</a>
-    <a class="nav-item" routerLink="categories"  routerLinkActive="active"><span class="nav-icon">📂</span> Discovery</a>
+    <a class="nav-item" routerLink="brands"           routerLinkActive="active"><span class="nav-icon">🏷️</span> Catálogo</a>
+    <a class="nav-item" routerLink="categories"       routerLinkActive="active"><span class="nav-icon">📂</span> Discovery</a>
+    <a class="nav-item" routerLink="catalog-requests" routerLinkActive="active">
+      <span class="nav-icon">📋</span> Solicitudes
+      <span class="nav-badge" *ngIf="pendingCatalogCount() > 0">{{ pendingCatalogCount() }}</span>
+    </a>
 
     <div class="nav-section">Análisis</div>
     <a class="nav-item" routerLink="analytics" routerLinkActive="active"><span class="nav-icon">📈</span> Ventas</a>

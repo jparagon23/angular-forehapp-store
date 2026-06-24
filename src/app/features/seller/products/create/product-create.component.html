@@ -75,6 +75,7 @@
           <option *ngFor="let c of categories()" [value]="c.id">{{ c.name }}</option>
         </select>
         <span class="form-error" *ngIf="basicForm.get('categoryId')?.touched && basicForm.get('categoryId')?.hasError('required')">Selecciona una categoría.</span>
+        <a class="request-link" (click)="openRequest('CATEGORY')">¿No encuentras tu categoría? Solicitarla →</a>
       </div>
 
       <div class="form-group attr-info" *ngIf="categoryAttrs().length && !loadingAttrs()">
@@ -97,6 +98,7 @@
           <option *ngFor="let b of brands()" [value]="b.id">{{ b.name }}</option>
         </select>
         <span class="form-error" *ngIf="basicForm.get('brandId')?.touched && basicForm.get('brandId')?.hasError('required')">Selecciona una marca.</span>
+        <a class="request-link" (click)="openRequest('BRAND')">¿No encuentras tu marca? Solicitarla →</a>
       </div>
 
       <div class="form-group" *ngIf="basicForm.get('categoryId')?.value && basicForm.get('brandId')?.value">
@@ -291,6 +293,38 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════════════
+     Modal — Solicitar marca / categoría
+══════════════════════════════════════════════════════════ -->
+<div class="req-modal-overlay" *ngIf="requestType()" (click)="closeRequest()">
+  <div class="req-modal" (click)="$event.stopPropagation()">
+    <div class="req-modal-header">
+      <h3>Solicitar {{ requestType() === 'BRAND' ? 'marca' : 'categoría' }}</h3>
+      <button class="req-modal-close" (click)="closeRequest()" type="button">✕</button>
+    </div>
+    <p class="req-modal-desc">
+      Cuando el admin apruebe tu solicitud recibirás una notificación y podrás usarla en tus productos.
+    </p>
+    <div class="req-modal-body">
+      <label>Nombre <span class="req">*</span></label>
+      <input
+        type="text"
+        [placeholder]="requestType() === 'BRAND' ? 'Ej: New Balance' : 'Ej: Calzado infantil'"
+        [value]="requestName()"
+        (input)="requestName.set($any($event.target).value); requestError.set('')"
+        maxlength="100"
+      />
+      <span class="req-modal-error" *ngIf="requestError()">{{ requestError() }}</span>
+    </div>
+    <div class="req-modal-actions">
+      <button class="btn-ghost" type="button" (click)="closeRequest()" [disabled]="requestSaving()">Cancelar</button>
+      <button class="btn-primary" type="button" (click)="submitRequest()" [disabled]="requestSaving()">
+        {{ requestSaving() ? 'Enviando…' : 'Enviar solicitud' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
      STEP 4 — Publicar
 ══════════════════════════════════════════════════════════ -->
 <div class="wiz-card" *ngIf="step() === 4">
@@ -341,3 +375,5 @@
     </button>
   </div>
 </div>
+
+<app-toast [message]="toastMsg()" [type]="toastType()"></app-toast>

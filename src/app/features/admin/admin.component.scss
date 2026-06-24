@@ -40,6 +40,18 @@
 }
 .nav-icon { font-size: 1.1rem; width: 22px; text-align: center; }
 
+.nav-badge {
+  margin-left: auto;
+  background: #ef4444;
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 20px;
+  min-width: 20px;
+  text-align: center;
+}
+
 .sidebar-footer {
   margin-top: auto; padding: 16px 20px;
   border-top: 1px solid rgba(255,255,255,.1);
