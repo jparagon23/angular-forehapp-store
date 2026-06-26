@@ -113,10 +113,12 @@ export class GuestCheckoutComponent implements OnInit {
   submitError  = signal('');
 
   // ── Coupons (per store group) ────────────────────────────────────────────────
-  couponInputs:   Record<number, string>        = {};
-  couponLoading:  Record<number, boolean>       = {};
-  couponErrors:   Record<number, string>        = {};
-  appliedCoupons: Record<number, AppliedCoupon> = {};
+  couponInputs:      Record<number, string>        = {};
+  couponLoading:     Record<number, boolean>       = {};
+  couponErrors:      Record<number, string>        = {};
+  appliedCoupons:    Record<number, AppliedCoupon> = {};
+  couponSectionOpen = false;
+  codesSectionOpen  = false;
 
   // ── Donation coupon (global) ──────────────────────────────────────────────────
   donationCouponInput   = signal('');
@@ -162,6 +164,7 @@ export class GuestCheckoutComponent implements OnInit {
           discountValue:  res.discountValue,
         };
         this.couponLoading[storeId] = false;
+        this.couponSectionOpen      = false;
       },
       error: (err) => {
         this.couponErrors[storeId]  = this.couponErrorMessage(err?.error?.message ?? '');
@@ -202,6 +205,7 @@ export class GuestCheckoutComponent implements OnInit {
           foundationName: res.foundationName ?? '',
         });
         this.donationCouponLoading.set(false);
+        this.codesSectionOpen = false;
       },
       error: (err) => {
         this.donationCouponError.set(this.couponErrorMessage(err?.error?.message ?? ''));
@@ -226,6 +230,7 @@ export class GuestCheckoutComponent implements OnInit {
         this.appliedReferral.set(res.referralCode);
         this.referralName.set(res.ambassadorName);
         this.referralLoading.set(false);
+        this.codesSectionOpen = false;
       },
       error: () => {
         this.referralError.set('Código de embajador no válido.');

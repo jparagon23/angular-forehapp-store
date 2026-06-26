@@ -84,33 +84,8 @@
 
         <!-- Coupon field -->
         <div class="coupon-section">
-          <ng-container *ngIf="!appliedCoupons[group.storeId]; else couponApplied">
-            <div class="coupon-input-row">
-              <input
-                class="coupon-input"
-                type="text"
-                placeholder="Cupón de descuento"
-                [(ngModel)]="couponInputs[group.storeId]"
-                (ngModelChange)="couponErrors[group.storeId] = ''"
-                (keydown.enter)="applyCoupon(group.storeId, group.subtotal)"
-                [disabled]="couponLoading[group.storeId]"
-                [class.has-error]="couponErrors[group.storeId]"
-                maxlength="50"
-              />
-              <button
-                class="btn-apply-coupon"
-                (click)="applyCoupon(group.storeId, group.subtotal)"
-                [disabled]="couponLoading[group.storeId] || !(couponInputs[group.storeId] || '').trim()">
-                <span *ngIf="!couponLoading[group.storeId]">Aplicar</span>
-                <span class="mini-spin" *ngIf="couponLoading[group.storeId]"></span>
-              </button>
-            </div>
-            <p class="coupon-error" *ngIf="couponErrors[group.storeId]">
-              {{ couponErrors[group.storeId] }}
-            </p>
-          </ng-container>
-
-          <ng-template #couponApplied>
+          <!-- Applied: show tag -->
+          <ng-container *ngIf="appliedCoupons[group.storeId]">
             <div class="coupon-tag">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                 <polyline points="20 6 9 17 4 12"/>
@@ -138,107 +113,146 @@
               <span>Total {{ group.storeName }}:</span>
               <strong>{{ getGroupTotal(group.storeId, group.subtotal) | currencyCop }}</strong>
             </div>
-          </ng-template>
+          </ng-container>
+          <!-- Not applied: collapsible toggle -->
+          <ng-container *ngIf="!appliedCoupons[group.storeId]">
+            <button class="coupon-toggle" (click)="toggleCoupon(group.storeId)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/>
+                <line x1="7" y1="7" x2="7.01" y2="7"/>
+              </svg>
+              <span>¿Tienes cupón?</span>
+              <svg class="coupon-chevron" [class.open]="couponOpen[group.storeId]" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="coupon-expand" *ngIf="couponOpen[group.storeId]">
+              <div class="coupon-input-row">
+                <input
+                  class="coupon-input"
+                  type="text"
+                  placeholder="Cupón de descuento"
+                  [(ngModel)]="couponInputs[group.storeId]"
+                  (ngModelChange)="couponErrors[group.storeId] = ''"
+                  (keydown.enter)="applyCoupon(group.storeId, group.subtotal)"
+                  [disabled]="couponLoading[group.storeId]"
+                  [class.has-error]="couponErrors[group.storeId]"
+                  maxlength="50"
+                />
+                <button
+                  class="btn-apply-coupon"
+                  (click)="applyCoupon(group.storeId, group.subtotal)"
+                  [disabled]="couponLoading[group.storeId] || !(couponInputs[group.storeId] || '').trim()">
+                  <span *ngIf="!couponLoading[group.storeId]">Aplicar</span>
+                  <span class="mini-spin" *ngIf="couponLoading[group.storeId]"></span>
+                </button>
+              </div>
+              <p class="coupon-error" *ngIf="couponErrors[group.storeId]">
+                {{ couponErrors[group.storeId] }}
+              </p>
+            </div>
+          </ng-container>
         </div>
 
       </div>
       </ng-container>
 
-      <!-- Donation coupon (global, not per-store) -->
-      <div class="donation-coupon-section">
-        <p class="donation-coupon-label">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z"/>
-          </svg>
-          ¿Tienes un código de donación?
-        </p>
-        <ng-container *ngIf="!appliedDonationCoupon(); else donationApplied">
-          <div class="coupon-input-row">
-            <input
-              class="coupon-input"
-              type="text"
-              placeholder="Código de donación"
-              [value]="donationCouponInput()"
-              (input)="donationCouponInput.set($any($event.target).value.toUpperCase()); donationCouponError.set('')"
-              (keydown.enter)="applyDonationCoupon()"
-              [disabled]="donationCouponLoading()"
-              [class.has-error]="donationCouponError()"
-              maxlength="50"
-            />
-            <button
-              class="btn-apply-coupon"
-              (click)="applyDonationCoupon()"
-              [disabled]="donationCouponLoading() || !donationCouponInput().trim()">
-              <span *ngIf="!donationCouponLoading()">Aplicar</span>
-              <span class="mini-spin" *ngIf="donationCouponLoading()"></span>
-            </button>
+      <!-- Códigos globales: donación y embajador (colapsable) -->
+      <div class="codes-section">
+        <!-- Applied: donation banner (always visible) -->
+        <div class="donation-banner" *ngIf="appliedDonationCoupon()">
+          <div class="donation-banner-icon">💚</div>
+          <div class="donation-banner-body">
+            <p class="donation-banner-title">{{ appliedDonationCoupon()!.code }}</p>
+            <p class="donation-banner-desc">
+              Gracias a esta compra, <strong>{{ (appliedDonationCoupon()!.donationAmount ?? 0) | currencyCop }}</strong>
+              serán donados por parte de Forehapp Store a <strong>{{ appliedDonationCoupon()!.foundationName }}</strong>.
+            </p>
           </div>
-          <p class="coupon-error" *ngIf="donationCouponError()">{{ donationCouponError() }}</p>
-        </ng-container>
-        <ng-template #donationApplied>
-          <div class="donation-banner">
-            <div class="donation-banner-icon">💚</div>
-            <div class="donation-banner-body">
-              <p class="donation-banner-title">{{ appliedDonationCoupon()!.code }}</p>
-              <p class="donation-banner-desc">
-                Gracias a esta compra, <strong>{{ (appliedDonationCoupon()!.donationAmount ?? 0) | currencyCop }}</strong>
-                serán donados por parte de Forehapp Store a <strong>{{ appliedDonationCoupon()!.foundationName }}</strong>.
-              </p>
-            </div>
-            <button class="btn-remove-coupon" (click)="removeDonationCoupon()" title="Quitar cupón">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </button>
-          </div>
-        </ng-template>
-      </div>
+          <button class="btn-remove-coupon" (click)="removeDonationCoupon()" title="Quitar cupón">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
 
-      <!-- Referral code -->
-      <div class="donation-coupon-section" *ngIf="!appliedDonationCoupon()">
-        <p class="donation-coupon-label">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        <!-- Applied: referral tag (always visible) -->
+        <div class="referral-tag" *ngIf="appliedReferral()">
+          <span class="referral-tag-icon">🤝</span>
+          <span class="referral-tag-body">
+            <strong>{{ appliedReferral() }}</strong> — Código de {{ referralName() }}
+          </span>
+          <button class="btn-remove-coupon" (click)="removeReferral()" title="Quitar código">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Toggle: visible si aún hay códigos para agregar -->
+        <button class="codes-toggle" (click)="codesOpen = !codesOpen" *ngIf="!appliedDonationCoupon()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/>
+            <line x1="7" y1="7" x2="7.01" y2="7"/>
           </svg>
-          ¿Tienes un código de embajador?
-        </p>
-        <ng-container *ngIf="!appliedReferral(); else referralApplied">
-          <div class="coupon-input-row">
-            <input
-              class="coupon-input"
-              type="text"
-              placeholder="Código de embajador"
-              [value]="referralInput()"
-              (input)="referralInput.set($any($event.target).value.toUpperCase()); referralError.set('')"
-              (keydown.enter)="applyReferral()"
-              [disabled]="referralLoading()"
-              [class.has-error]="referralError()"
-              maxlength="50"
-            />
-            <button
-              class="btn-apply-coupon"
-              (click)="applyReferral()"
-              [disabled]="referralLoading() || !referralInput().trim()">
-              <span *ngIf="!referralLoading()">Aplicar</span>
-              <span class="mini-spin" *ngIf="referralLoading()"></span>
-            </button>
-          </div>
-          <p class="coupon-error" *ngIf="referralError()">{{ referralError() }}</p>
-        </ng-container>
-        <ng-template #referralApplied>
-          <div class="donation-banner">
-            <div class="donation-banner-icon">🤝</div>
-            <div class="donation-banner-body">
-              <p class="donation-banner-title">{{ appliedReferral() }}</p>
-              <p class="donation-banner-desc">Código de <strong>{{ referralName() }}</strong> aplicado.</p>
-            </div>
-            <button class="btn-remove-coupon" (click)="removeReferral()" title="Quitar código">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          <span>¿Tienes un código?</span>
+          <svg class="codes-chevron" [class.open]="codesOpen" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+
+        <!-- Cuerpo colapsable -->
+        <div class="codes-body" *ngIf="codesOpen && !appliedDonationCoupon()">
+          <!-- Donación -->
+          <div class="codes-item">
+            <p class="codes-item-label">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z"/>
               </svg>
-            </button>
+              Código de donación
+            </p>
+            <div class="coupon-input-row">
+              <input class="coupon-input" type="text" placeholder="Código de donación"
+                [value]="donationCouponInput()"
+                (input)="donationCouponInput.set($any($event.target).value.toUpperCase()); donationCouponError.set('')"
+                (keydown.enter)="applyDonationCoupon()"
+                [disabled]="donationCouponLoading()"
+                [class.has-error]="donationCouponError()"
+                maxlength="50"/>
+              <button class="btn-apply-coupon" (click)="applyDonationCoupon()"
+                [disabled]="donationCouponLoading() || !donationCouponInput().trim()">
+                <span *ngIf="!donationCouponLoading()">Aplicar</span>
+                <span class="mini-spin" *ngIf="donationCouponLoading()"></span>
+              </button>
+            </div>
+            <p class="coupon-error" *ngIf="donationCouponError()">{{ donationCouponError() }}</p>
           </div>
-        </ng-template>
+
+          <!-- Embajador (solo si no hay referral aplicado) -->
+          <div class="codes-item" *ngIf="!appliedReferral()">
+            <p class="codes-item-label">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+              </svg>
+              Código de embajador
+            </p>
+            <div class="coupon-input-row">
+              <input class="coupon-input" type="text" placeholder="Código de embajador"
+                [value]="referralInput()"
+                (input)="referralInput.set($any($event.target).value.toUpperCase()); referralError.set('')"
+                (keydown.enter)="applyReferral()"
+                [disabled]="referralLoading()"
+                [class.has-error]="referralError()"
+                maxlength="50"/>
+              <button class="btn-apply-coupon" (click)="applyReferral()"
+                [disabled]="referralLoading() || !referralInput().trim()">
+                <span *ngIf="!referralLoading()">Aplicar</span>
+                <span class="mini-spin" *ngIf="referralLoading()"></span>
+              </button>
+            </div>
+            <p class="coupon-error" *ngIf="referralError()">{{ referralError() }}</p>
+          </div>
+        </div>
       </div>
 
       <!-- Summary rows -->

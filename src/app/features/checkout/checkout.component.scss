@@ -175,6 +175,65 @@
   strong { font-size: .97rem; font-weight: 800; color: var(--dark); }
 }
 
+// ── Coupon toggle (per-store collapsible) ─────────────────
+.coupon-toggle {
+  display: flex; align-items: center; gap: 7px;
+  width: 100%; padding: 0;
+  background: none; border: none; cursor: pointer;
+  font-size: .8rem; font-weight: 700; color: var(--green);
+  text-align: left; transition: opacity .15s;
+  &:hover { opacity: .75; }
+  svg { flex-shrink: 0; stroke: var(--green); }
+}
+.coupon-chevron {
+  margin-left: auto; stroke: #bbb;
+  transition: transform .2s;
+  &.open { transform: rotate(180deg); }
+}
+.coupon-expand { margin-top: 10px; }
+
+// ── Global codes section (colapsable unificado) ───────────
+.codes-section {
+  border-top: 1px dashed #ddeedd;
+  padding: 12px 14px 14px;
+  background: #fafdf9;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.codes-toggle {
+  display: flex; align-items: center; gap: 7px;
+  width: 100%; padding: 0;
+  background: none; border: none; cursor: pointer;
+  font-size: .82rem; font-weight: 600; color: #555;
+  text-align: left; transition: color .15s;
+  &:hover { color: var(--dark); }
+  svg { stroke: var(--green); flex-shrink: 0; }
+}
+.codes-chevron {
+  margin-left: auto; stroke: #bbb;
+  transition: transform .2s;
+  &.open { transform: rotate(180deg); }
+}
+.codes-body { display: flex; flex-direction: column; gap: 14px; }
+.codes-item { display: flex; flex-direction: column; gap: 0; }
+.codes-item-label {
+  display: flex; align-items: center; gap: 5px;
+  font-size: .74rem; font-weight: 700; color: #999;
+  text-transform: uppercase; letter-spacing: .4px;
+  margin-bottom: 7px;
+  svg { stroke: #bbb; flex-shrink: 0; }
+}
+.referral-tag {
+  display: flex; align-items: center; gap: 8px;
+  background: #f0fbf0; border: 1.5px solid #b5e0a0;
+  border-radius: 8px; padding: 8px 11px;
+  font-size: .82rem; color: #2d7a2d;
+}
+.referral-tag-icon { font-size: 1rem; flex-shrink: 0; }
+.referral-tag-body {
+  flex: 1; min-width: 0;
+  strong { color: #1a6b1a; font-family: monospace; font-size: .85rem; }
+}
+
 // ── Donation coupon section ───────────────────────────────
 .donation-coupon-section {
   border-top: 1px dashed #ddeedd;

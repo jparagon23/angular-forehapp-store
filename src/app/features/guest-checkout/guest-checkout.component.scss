@@ -368,12 +368,47 @@
   margin-top: 20px;
   padding-top: 18px;
   border-top: 1px solid #f0f0f0;
+  display: flex; flex-direction: column; gap: 10px;
 }
 .gc-coupons-title {
   font-size: .78rem; font-weight: 700; text-transform: uppercase;
   letter-spacing: .4px; color: #666; margin: 0 0 12px;
 }
 .gc-coupons-opt { font-weight: 400; text-transform: none; color: #aaa; letter-spacing: 0; }
+
+// ── Collapsible toggles ────────────────────────────────────────────────────
+.gc-codes-toggle {
+  display: flex; align-items: center; gap: 7px;
+  width: 100%; padding: 0;
+  background: none; border: none; cursor: pointer;
+  font-size: .82rem; font-weight: 600; color: #555;
+  text-align: left; transition: color .15s;
+  &:hover { color: #222; }
+  svg { stroke: #4caf50; flex-shrink: 0; }
+}
+.gc-codes-chevron {
+  margin-left: auto; stroke: #bbb;
+  transition: transform .2s;
+  &.open { transform: rotate(180deg); }
+}
+.gc-codes-item { display: flex; flex-direction: column; gap: 0; margin-top: 12px; }
+.gc-codes-item-label {
+  display: flex; align-items: center; gap: 5px;
+  font-size: .74rem; font-weight: 700; color: #999;
+  text-transform: uppercase; letter-spacing: .4px;
+  margin-bottom: 7px;
+  svg { stroke: #bbb; flex-shrink: 0; }
+}
+.gc-referral-tag {
+  display: flex; align-items: center; gap: 8px;
+  background: #f0fbf0; border: 1.5px solid #b5e0a0;
+  border-radius: 8px; padding: 8px 11px;
+  font-size: .82rem; color: #2d7a2d;
+}
+.gc-referral-tag-body {
+  flex: 1; min-width: 0;
+  strong { color: #1a6b1a; font-family: monospace; font-size: .85rem; }
+}
 .gc-coupon-group { margin-bottom: 12px; }
 .gc-coupon-store-label { font-size: .78rem; color: #888; margin: 0 0 5px; }
 .gc-coupon-row {

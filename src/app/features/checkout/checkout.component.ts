@@ -126,6 +126,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   couponLoading:  Record<number, boolean>       = {};
   couponErrors:   Record<number, string>        = {};
   appliedCoupons: Record<number, AppliedCoupon> = {};
+  couponOpen:     Record<number, boolean>       = {};
+  codesOpen = false;
 
   // donation coupon state (global, not per-store)
   donationCouponInput   = signal('');
@@ -339,6 +341,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
           discountValue:  res.discountValue,
         };
         this.couponLoading[storeId] = false;
+        this.couponOpen[storeId]    = false;
       },
       error: (err) => {
         this.couponErrors[storeId]  = this.couponErrorMessage(err?.error?.message ?? '');
@@ -373,6 +376,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
           foundationName: res.foundationName ?? '',
         });
         this.donationCouponLoading.set(false);
+        this.codesOpen = false;
       },
       error: (err) => {
         this.donationCouponError.set(this.couponErrorMessage(err?.error?.message ?? ''));
@@ -387,6 +391,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.donationCouponError.set('');
   }
 
+  toggleCoupon(storeId: number) {
+    this.couponOpen[storeId] = !this.couponOpen[storeId];
+  }
+
   applyReferral() {
     const code = this.referralInput().trim().toUpperCase();
     if (!code) return;
@@ -397,6 +405,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         this.appliedReferral.set(res.referralCode);
         this.referralName.set(res.ambassadorName);
         this.referralLoading.set(false);
+        this.codesOpen = false;
       },
       error: () => {
         this.referralError.set('Código de embajador no válido.');
