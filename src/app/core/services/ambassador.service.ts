@@ -7,6 +7,7 @@ import {
   AmbassadorResponse,
   CommissionResponse,
   CreateAmbassadorRequest,
+  ReferralValidationResponse,
   UpdateAmbassadorRequest,
 } from '../models/ambassador.model';
 
@@ -49,5 +50,9 @@ export class AmbassadorService {
 
   getMyCommissions(): Observable<CommissionResponse[]> {
     return this.http.get<CommissionResponse[]>(`${this.base}/ambassadors/me/commissions`);
+  }
+
+  validateReferralCode(code: string): Observable<ReferralValidationResponse> {
+    return this.http.get<ReferralValidationResponse>(`${this.base}/ambassadors/validate`, { params: { code } });
   }
 }

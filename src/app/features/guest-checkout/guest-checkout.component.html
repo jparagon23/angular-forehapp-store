@@ -295,6 +295,49 @@
             </ng-template>
           </div>
 
+          <!-- Código de embajador -->
+          <div class="gc-coupons-section" *ngIf="estimate() && !appliedDonationCoupon()">
+            <h3 class="gc-coupons-title">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+              </svg>
+              Código de embajador <span class="gc-coupons-opt">(opcional)</span>
+            </h3>
+            <ng-container *ngIf="!appliedReferral(); else gcReferralApplied">
+              <div class="gc-coupon-row">
+                <input class="gc-coupon-input"
+                       type="text"
+                       placeholder="Código de embajador"
+                       [value]="referralInput()"
+                       (input)="referralInput.set($any($event.target).value.toUpperCase()); referralError.set('')"
+                       [disabled]="referralLoading()"
+                       (keydown.enter)="applyReferral()"
+                       maxlength="50">
+                <button class="gc-btn-apply"
+                        (click)="applyReferral()"
+                        [disabled]="referralLoading() || !referralInput().trim()">
+                  <span *ngIf="!referralLoading()">Aplicar</span>
+                  <span class="gc-mini-spin" *ngIf="referralLoading()"></span>
+                </button>
+              </div>
+              <p class="gc-coupon-error" *ngIf="referralError()">{{ referralError() }}</p>
+            </ng-container>
+            <ng-template #gcReferralApplied>
+              <div class="gc-donation-banner">
+                <span class="gc-donation-icon">🤝</span>
+                <div class="gc-donation-body">
+                  <p class="gc-donation-title">{{ appliedReferral() }}</p>
+                  <p class="gc-donation-desc">Código de <strong>{{ referralName() }}</strong> aplicado.</p>
+                </div>
+                <button class="gc-btn-remove" (click)="removeReferral()" title="Quitar">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+            </ng-template>
+          </div>
+
           <div class="gc-submit-error" *ngIf="submitError()">{{ submitError() }}</div>
 
           <div class="gc-card-footer">

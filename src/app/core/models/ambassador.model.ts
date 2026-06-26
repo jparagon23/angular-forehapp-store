@@ -44,3 +44,8 @@ export interface UpdateAmbassadorRequest {
   commissionPercentage?: number;
   status?:               AmbassadorStatus;
 }
+
+export interface ReferralValidationResponse {
+  referralCode:   string;
+  ambassadorName: string;
+}

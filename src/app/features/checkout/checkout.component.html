@@ -194,6 +194,53 @@
         </ng-template>
       </div>
 
+      <!-- Referral code -->
+      <div class="donation-coupon-section" *ngIf="!appliedDonationCoupon()">
+        <p class="donation-coupon-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+          </svg>
+          ¿Tienes un código de embajador?
+        </p>
+        <ng-container *ngIf="!appliedReferral(); else referralApplied">
+          <div class="coupon-input-row">
+            <input
+              class="coupon-input"
+              type="text"
+              placeholder="Código de embajador"
+              [value]="referralInput()"
+              (input)="referralInput.set($any($event.target).value.toUpperCase()); referralError.set('')"
+              (keydown.enter)="applyReferral()"
+              [disabled]="referralLoading()"
+              [class.has-error]="referralError()"
+              maxlength="50"
+            />
+            <button
+              class="btn-apply-coupon"
+              (click)="applyReferral()"
+              [disabled]="referralLoading() || !referralInput().trim()">
+              <span *ngIf="!referralLoading()">Aplicar</span>
+              <span class="mini-spin" *ngIf="referralLoading()"></span>
+            </button>
+          </div>
+          <p class="coupon-error" *ngIf="referralError()">{{ referralError() }}</p>
+        </ng-container>
+        <ng-template #referralApplied>
+          <div class="donation-banner">
+            <div class="donation-banner-icon">🤝</div>
+            <div class="donation-banner-body">
+              <p class="donation-banner-title">{{ appliedReferral() }}</p>
+              <p class="donation-banner-desc">Código de <strong>{{ referralName() }}</strong> aplicado.</p>
+            </div>
+            <button class="btn-remove-coupon" (click)="removeReferral()" title="Quitar código">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        </ng-template>
+      </div>
+
       <!-- Summary rows -->
       <div class="summary-rows">
         <div class="sum-row">

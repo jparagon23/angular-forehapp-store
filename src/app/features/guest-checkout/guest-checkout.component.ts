@@ -22,7 +22,7 @@ import { loadCart } from '../../store/cart/cart.actions';
 import { validateEmail, EmailValidationResult } from '../../core/utils/email.utils';
 import { CouponService } from '../../core/services/coupon.service';
 import { AppliedCoupon, CouponValidationResponse } from '../../core/models/coupon.model';
-import { getActiveReferralCode } from '../../core/utils/referral.utils';
+import { AmbassadorService } from '../../core/services/ambassador.service';
 
 @Component({
   selector: 'app-guest-checkout',
@@ -40,6 +40,7 @@ export class GuestCheckoutComponent implements OnInit {
   private tokenStore       = inject(TokenStore);
   private store            = inject(Store);
   private router           = inject(Router);
+  private ambassadorSvc    = inject(AmbassadorService);
 
   // ── Navigation ──────────────────────────────────────────────────────────────
   step = signal<1 | 2 | 3 | 4>(1);
@@ -122,6 +123,13 @@ export class GuestCheckoutComponent implements OnInit {
   donationCouponLoading = signal(false);
   donationCouponError   = signal('');
   appliedDonationCoupon = signal<AppliedCoupon | null>(null);
+
+  // ── Referral code ─────────────────────────────────────────────────────────────
+  referralInput   = signal('');
+  referralLoading = signal(false);
+  referralError   = signal('');
+  appliedReferral = signal<string | null>(null);
+  referralName    = signal('');
 
   get totalCouponDiscount(): number {
     return Object.values(this.appliedCoupons).reduce((s, c) => s + c.discountAmount, 0);
@@ -206,6 +214,32 @@ export class GuestCheckoutComponent implements OnInit {
     this.appliedDonationCoupon.set(null);
     this.donationCouponInput.set('');
     this.donationCouponError.set('');
+  }
+
+  applyReferral() {
+    const code = this.referralInput().trim().toUpperCase();
+    if (!code) return;
+    this.referralLoading.set(true);
+    this.referralError.set('');
+    this.ambassadorSvc.validateReferralCode(code).subscribe({
+      next: res => {
+        this.appliedReferral.set(res.referralCode);
+        this.referralName.set(res.ambassadorName);
+        this.referralLoading.set(false);
+      },
+      error: () => {
+        this.referralError.set('Código de embajador no válido.');
+        this.appliedReferral.set(null);
+        this.referralLoading.set(false);
+      },
+    });
+  }
+
+  removeReferral() {
+    this.appliedReferral.set(null);
+    this.referralName.set('');
+    this.referralInput.set('');
+    this.referralError.set('');
   }
 
   removeCoupon(storeId: number) {
@@ -383,7 +417,7 @@ export class GuestCheckoutComponent implements OnInit {
       paymentMethod:      method,
       couponCode:         activeCoupon?.code,
       couponStoreId:      donationCoupon ? null : activeCoupon?.storeId ?? undefined,
-      referralCode:       donationCoupon ? undefined : (getActiveReferralCode() ?? undefined),
+      referralCode:       donationCoupon ? undefined : (this.appliedReferral() ?? undefined),
     };
 
     this.guestCheckout.createOrder(body).pipe(take(1)).subscribe({

@@ -28,7 +28,7 @@ import { AuthApiService } from '../../core/services/auth-api.service';
 import { TokenStore } from '../../core/services/token-store.service';
 import { updateUser } from '../../store/auth/auth.actions';
 import { apiCode } from '../../core/models/api-error.model';
-import { getActiveReferralCode } from '../../core/utils/referral.utils';
+import { AmbassadorService } from '../../core/services/ambassador.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { SeoService } from '../../core/services/seo.service';
 
@@ -50,6 +50,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private authApi         = inject(AuthApiService);
   private tokenStore      = inject(TokenStore);
   private seo             = inject(SeoService);
+  private ambassadorSvc   = inject(AmbassadorService);
 
   sellerGroups$ = this.store.select(selectSellerGroups);
   total$        = this.store.select(selectCartTotal);
@@ -131,6 +132,13 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   donationCouponLoading = signal(false);
   donationCouponError   = signal('');
   appliedDonationCoupon = signal<AppliedCoupon | null>(null);
+
+  // referral code state
+  referralInput   = signal('');
+  referralLoading = signal(false);
+  referralError   = signal('');
+  appliedReferral = signal<string | null>(null);
+  referralName    = signal('');
 
   cartTotal = 0;
 
@@ -379,6 +387,32 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.donationCouponError.set('');
   }
 
+  applyReferral() {
+    const code = this.referralInput().trim().toUpperCase();
+    if (!code) return;
+    this.referralLoading.set(true);
+    this.referralError.set('');
+    this.ambassadorSvc.validateReferralCode(code).subscribe({
+      next: res => {
+        this.appliedReferral.set(res.referralCode);
+        this.referralName.set(res.ambassadorName);
+        this.referralLoading.set(false);
+      },
+      error: () => {
+        this.referralError.set('Código de embajador no válido.');
+        this.appliedReferral.set(null);
+        this.referralLoading.set(false);
+      },
+    });
+  }
+
+  removeReferral() {
+    this.appliedReferral.set(null);
+    this.referralName.set('');
+    this.referralInput.set('');
+    this.referralError.set('');
+  }
+
   private couponErrorMessage(msg: string): string {
     const map: Record<string, string> = {
       'Coupon not found': 'El código ingresado no existe',
@@ -472,7 +506,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       paymentMethod: this.selectedPaymentMethod!,
       couponCode:    activeCoupon?.code,
       couponStoreId: donationCoupon ? null : activeCoupon?.storeId ?? undefined,
-      referralCode:  donationCoupon ? undefined : (getActiveReferralCode() ?? undefined),
+      referralCode:  donationCoupon ? undefined : (this.appliedReferral() ?? undefined),
     }));
   }
 
