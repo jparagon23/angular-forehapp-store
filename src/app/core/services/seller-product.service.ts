@@ -6,7 +6,7 @@ import {
   AdminCategory, Attribute, AttributeValue, Brand, BrandLine, Category, CategoryAttribute,
   CreateProductRequest, CreateVariantRequest, UpdateVariantRequest,
   InventoryRequest, MovementReason, MovementsPage,
-  ProductImage, ProductVariant, SellerProduct, SellerProductDetail,
+  ProductImage, ProductVariant, SellerProduct, SellerProductDetail, VariantCostHistory,
 } from '../models/seller-product.model';
 
 @Injectable({ providedIn: 'root' })
@@ -167,6 +167,12 @@ export class SellerProductService {
 
   deleteVariant(storeId: number, productId: number, variantId: number): Observable<void> {
     return this.http.delete<void>(`${this.BASE}/stores/${storeId}/products/${productId}/variants/${variantId}`);
+  }
+
+  getVariantCostHistory(storeId: number, productId: number, variantId: number): Observable<VariantCostHistory[]> {
+    return this.http.get<VariantCostHistory[]>(
+      `${this.BASE}/stores/${storeId}/products/${productId}/variants/${variantId}/cost-history`
+    );
   }
 
   // ── Tags ─────────────────────────────────────────────────────────────────

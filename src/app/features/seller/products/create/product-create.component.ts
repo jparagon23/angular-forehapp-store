@@ -65,6 +65,8 @@ export class ProductCreateComponent implements OnInit {
     price:          [null as number | null, [Validators.required, Validators.min(0.01)]],
     compareAtPrice: [null as number | null],
     stock:          [null as number | null, [Validators.required, Validators.min(0)]],
+    cost:           [null as number | null],
+    costNotes:      ['', Validators.maxLength(255)],
   });
   selectedAttrValues: Record<number, number | null> = {};
   variants           = signal<ProductVariant[]>([]);
@@ -226,7 +228,7 @@ export class ProductCreateComponent implements OnInit {
     const storeId = this.storeId();
     if (!storeId) return;
     const productId = this.draftProduct()!.id;
-    const { sku, price, compareAtPrice, stock } = this.variantForm.value;
+    const { sku, price, compareAtPrice, stock, cost, costNotes } = this.variantForm.value;
     const attributeValueIds = Object.values(this.selectedAttrValues)
       .filter((id): id is number => id !== null && id !== 0);
 
@@ -238,6 +240,8 @@ export class ProductCreateComponent implements OnInit {
       compareAtPrice: compareAtPrice ?? undefined,
       stock: stock!,
       attributeValueIds,
+      cost: cost ?? undefined,
+      costNotes: costNotes || undefined,
     }).subscribe({
       next: variant => {
         this.variants.update(v => [...v, variant]);

@@ -22,6 +22,16 @@ export interface ProductVariant {
   stock: number;
   active: boolean;
   attributes: VariantAttribute[];
+  cost?: number | null;
+  margin?: number | null;
+  marginPercent?: number | null;
+}
+
+export interface VariantCostHistory {
+  id: number;
+  cost: number;
+  notes: string | null;
+  changedAt: string;
 }
 
 export interface ProductImage {
@@ -71,12 +81,17 @@ export interface CreateVariantRequest {
   compareAtPrice?: number;
   stock: number;
   attributeValueIds: number[];
+  cost?: number;
+  costNotes?: string;
 }
 
 export interface UpdateVariantRequest {
   price?: number;
   compareAtPrice?: number;
   clearCompareAtPrice?: boolean;
+  cost?: number;
+  costNotes?: string;
+  clearCost?: boolean;
 }
 
 export interface InventoryRequest {

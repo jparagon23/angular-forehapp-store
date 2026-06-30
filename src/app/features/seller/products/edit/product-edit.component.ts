@@ -11,6 +11,7 @@ import {
   Category, CategoryAttribute,
   InventoryMovement, InventoryRequest, MovementReason, MovementsPage,
   ProductImage, ProductVariant, SellerProduct, SellerProductDetail, UpdateVariantRequest,
+  VariantCostHistory,
 } from '../../../../core/models/seller-product.model';
 import { selectActiveSellerStoreId } from '../../../../store/seller/seller.selectors';
 
@@ -56,6 +57,8 @@ export class ProductEditComponent implements OnInit {
     price:          [null as number | null, [Validators.required, Validators.min(0.01)]],
     compareAtPrice: [null as number | null],
     stock:          [null as number | null, [Validators.required, Validators.min(0)]],
+    cost:           [null as number | null],
+    costNotes:      ['', Validators.maxLength(255)],
   });
   addingVariant      = signal(false);
   variantError       = signal<string | null>(null);
@@ -73,7 +76,18 @@ export class ProductEditComponent implements OnInit {
   editPriceForm = this.fb.group({
     editPrice:          [null as number | null, [Validators.required, Validators.min(0.01)]],
     editCompareAtPrice: [null as number | null],
+    editCost:           [null as number | null],
+    editCostNotes:      ['', Validators.maxLength(255)],
   });
+  clearCostFlag = false;
+
+  // ── Historial de costos modal ─────────────────────────────────
+  costHistOpen      = signal(false);
+  costHistVariantId = signal(0);
+  costHistSku       = signal('');
+  costHistLoading   = signal(false);
+  costHistError     = signal('');
+  costHistory       = signal<VariantCostHistory[]>([]);
 
   // ── Inventario modal ─────────────────────────────────────────
   invOpen      = signal(false);
@@ -276,7 +290,7 @@ export class ProductEditComponent implements OnInit {
     if (this.variantForm.invalid) return;
     const storeId = this.storeId();
     if (!storeId) return;
-    const { sku, price, compareAtPrice, stock } = this.variantForm.value;
+    const { sku, price, compareAtPrice, stock, cost, costNotes } = this.variantForm.value;
     const attributeValueIds = Object.values(this.selectedAttrValues)
       .filter((id): id is number => id !== null && id !== 0);
 
@@ -286,6 +300,8 @@ export class ProductEditComponent implements OnInit {
       sku: sku || undefined, price: price!,
       compareAtPrice: compareAtPrice ?? undefined,
       stock: stock!, attributeValueIds,
+      cost: cost ?? undefined,
+      costNotes: costNotes || undefined,
     }).subscribe({
       next: variant => {
         this.variants.update(v => [...v, variant]);
@@ -358,7 +374,13 @@ export class ProductEditComponent implements OnInit {
     this.editingVariantId.set(v.id);
     this.variantUpdateError.set(null);
     this.clearCompareAtPrice = false;
-    this.editPriceForm.reset({ editPrice: v.price, editCompareAtPrice: v.compareAtPrice ?? null });
+    this.clearCostFlag = false;
+    this.editPriceForm.reset({
+      editPrice: v.price,
+      editCompareAtPrice: v.compareAtPrice ?? null,
+      editCost: v.cost ?? null,
+      editCostNotes: '',
+    });
   }
 
   cancelEditPrice() {
@@ -372,12 +394,18 @@ export class ProductEditComponent implements OnInit {
     if (this.editPriceForm.invalid) return;
     const storeId = this.storeId();
     if (!storeId) return;
-    const { editPrice, editCompareAtPrice } = this.editPriceForm.value;
+    const { editPrice, editCompareAtPrice, editCost, editCostNotes } = this.editPriceForm.value;
     const req: UpdateVariantRequest = { price: editPrice! };
     if (this.clearCompareAtPrice) {
       req.clearCompareAtPrice = true;
     } else if (editCompareAtPrice) {
       req.compareAtPrice = editCompareAtPrice;
+    }
+    if (this.clearCostFlag) {
+      req.clearCost = true;
+    } else if (editCost != null) {
+      req.cost = editCost;
+      if (editCostNotes) req.costNotes = editCostNotes;
     }
     this.updatingVariant.set(true);
     this.variantUpdateError.set(null);
@@ -394,6 +422,23 @@ export class ProductEditComponent implements OnInit {
       },
     });
   }
+
+  openCostHistory(v: ProductVariant) {
+    const storeId = this.storeId();
+    if (!storeId) return;
+    this.costHistVariantId.set(v.id);
+    this.costHistSku.set(v.sku ?? '—');
+    this.costHistLoading.set(true);
+    this.costHistError.set('');
+    this.costHistory.set([]);
+    this.costHistOpen.set(true);
+    this.service.getVariantCostHistory(storeId, this.productId, v.id).subscribe({
+      next: hist => { this.costHistory.set(hist); this.costHistLoading.set(false); },
+      error: () => { this.costHistError.set('Error al cargar el historial.'); this.costHistLoading.set(false); },
+    });
+  }
+
+  closeCostHistory() { this.costHistOpen.set(false); }
 
   // ── Inventario modal ─────────────────────────────────────────
   openInvModal(v: ProductVariant) {

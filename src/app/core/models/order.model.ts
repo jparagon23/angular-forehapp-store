@@ -22,6 +22,9 @@ export interface OrderItemResponse {
   quantity: number;
   unitPrice: number;
   subtotal: number;
+  unitCost: number | null;
+  totalCost: number | null;
+  unitMargin: number | null;
 }
 
 // ── Buyer-facing ─────────────────────────────────────────────────────────────
@@ -91,6 +94,9 @@ export interface SellerOrderGroupDetail {
   cancelledAt: string | null;
   cancellationReason: string | null;
   items: OrderItemResponse[];
+  totalCost: number | null;
+  totalMargin: number | null;
+  marginPercent: number | null;
 }
 
 // ── Guest checkout ────────────────────────────────────────────────────────────

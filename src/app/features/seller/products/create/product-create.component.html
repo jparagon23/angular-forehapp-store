@@ -220,6 +220,15 @@
         <input formControlName="stock" type="number" min="0" step="1" placeholder="0" />
         <span class="form-error" *ngIf="variantForm.get('stock')?.touched && variantForm.get('stock')?.invalid">Stock >= 0 requerido.</span>
       </div>
+      <div class="form-group">
+        <label>Costo <span class="opt">(opcional)</span></label>
+        <input formControlName="cost" type="number" min="0.01" step="0.01" placeholder="0" />
+        <span class="field-hint">Costo de adquisición en COP. Solo visible para ti.</span>
+      </div>
+      <div class="form-group">
+        <label>Notas de costo <span class="opt">(opcional)</span></label>
+        <input formControlName="costNotes" type="text" maxlength="255" placeholder="Ej: proveedor X, factura #123" />
+      </div>
     </div>
 
     <!-- Atributos de categoría -->

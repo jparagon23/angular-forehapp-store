@@ -191,6 +191,10 @@
           <span>$ {{ v.price | number:'1.2-2' }}</span>
           <span *ngIf="v.compareAtPrice" class="variant-compare">Antes: $ {{ v.compareAtPrice | number:'1.2-2' }}</span>
           <span [class.stock-warn]="v.stock === 0">Stock: {{ v.stock }}</span>
+          <span *ngIf="v.cost != null" class="variant-cost">Costo: $ {{ v.cost | number:'1.2-2' }}</span>
+          <span *ngIf="v.marginPercent != null" class="variant-margin" [class.variant-margin--neg]="v.marginPercent < 0">
+            Margen: {{ v.marginPercent | number:'1.1-1' }}%
+          </span>
           <span class="variant-attrs" *ngIf="v.attributes?.length">
             <ng-container *ngFor="let a of v.attributes; let last = last">
               {{ a.attribute }}: {{ a.value }}{{ !last ? ' · ' : '' }}
@@ -200,6 +204,7 @@
         <div class="variant-row-actions">
           <button class="btn-action btn-inv"  (click)="openInvModal(v)"    [disabled]="!v.active">Ajustar</button>
           <button class="btn-action btn-hist" (click)="openMovements(v)">Historial</button>
+          <button class="btn-action btn-cost-hist" (click)="openCostHistory(v)" title="Historial de costos">Costos</button>
           <button class="btn-action btn-edit-price"
                   (click)="startEditPrice(v)"
                   *ngIf="editingVariantId() !== v.id"
@@ -239,6 +244,18 @@
           <label class="clear-compare-label" *ngIf="v.compareAtPrice">
             <input type="checkbox" [(ngModel)]="clearCompareAtPrice" [ngModelOptions]="{standalone: true}" />
             Eliminar precio tachado
+          </label>
+          <div class="form-group">
+            <label>Costo <span class="opt">(opcional)</span></label>
+            <input formControlName="editCost" type="number" min="0.01" step="0.01" placeholder="0.00" />
+          </div>
+          <div class="form-group">
+            <label>Notas de costo <span class="opt">(opcional)</span></label>
+            <input formControlName="editCostNotes" type="text" maxlength="255" placeholder="Ej: proveedor X, factura #123" />
+          </div>
+          <label class="clear-compare-label" *ngIf="v.cost != null">
+            <input type="checkbox" [(ngModel)]="clearCostFlag" [ngModelOptions]="{standalone: true}" />
+            Eliminar costo registrado
           </label>
         </div>
         <div class="form-error form-error--global" *ngIf="variantUpdateError()">{{ variantUpdateError() }}</div>
@@ -283,6 +300,15 @@
         <label>Stock <span class="req">*</span></label>
         <input formControlName="stock" type="number" min="0" step="1" placeholder="0" />
         <span class="form-error" *ngIf="variantForm.get('stock')?.touched && variantForm.get('stock')?.invalid">Stock >= 0 requerido.</span>
+      </div>
+      <div class="form-group">
+        <label>Costo <span class="opt">(opcional)</span></label>
+        <input formControlName="cost" type="number" min="0.01" step="0.01" placeholder="0.00" />
+        <span class="field-hint">Solo visible para ti.</span>
+      </div>
+      <div class="form-group">
+        <label>Notas de costo <span class="opt">(opcional)</span></label>
+        <input formControlName="costNotes" type="text" maxlength="255" placeholder="Ej: proveedor X, factura #123" />
       </div>
     </div>
     <div class="form-row" *ngIf="categoryAttrs().length">
@@ -363,5 +389,32 @@
             [disabled]="saving() || publishing() || deletingVariantId() !== null">
       {{ publishing() ? 'Publicando…' : 'Guardar y publicar' }}
     </button>
+  </div>
+</div>
+
+<!-- ══ Cost History Modal ══════════════════════════════════════ -->
+<div class="inv-overlay" [class.inv-open]="costHistOpen()">
+  <div class="mov-modal">
+    <div class="mov-header">
+      <span class="mov-title">Historial de costos — SKU {{ costHistSku() }}</span>
+      <button class="mov-close" (click)="closeCostHistory()">✕</button>
+    </div>
+    <div class="mov-loading" *ngIf="costHistLoading()">Cargando…</div>
+    <div class="inv-error" *ngIf="costHistError()">{{ costHistError() }}</div>
+    <div class="mov-empty" *ngIf="!costHistLoading() && !costHistError() && !costHistory().length">
+      Sin historial de costos registrado.
+    </div>
+    <table class="mov-table" *ngIf="!costHistLoading() && costHistory().length">
+      <thead>
+        <tr><th>Fecha</th><th>Costo</th><th>Notas</th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let h of costHistory()">
+          <td>{{ h.changedAt | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td>$ {{ h.cost | number:'1.2-2' }}</td>
+          <td>{{ h.notes ?? '—' }}</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </div>

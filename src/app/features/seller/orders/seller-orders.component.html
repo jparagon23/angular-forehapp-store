@@ -220,8 +220,14 @@
               </div>
             </td>
             <td>{{ item.quantity }}</td>
-            <td>{{ item.unitPrice | currencyCop }}</td>
-            <td><strong>{{ item.subtotal | currencyCop }}</strong></td>
+            <td>
+              {{ item.unitPrice | currencyCop }}
+              <div class="so-item-cost" *ngIf="item.unitCost != null">Costo: {{ item.unitCost | currencyCop }}</div>
+            </td>
+            <td>
+              <strong>{{ item.subtotal | currencyCop }}</strong>
+              <div class="so-item-margin" *ngIf="item.unitMargin != null">Margen: {{ item.unitMargin | currencyCop }}</div>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -243,6 +249,20 @@
           </span>
           <span class="so-coupon-discount">− {{ g.couponDiscount | currencyCop }}</span>
         </div>
+        <ng-container *ngIf="g.totalCost != null">
+          <div class="so-breakdown-divider"></div>
+          <div class="so-breakdown-row so-margin-row">
+            <span>Costo total</span>
+            <span>{{ g.totalCost | currencyCop }}</span>
+          </div>
+          <div class="so-breakdown-row so-margin-row" *ngIf="g.totalMargin != null">
+            <span>Margen estimado</span>
+            <span [class.so-margin-neg]="g.totalMargin < 0">
+              {{ g.totalMargin | currencyCop }}
+              <span *ngIf="g.marginPercent != null"> ({{ g.marginPercent | number:'1.1-1' }}%)</span>
+            </span>
+          </div>
+        </ng-container>
         <div class="so-breakdown-divider"></div>
         <div class="so-breakdown-row so-breakdown-total">
           <span>Total a cobrar</span>

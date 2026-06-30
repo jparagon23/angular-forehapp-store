@@ -126,8 +126,9 @@
   &:hover:not(:disabled) { opacity: .8; }
   &:disabled { opacity: .45; cursor: not-allowed; }
   &.btn-apply { background: #4caf50; color: #fff; }
-  &.btn-inv   { background: #e3f2fd; color: #1565c0; }
-  &.btn-hist  { background: #f3e5f5; color: #7b1fa2; }
+  &.btn-inv        { background: #e3f2fd; color: #1565c0; }
+  &.btn-hist       { background: #f3e5f5; color: #7b1fa2; }
+  &.btn-cost-hist  { background: #fff3e0; color: #e65100; }
 }
 
 // ── Header ─────────────────────────────────────────────────────
@@ -352,9 +353,12 @@
   justify-content: flex-end;
 }
 
-.variant-compare { text-decoration: line-through; color: #aaa !important; }
-.variant-attrs   { font-size: .78rem; color: #4caf50; font-weight: 600; }
-.stock-warn      { color: #e53935 !important; font-weight: 700; }
+.variant-compare   { text-decoration: line-through; color: #aaa !important; }
+.variant-attrs     { font-size: .78rem; color: #4caf50; font-weight: 600; }
+.stock-warn        { color: #e53935 !important; font-weight: 700; }
+.variant-cost      { font-size: .76rem; color: #888; }
+.variant-margin    { font-size: .76rem; color: #2e7d32; font-weight: 600;
+  &--neg           { color: #c62828; } }
 
 .variant-row--inactive {
   opacity: .65;
