@@ -1,5 +1,5 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import { DatePipe, NgClass, NgFor, NgIf, TitleCasePipe } from '@angular/common';
+import { DatePipe, DecimalPipe, NgClass, NgFor, NgIf, TitleCasePipe } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CurrencyCopPipe } from '../../../shared/pipes/currency-cop.pipe';
@@ -10,7 +10,7 @@ import { selectActiveSellerStoreId } from '../../../store/seller/seller.selector
 @Component({
   selector: 'app-seller-orders',
   standalone: true,
-  imports: [NgFor, NgIf, NgClass, DatePipe, TitleCasePipe, CurrencyCopPipe],
+  imports: [NgFor, NgIf, NgClass, DatePipe, DecimalPipe, TitleCasePipe, CurrencyCopPipe],
   templateUrl: './seller-orders.component.html',
   styleUrl: './seller-orders.component.scss',
 })
