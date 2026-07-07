@@ -66,7 +66,7 @@
           <thead>
             <tr>
               <th>Orden</th>
-              <th>Total</th>
+              <th>% Comisión</th>
               <th>Comisión</th>
               <th>Fecha</th>
               <th>Estado</th>
@@ -75,7 +75,7 @@
           <tbody>
             <tr *ngFor="let c of commissions()">
               <td>#{{ c.orderId }}</td>
-              <td>{{ c.orderTotal | currencyCop }}</td>
+              <td>{{ c.commissionPercentage }}%</td>
               <td><strong>{{ c.commissionAmount | currencyCop }}</strong></td>
               <td>{{ c.createdAt | date:'dd/MM/yy' }}</td>
               <td>

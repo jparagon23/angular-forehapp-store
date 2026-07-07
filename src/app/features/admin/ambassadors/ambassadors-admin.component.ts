@@ -8,6 +8,7 @@ import { StoreService } from '../../../core/services/store.service';
 import { UserSearchResult } from '../../../core/models/store.model';
 import { AdminTopbarComponent } from '../shared/admin-topbar.component';
 import { CurrencyCopPipe } from '../../../shared/pipes/currency-cop.pipe';
+import { apiCode } from '../../../core/models/api-error.model';
 
 @Component({
   selector: 'app-ambassadors-admin',
@@ -87,17 +88,20 @@ export class AmbassadorsAdminComponent implements OnInit {
     }
     this.createSaving.set(true);
     this.createError.set('');
-    this.svc.createAmbassador({ profileId: this.foundUser.id, referralCode: code, commissionPercentage: pct }).subscribe({
+    this.svc.createAmbassador({ userId: this.foundUser.id, referralCode: code, commissionPercentage: pct }).subscribe({
       next: amb => {
         this.ambassadors.update(list => [amb, ...list]);
         this.closeCreate();
         this.createSaving.set(false);
       },
       error: err => {
-        const msg = err.error?.message ?? '';
-        this.createError.set(err.status === 409
-          ? (msg || 'Ya existe un embajador con ese código o perfil.')
-          : 'Error al crear embajador.');
+        const messages: Partial<Record<string, string>> = {
+          AMBASSADOR_ALREADY_EXISTS:          'Este usuario ya es embajador.',
+          AMBASSADOR_REFERRAL_CODE_DUPLICATE: 'Ese código ya está en uso, elige otro.',
+          USER_PROFILE_NOT_FOUND:             'Este usuario todavía no tiene perfil activo.',
+        };
+        const code = apiCode(err);
+        this.createError.set((code && messages[code]) || 'Error al crear embajador.');
         this.createSaving.set(false);
       },
     });
@@ -105,8 +109,8 @@ export class AmbassadorsAdminComponent implements OnInit {
 
   toggleStatus(amb: AmbassadorResponse) {
     const next = amb.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
-    this.svc.updateAmbassador(amb.id, { status: next }).subscribe({
-      next: updated => this.ambassadors.update(list => list.map(a => a.id === updated.id ? updated : a)),
+    this.svc.updateAmbassador(amb.ambassadorId, { status: next }).subscribe({
+      next: updated => this.ambassadors.update(list => list.map(a => a.ambassadorId === updated.ambassadorId ? updated : a)),
     });
   }
 
@@ -114,7 +118,7 @@ export class AmbassadorsAdminComponent implements OnInit {
     this.selected.set(amb);
     this.commLoading.set(true);
     this.commissions.set([]);
-    this.svc.getAmbassadorCommissions(amb.id).subscribe({
+    this.svc.getAmbassadorCommissions(amb.ambassadorId).subscribe({
       next: list => { this.commissions.set(list); this.commLoading.set(false); },
       error: ()   => this.commLoading.set(false),
     });
@@ -123,16 +127,21 @@ export class AmbassadorsAdminComponent implements OnInit {
   closeCommissions() { this.selected.set(null); this.commissions.set([]); }
 
   pay(comm: CommissionResponse) {
-    this.payingId.set(comm.id);
-    this.svc.payCommission(comm.id).subscribe({
+    if (!confirm('¿Marcar esta comisión como pagada? Esta acción no se puede deshacer desde aquí.')) return;
+    this.payingId.set(comm.commissionId);
+    this.svc.payCommission(comm.commissionId).subscribe({
       next: () => {
         this.commissions.update(list =>
-          list.map(c => c.id === comm.id ? { ...c, status: 'PAID' as const } : c)
+          list.map(c => c.commissionId === comm.commissionId ? { ...c, status: 'PAID' as const } : c)
         );
         const amb = this.selected();
         if (amb) {
-          this.ambassadors.update(list => list.map(a => a.id === amb.id
-            ? { ...a, pendingAmount: a.pendingAmount - comm.commissionAmount, paidAmount: a.paidAmount + comm.commissionAmount }
+          this.ambassadors.update(list => list.map(a => a.ambassadorId === amb.ambassadorId
+            ? { ...a, stats: {
+                ...a.stats,
+                pendingAmount: a.stats.pendingAmount - comm.commissionAmount,
+                paidAmount:    a.stats.paidAmount + comm.commissionAmount,
+              } }
             : a
           ));
         }

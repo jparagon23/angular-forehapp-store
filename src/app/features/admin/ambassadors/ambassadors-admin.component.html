@@ -7,7 +7,7 @@
     <div class="table-card">
       <div class="table-header">
         <div class="comm-title">
-          <h3>Comisiones de <strong>{{ amb.name }}</strong></h3>
+          <h3>Comisiones de <strong>{{ amb.userName }}</strong></h3>
           <span class="code-chip">{{ amb.referralCode }}</span>
         </div>
         <button class="btn btn-outline btn-sm" (click)="closeCommissions()">← Volver</button>
@@ -24,7 +24,7 @@
         <thead>
           <tr>
             <th>Orden</th>
-            <th>Total orden</th>
+            <th>% Comisión</th>
             <th>Comisión</th>
             <th>Fecha</th>
             <th>Estado</th>
@@ -34,7 +34,7 @@
         <tbody>
           <tr *ngFor="let c of commissions()">
             <td>#{{ c.orderId }}</td>
-            <td>{{ c.orderTotal | currencyCop }}</td>
+            <td>{{ c.commissionPercentage }}%</td>
             <td><strong>{{ c.commissionAmount | currencyCop }}</strong></td>
             <td>{{ c.createdAt | date:'dd/MM/yy' }}</td>
             <td>
@@ -45,9 +45,9 @@
             <td>
               <button *ngIf="c.status === 'PENDING'"
                 class="btn btn-green btn-sm"
-                [disabled]="payingId() === c.id"
+                [disabled]="payingId() === c.commissionId"
                 (click)="pay(c)">
-                {{ payingId() === c.id ? '...' : 'Marcar pagado' }}
+                {{ payingId() === c.commissionId ? '...' : 'Marcar pagado' }}
               </button>
             </td>
           </tr>
@@ -87,14 +87,14 @@
       <tbody>
         <tr *ngFor="let a of ambassadors()">
           <td>
-            <strong>{{ a.name }}</strong>
-            <span class="email-sub">{{ a.email }}</span>
+            <strong>{{ a.userName }}</strong>
+            <span class="email-sub">{{ a.userEmail }}</span>
           </td>
           <td><span class="code-chip">{{ a.referralCode }}</span></td>
           <td>{{ a.commissionPercentage }}%</td>
-          <td>{{ a.totalOrders }}</td>
-          <td>{{ a.totalEarned | currencyCop }}</td>
-          <td><strong>{{ a.pendingAmount | currencyCop }}</strong></td>
+          <td>{{ a.stats.totalOrders }}</td>
+          <td>{{ a.stats.totalEarned | currencyCop }}</td>
+          <td><strong>{{ a.stats.pendingAmount | currencyCop }}</strong></td>
           <td>
             <span class="status-badge" [class]="a.status === 'ACTIVE' ? 's-done' : 's-canceled'">
               {{ a.status === 'ACTIVE' ? 'Activo' : 'Inactivo' }}
