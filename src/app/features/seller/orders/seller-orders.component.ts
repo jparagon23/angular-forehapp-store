@@ -5,13 +5,14 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { CurrencyCopPipe } from '../../../shared/pipes/currency-cop.pipe';
 import { OrderService } from '../../../core/services/order.service';
 import { SellerGroupStatus, SellerOrderGroupDetail } from '../../../core/models/order.model';
-import { apiCode } from '../../../core/models/api-error.model';
+import { apiCode, apiMessage } from '../../../core/models/api-error.model';
 import { selectActiveSellerStoreId } from '../../../store/seller/seller.selectors';
+import { ToastComponent } from '../../../shared/components/toast/toast.component';
 
 @Component({
   selector: 'app-seller-orders',
   standalone: true,
-  imports: [NgFor, NgIf, NgClass, DatePipe, DecimalPipe, TitleCasePipe, CurrencyCopPipe],
+  imports: [NgFor, NgIf, NgClass, DatePipe, DecimalPipe, TitleCasePipe, CurrencyCopPipe, ToastComponent],
   templateUrl: './seller-orders.component.html',
   styleUrl: './seller-orders.component.scss',
 })
@@ -35,6 +36,9 @@ export class SellerOrdersComponent {
   removeShippingReason = signal<Record<number, string>>({});
   removeShippingError  = signal<Record<number, string>>({});
   actionLoading     = signal<Set<number>>(new Set());
+
+  toastMsg  = signal('');
+  toastType = signal<'success' | 'error'>('success');
 
   modalOrder    = computed(() => this.groups().find(g => g.groupId === this.shipModal()) ?? null);
   shipModalBusy = computed(() => { const id = this.shipModal(); return id !== null && this.actionLoading().has(id); });
@@ -167,12 +171,19 @@ export class SellerOrdersComponent {
 
   confirmRemoveShipping(groupId: number) {
     const reason = (this.removeShippingReason()[groupId] ?? '').trim();
-    if (!reason) return;
+    if (!reason || reason.length > 500) {
+      this.removeShippingError.update(d => ({
+        ...d,
+        [groupId]: !reason ? 'El motivo es obligatorio.' : 'El motivo no puede superar los 500 caracteres.',
+      }));
+      return;
+    }
     const storeId = this.storeId();
     if (!storeId) return;
     const group = this.groups().find(g => g.groupId === groupId);
     if (!group) return;
     const waived = group.shippingCost;
+    this.removeShippingError.update(d => ({ ...d, [groupId]: '' }));
     this.setLoading(groupId, true);
     this.orderService.removeShippingCost(storeId, groupId, reason).subscribe({
       next: () => {
@@ -187,15 +198,59 @@ export class SellerOrdersComponent {
         this.setLoading(groupId, false);
       },
       error: err => {
-        const code = apiCode(err);
-        this.removeShippingError.update(d => ({
-          ...d,
-          [groupId]: code === 'ORDER_GROUP_SHIPPING_ALREADY_REMOVED'
-            ? 'El envío de este pedido ya fue eliminado.'
-            : 'No se pudo quitar el cobro de envío.',
-        }));
         this.setLoading(groupId, false);
+        const code = apiCode(err);
+
+        if (code === 'VALIDATION_ERROR') {
+          this.removeShippingError.update(d => ({ ...d, [groupId]: apiMessage(err, 'El motivo es obligatorio.') }));
+          return;
+        }
+        if (code === 'ORDER_GROUP_INVALID_STATUS') {
+          this.abortRemoveShipping(groupId);
+          this.showToast('Ya no se puede modificar este pedido.', 'error');
+          this.refreshGroup(storeId, groupId);
+          return;
+        }
+        if (code === 'ORDER_GROUP_SHIPPING_ALREADY_REMOVED') {
+          this.abortRemoveShipping(groupId);
+          this.showToast('El envío ya fue quitado.', 'error');
+          this.refreshGroup(storeId, groupId);
+          return;
+        }
+        if (code === 'ORDER_GROUP_ACCESS_DENIED' || code === 'STORE_ACCESS_DENIED') {
+          this.abortRemoveShipping(groupId);
+          this.showToast('No tienes permiso para modificar este pedido.', 'error');
+          return;
+        }
+        if (code === 'ORDER_GROUP_NOT_FOUND') {
+          this.abortRemoveShipping(groupId);
+          this.showToast('Este pedido ya no existe. Actualizando lista...', 'error');
+          this.reloadGroups();
+          return;
+        }
+        this.removeShippingError.update(d => ({ ...d, [groupId]: 'No se pudo quitar el cobro de envío.' }));
       },
+    });
+  }
+
+  private showToast(message: string, type: 'success' | 'error') {
+    this.toastType.set(type);
+    this.toastMsg.set(message);
+  }
+
+  private refreshGroup(storeId: number, groupId: number) {
+    this.orderService.getSellerOrderGroupById(storeId, groupId).subscribe({
+      next: fresh => this.groups.update(gs => gs.map(g => g.groupId === groupId ? fresh : g)),
+      error: () => this.groups.update(gs => gs.filter(g => g.groupId !== groupId)),
+    });
+  }
+
+  private reloadGroups() {
+    const storeId = this.storeId();
+    if (!storeId) return;
+    this.orderService.getSellerOrderGroups(storeId).subscribe({
+      next: groups => this.groups.set(groups),
+      error: () => {},
     });
   }
 
