@@ -118,6 +118,8 @@
   &.so-btn-cancel        { background: #f5f5f5; color: #555; border: 1px solid #ddd; }
   &.so-btn-cancel-order  { background: #fff3f3; color: #c62828; border: 1px solid #ef9a9a; }
   &.so-btn-cancel-confirm{ background: #c62828; color: #fff; }
+  &.so-btn-remove-shipping        { background: #fff8e1; color: #e65100; border: 1px solid #ffcc80; }
+  &.so-btn-remove-shipping-confirm{ background: #e65100; color: #fff; }
 }
 
 
@@ -250,6 +252,30 @@
 }
 .so-cancel-date { color: #999; white-space: nowrap; }
 
+// Remove shipping cost form
+.so-remove-shipping-form {
+  border-top: 1px solid #ffe0b2;
+  padding: 12px 18px;
+  background: #fffaf3;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.so-remove-shipping-textarea {
+  width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #ffcc80;
+  font-size: .83rem; resize: vertical; outline: none; font-family: inherit;
+  &:focus { border-color: #e65100; box-shadow: 0 0 0 2px rgba(230,81,0,.1); }
+}
+.so-remove-shipping-form-btns { display: flex; gap: 8px; }
+.so-remove-shipping-error { font-size: .78rem; color: #c62828; margin: 0; }
+
+// Shipping-removed info in expanded body
+.so-shipping-removed-info {
+  display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap;
+  background: #fff8e1; border-radius: 6px; padding: 10px 14px; margin-bottom: 12px;
+  font-size: .83rem; color: #555;
+  svg { color: #e65100; flex-shrink: 0; margin-top: 1px; }
+  strong { color: #333; }
+}
+
 // Ship modal
 .so-modal-overlay {
   position: fixed; inset: 0; z-index: 1000;
@@ -357,7 +383,8 @@
   }
 
   // Cancel form buttons stack
-  .so-cancel-form-btns {
+  .so-cancel-form-btns,
+  .so-remove-shipping-form-btns {
     flex-direction: column;
     .so-btn { width: 100%; text-align: center; }
   }

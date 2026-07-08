@@ -5,6 +5,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { CurrencyCopPipe } from '../../../shared/pipes/currency-cop.pipe';
 import { OrderService } from '../../../core/services/order.service';
 import { SellerGroupStatus, SellerOrderGroupDetail } from '../../../core/models/order.model';
+import { apiCode } from '../../../core/models/api-error.model';
 import { selectActiveSellerStoreId } from '../../../store/seller/seller.selectors';
 
 @Component({
@@ -30,6 +31,9 @@ export class SellerOrdersComponent {
   shipModalTracking = signal<string>('');
   cancelMode        = signal<Set<number>>(new Set());
   cancelReason      = signal<Record<number, string>>({});
+  removeShippingMode   = signal<Set<number>>(new Set());
+  removeShippingReason = signal<Record<number, string>>({});
+  removeShippingError  = signal<Record<number, string>>({});
   actionLoading     = signal<Set<number>>(new Set());
 
   modalOrder    = computed(() => this.groups().find(g => g.groupId === this.shipModal()) ?? null);
@@ -140,6 +144,58 @@ export class SellerOrdersComponent {
         this.setLoading(groupId, false);
       },
       error: () => this.setLoading(groupId, false),
+    });
+  }
+
+  canRemoveShipping(g: SellerOrderGroupDetail): boolean {
+    return g.status !== 'DELIVERED' && g.status !== 'CANCELLED' && g.shippingCost > 0;
+  }
+
+  startRemoveShipping(groupId: number) {
+    this.removeShippingMode.update(s => { const n = new Set(s); n.add(groupId); return n; });
+    this.removeShippingReason.update(d => ({ ...d, [groupId]: '' }));
+    this.removeShippingError.update(d => ({ ...d, [groupId]: '' }));
+  }
+
+  abortRemoveShipping(groupId: number) {
+    this.removeShippingMode.update(s => { const n = new Set(s); n.delete(groupId); return n; });
+  }
+
+  setRemoveShippingReason(groupId: number, value: string) {
+    this.removeShippingReason.update(d => ({ ...d, [groupId]: value }));
+  }
+
+  confirmRemoveShipping(groupId: number) {
+    const reason = (this.removeShippingReason()[groupId] ?? '').trim();
+    if (!reason) return;
+    const storeId = this.storeId();
+    if (!storeId) return;
+    const group = this.groups().find(g => g.groupId === groupId);
+    if (!group) return;
+    const waived = group.shippingCost;
+    this.setLoading(groupId, true);
+    this.orderService.removeShippingCost(storeId, groupId, reason).subscribe({
+      next: () => {
+        this.patchGroup(groupId, group.status, {
+          shippingCost: 0,
+          orderTotal: group.orderTotal - waived,
+          shippingCostWaived: waived,
+          shippingRemovedAt: new Date().toISOString(),
+          shippingRemovedReason: reason,
+        });
+        this.abortRemoveShipping(groupId);
+        this.setLoading(groupId, false);
+      },
+      error: err => {
+        const code = apiCode(err);
+        this.removeShippingError.update(d => ({
+          ...d,
+          [groupId]: code === 'ORDER_GROUP_SHIPPING_ALREADY_REMOVED'
+            ? 'El envío de este pedido ya fue eliminado.'
+            : 'No se pudo quitar el cobro de envío.',
+        }));
+        this.setLoading(groupId, false);
+      },
     });
   }
 

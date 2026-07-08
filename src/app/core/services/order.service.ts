@@ -65,6 +65,10 @@ export class OrderService {
     return this.http.patch<void>(`${this.base}/stores/${storeId}/order-groups/${groupId}/cancel`, { reason });
   }
 
+  removeShippingCost(storeId: number, groupId: number, reason: string): Observable<void> {
+    return this.http.patch<void>(`${this.base}/stores/${storeId}/order-groups/${groupId}/remove-shipping-cost`, { reason });
+  }
+
   // Admin panel (mock)
   getOrders(): Observable<Order[]> {
     return of(MOCK_ORDERS);

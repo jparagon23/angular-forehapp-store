@@ -93,6 +93,9 @@ export interface SellerOrderGroupDetail {
   deliveredAt: string | null;
   cancelledAt: string | null;
   cancellationReason: string | null;
+  shippingCostWaived: number | null;
+  shippingRemovedAt: string | null;
+  shippingRemovedReason: string | null;
   items: OrderItemResponse[];
   totalCost: number | null;
   totalMargin: number | null;

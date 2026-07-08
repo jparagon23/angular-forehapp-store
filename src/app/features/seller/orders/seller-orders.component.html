@@ -114,10 +114,17 @@
         </button>
 
         <!-- PENDING / PREPARING: botón cancelar pedido -->
-        <button *ngIf="(g.status === 'PENDING' || g.status === 'PREPARING') && !cancelMode().has(g.groupId)"
+        <button *ngIf="(g.status === 'PENDING' || g.status === 'PREPARING') && !cancelMode().has(g.groupId) && !removeShippingMode().has(g.groupId)"
                 class="so-btn so-btn-cancel-order"
                 (click)="startCancel(g.groupId)">
           Cancelar pedido
+        </button>
+
+        <!-- Grupo activo con envío cobrado: quitar cobro de envío -->
+        <button *ngIf="canRemoveShipping(g) && !cancelMode().has(g.groupId) && !removeShippingMode().has(g.groupId)"
+                class="so-btn so-btn-remove-shipping"
+                (click)="startRemoveShipping(g.groupId)">
+          Quitar cobro de envío
         </button>
       </div>
 
@@ -143,6 +150,25 @@
           {{ actionLoading().has(g.groupId) ? 'Cancelando...' : 'Confirmar cancelación' }}
         </button>
         <button class="so-btn so-btn-cancel" (click)="abortCancel(g.groupId)">Volver</button>
+      </div>
+    </div>
+
+    <!-- Remove shipping cost form -->
+    <div class="so-remove-shipping-form" *ngIf="removeShippingMode().has(g.groupId)" (click)="$event.stopPropagation()">
+      <textarea class="so-remove-shipping-textarea"
+                placeholder="Motivo para quitar el cobro de envío (requerido, máx. 500 caracteres)"
+                rows="2"
+                maxlength="500"
+                [value]="removeShippingReason()[g.groupId] ?? ''"
+                (input)="setRemoveShippingReason(g.groupId, $any($event.target).value)"></textarea>
+      <p class="so-remove-shipping-error" *ngIf="removeShippingError()[g.groupId]">{{ removeShippingError()[g.groupId] }}</p>
+      <div class="so-remove-shipping-form-btns">
+        <button class="so-btn so-btn-remove-shipping-confirm"
+                [disabled]="!removeShippingReason()[g.groupId]?.trim() || actionLoading().has(g.groupId)"
+                (click)="confirmRemoveShipping(g.groupId)">
+          {{ actionLoading().has(g.groupId) ? 'Guardando...' : 'Confirmar' }}
+        </button>
+        <button class="so-btn so-btn-cancel" (click)="abortRemoveShipping(g.groupId)">Volver</button>
       </div>
     </div>
 
@@ -191,6 +217,19 @@
         </svg>
         <span><strong>Motivo de cancelación:</strong> {{ g.cancellationReason }}</span>
         <span class="so-cancel-date" *ngIf="g.cancelledAt">· {{ g.cancelledAt | date:'dd MMM yyyy' }}</span>
+      </div>
+
+      <div class="so-shipping-removed-info" *ngIf="g.shippingRemovedAt">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+          <line x1="4" y1="20" x2="20" y2="4"/>
+        </svg>
+        <span>
+          <strong>Envío eliminado:</strong> se quitó un cobro de {{ g.shippingCostWaived | currencyCop }}
+          <ng-container *ngIf="g.shippingRemovedReason">· {{ g.shippingRemovedReason }}</ng-container>
+        </span>
+        <span class="so-cancel-date">· {{ g.shippingRemovedAt | date:'dd MMM yyyy' }}</span>
       </div>
 
       <table class="so-items-table">
