@@ -1,0 +1,44 @@
+<div class="result-page">
+  <div class="card">
+
+    <ng-container *ngIf="state() === 'confirm'">
+      <div class="icon">✉️</div>
+      <h1>Recordatorios de recompra</h1>
+      <p>¿Quieres dejar de recibir los correos que te avisan cuando un producto se te está acabando?</p>
+      <p class="note">Seguirás recibiendo los correos de tus pedidos: confirmación, pago y envío.</p>
+
+      <button type="button" class="btn-main" (click)="unsubscribe()" [disabled]="loading()">
+        {{ loading() ? 'Procesando…' : 'Sí, darme de baja' }}
+      </button>
+      <a routerLink="/" class="btn-home">No, volver a la tienda</a>
+    </ng-container>
+
+    <ng-container *ngIf="state() === 'unsubscribed'">
+      <div class="icon">✅</div>
+      <h1>Listo</h1>
+      <p>No enviaremos más recordatorios de recompra a <strong>{{ email() }}</strong>.</p>
+
+      <button type="button" class="btn-secondary" (click)="resubscribe()" [disabled]="loading()">
+        {{ loading() ? 'Procesando…' : 'Me arrepentí, quiero seguir recibiéndolos' }}
+      </button>
+      <a routerLink="/" class="btn-home">Ir a la tienda</a>
+    </ng-container>
+
+    <ng-container *ngIf="state() === 'resubscribed'">
+      <div class="icon">🎾</div>
+      <h1>¡Seguimos en contacto!</h1>
+      <p>Seguirás recibiendo recordatorios de recompra en <strong>{{ email() }}</strong>.</p>
+      <a routerLink="/" class="btn-main">Ir a la tienda</a>
+    </ng-container>
+
+    <ng-container *ngIf="state() === 'invalid'">
+      <div class="icon">⚠️</div>
+      <h1>Enlace no válido</h1>
+      <p>El enlace no es válido o está incompleto. Ábrelo de nuevo desde el correo que recibiste.</p>
+      <a routerLink="/" class="btn-main">Ir a la tienda</a>
+    </ng-container>
+
+    <p class="error" *ngIf="error()">{{ error() }}</p>
+
+  </div>
+</div>

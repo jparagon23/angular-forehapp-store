@@ -10,10 +10,12 @@ import { SellerProductService } from '../../../../core/services/seller-product.s
 import {
   Category, CategoryAttribute,
   InventoryMovement, InventoryRequest, MovementReason, MovementsPage,
-  ProductImage, ProductVariant, SellerProduct, SellerProductDetail, UpdateVariantRequest,
+  ProductImage, ProductVariant, SellerProduct, SellerProductDetail, UpdateProductRequest, UpdateVariantRequest,
   VariantCostHistory,
 } from '../../../../core/models/seller-product.model';
 import { selectActiveSellerStoreId } from '../../../../store/seller/seller.selectors';
+
+const REPURCHASE_DAYS_VALIDATORS = [Validators.min(1), Validators.max(365), Validators.pattern(/^\d+$/)];
 
 @Component({
   selector: 'app-product-edit',
@@ -39,6 +41,7 @@ export class ProductEditComponent implements OnInit {
     title:        ['', [Validators.required, Validators.maxLength(255)]],
     description:  [''],
     freeShipping: [false],
+    repurchaseDays: [null as number | null, REPURCHASE_DAYS_VALIDATORS],
   });
   saving       = signal(false);
   saveError    = signal<string | null>(null);
@@ -59,6 +62,7 @@ export class ProductEditComponent implements OnInit {
     stock:          [null as number | null, [Validators.required, Validators.min(0)]],
     cost:           [null as number | null],
     costNotes:      ['', Validators.maxLength(255)],
+    repurchaseDays: [null as number | null, REPURCHASE_DAYS_VALIDATORS],
   });
   addingVariant      = signal(false);
   variantError       = signal<string | null>(null);
@@ -78,6 +82,7 @@ export class ProductEditComponent implements OnInit {
     editCompareAtPrice: [null as number | null],
     editCost:           [null as number | null],
     editCostNotes:      ['', Validators.maxLength(255)],
+    editRepurchaseDays: [null as number | null, REPURCHASE_DAYS_VALIDATORS],
   });
   clearCostFlag = false;
 
@@ -187,7 +192,12 @@ export class ProductEditComponent implements OnInit {
         this.product.set(product);
         this.variants.set(product.variants);
         this.tags.set(product.tags ?? []);
-        this.infoForm.patchValue({ title: product.title, description: product.description ?? '', freeShipping: product.freeShipping });
+        this.infoForm.patchValue({
+          title: product.title,
+          description: product.description ?? '',
+          freeShipping: product.freeShipping,
+          repurchaseDays: product.repurchaseDays ?? null,
+        });
 
         const match = categories.find((c: Category) => c.name === product.category);
         if (match) {
@@ -214,20 +224,31 @@ export class ProductEditComponent implements OnInit {
   }
 
   // ── Información básica ───────────────────────────────────────
+  private buildInfoPayload(): UpdateProductRequest {
+    const { title, description, freeShipping, repurchaseDays } = this.infoForm.value;
+    const payload: UpdateProductRequest = {
+      title: title!,
+      description: description || undefined,
+      freeShipping: freeShipping ?? false,
+    };
+    // El backend ignora repurchaseDays: null, así que vaciar el campo requiere el flag explícito
+    if (repurchaseDays != null) {
+      payload.repurchaseDays = repurchaseDays;
+    } else {
+      payload.clearRepurchaseDays = true;
+    }
+    return payload;
+  }
+
   saveInfo() {
     this.infoForm.markAllAsTouched();
     if (this.infoForm.invalid) return;
     const storeId = this.storeId();
     if (!storeId) return;
-    const { title, description, freeShipping } = this.infoForm.value;
     this.saving.set(true);
     this.saveError.set(null);
     this.saveOk.set(false);
-    this.service.updateProduct(storeId, this.productId, {
-      title: title!,
-      description: description || undefined,
-      freeShipping: freeShipping ?? false,
-    }).subscribe({
+    this.service.updateProduct(storeId, this.productId, this.buildInfoPayload()).subscribe({
       next: p => {
         const cur = this.product();
         if (cur) this.product.set({ ...cur, ...p });
@@ -247,17 +268,12 @@ export class ProductEditComponent implements OnInit {
     if (this.infoForm.invalid) return;
     const storeId = this.storeId();
     if (!storeId) return;
-    const { title, description, freeShipping } = this.infoForm.value;
     this.saving.set(true);
     this.saveError.set(null);
     this.saveOk.set(false);
     this.publishError.set(null);
     this.publishOk.set(false);
-    this.service.updateProduct(storeId, this.productId, {
-      title: title!,
-      description: description || undefined,
-      freeShipping: freeShipping ?? false,
-    }).subscribe({
+    this.service.updateProduct(storeId, this.productId, this.buildInfoPayload()).subscribe({
       next: p => {
         const cur = this.product();
         if (cur) this.product.set({ ...cur, ...p });
@@ -290,7 +306,7 @@ export class ProductEditComponent implements OnInit {
     if (this.variantForm.invalid) return;
     const storeId = this.storeId();
     if (!storeId) return;
-    const { sku, price, compareAtPrice, stock, cost, costNotes } = this.variantForm.value;
+    const { sku, price, compareAtPrice, stock, cost, costNotes, repurchaseDays } = this.variantForm.value;
     const attributeValueIds = Object.values(this.selectedAttrValues)
       .filter((id): id is number => id !== null && id !== 0);
 
@@ -302,6 +318,7 @@ export class ProductEditComponent implements OnInit {
       stock: stock!, attributeValueIds,
       cost: cost ?? undefined,
       costNotes: costNotes || undefined,
+      repurchaseDays: repurchaseDays ?? undefined,
     }).subscribe({
       next: variant => {
         this.variants.update(v => [...v, variant]);
@@ -380,6 +397,7 @@ export class ProductEditComponent implements OnInit {
       editCompareAtPrice: v.compareAtPrice ?? null,
       editCost: v.cost ?? null,
       editCostNotes: '',
+      editRepurchaseDays: v.repurchaseDays ?? null,
     });
   }
 
@@ -394,7 +412,7 @@ export class ProductEditComponent implements OnInit {
     if (this.editPriceForm.invalid) return;
     const storeId = this.storeId();
     if (!storeId) return;
-    const { editPrice, editCompareAtPrice, editCost, editCostNotes } = this.editPriceForm.value;
+    const { editPrice, editCompareAtPrice, editCost, editCostNotes, editRepurchaseDays } = this.editPriceForm.value;
     const req: UpdateVariantRequest = { price: editPrice! };
     if (this.clearCompareAtPrice) {
       req.clearCompareAtPrice = true;
@@ -406,6 +424,11 @@ export class ProductEditComponent implements OnInit {
     } else if (editCost != null) {
       req.cost = editCost;
       if (editCostNotes) req.costNotes = editCostNotes;
+    }
+    if (editRepurchaseDays != null) {
+      req.repurchaseDays = editRepurchaseDays;
+    } else if (v.repurchaseDays != null) {
+      req.clearRepurchaseDays = true;
     }
     this.updatingVariant.set(true);
     this.variantUpdateError.set(null);

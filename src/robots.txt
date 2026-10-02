@@ -8,5 +8,6 @@ Disallow: /orders
 Disallow: /wishlist
 Disallow: /account
 Disallow: /verify-code
+Disallow: /email
 
 Sitemap: https://forehapp.store/sitemap.xml

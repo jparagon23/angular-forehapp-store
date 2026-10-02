@@ -18,6 +18,8 @@ import { CatalogRequestType } from '../../../../core/models/catalog-request.mode
 
 type WizardStep = 1 | 2 | 3 | 4;
 
+const REPURCHASE_DAYS_VALIDATORS = [Validators.min(1), Validators.max(365), Validators.pattern(/^\d+$/)];
+
 @Component({
   selector: 'app-product-create',
   standalone: true,
@@ -53,6 +55,7 @@ export class ProductCreateComponent implements OnInit {
     lineId:       [null as number | null],
     categoryId:   [null as number | null, Validators.required],
     freeShipping: [false],
+    repurchaseDays: [null as number | null, REPURCHASE_DAYS_VALIDATORS],
   });
 
   creatingDraft = signal(false);
@@ -67,6 +70,7 @@ export class ProductCreateComponent implements OnInit {
     stock:          [null as number | null, [Validators.required, Validators.min(0)]],
     cost:           [null as number | null],
     costNotes:      ['', Validators.maxLength(255)],
+    repurchaseDays: [null as number | null, REPURCHASE_DAYS_VALIDATORS],
   });
   selectedAttrValues: Record<number, number | null> = {};
   variants           = signal<ProductVariant[]>([]);
@@ -173,7 +177,7 @@ export class ProductCreateComponent implements OnInit {
     if (this.basicForm.invalid) return;
     const storeId = this.storeId();
     if (!storeId) return;
-    const { title, description, brandId, lineId, categoryId, freeShipping } = this.basicForm.value;
+    const { title, description, brandId, lineId, categoryId, freeShipping, repurchaseDays } = this.basicForm.value;
     const payload = {
       title: title!,
       description: description || undefined,
@@ -181,14 +185,16 @@ export class ProductCreateComponent implements OnInit {
       lineId: lineId ?? undefined,
       categoryId: categoryId!,
       freeShipping: freeShipping ?? false,
+      repurchaseDays: repurchaseDays ?? undefined,
     };
 
     const existing = this.draftProduct();
     this.creatingDraft.set(true);
     this.draftError.set(null);
 
+    // Al volver al paso 1 y vaciar el campo hay que pedir el borrado explícito
     const req$ = existing
-      ? this.service.updateProduct(storeId, existing.id, payload)
+      ? this.service.updateProduct(storeId, existing.id, { ...payload, clearRepurchaseDays: repurchaseDays == null })
       : this.service.createProduct(storeId, payload);
 
     req$.subscribe({
@@ -228,7 +234,7 @@ export class ProductCreateComponent implements OnInit {
     const storeId = this.storeId();
     if (!storeId) return;
     const productId = this.draftProduct()!.id;
-    const { sku, price, compareAtPrice, stock, cost, costNotes } = this.variantForm.value;
+    const { sku, price, compareAtPrice, stock, cost, costNotes, repurchaseDays } = this.variantForm.value;
     const attributeValueIds = Object.values(this.selectedAttrValues)
       .filter((id): id is number => id !== null && id !== 0);
 
@@ -242,6 +248,7 @@ export class ProductCreateComponent implements OnInit {
       attributeValueIds,
       cost: cost ?? undefined,
       costNotes: costNotes || undefined,
+      repurchaseDays: repurchaseDays ?? undefined,
     }).subscribe({
       next: variant => {
         this.variants.update(v => [...v, variant]);

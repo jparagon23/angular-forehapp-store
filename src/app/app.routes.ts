@@ -26,6 +26,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/payment-pending/payment-pending.component').then(m => m.PaymentPendingComponent),
   },
   {
+    path: 'email/unsubscribe',
+    loadComponent: () => import('./features/email-unsubscribe/email-unsubscribe.component').then(m => m.EmailUnsubscribeComponent),
+  },
+  {
     path: 'login',
     loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent),
   },
