@@ -1,0 +1,51 @@
+.result-page {
+  background: linear-gradient(135deg, var(--dark) 0%, var(--dark2) 55%, #1a1a2e 100%);
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  color: #fff; text-align: center; padding: 30px;
+}
+
+.card {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(66,170,20,.3);
+  backdrop-filter: blur(12px);
+  border-radius: 24px; padding: 60px 50px;
+  max-width: 480px; width: 100%;
+  animation: fadeIn .55s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.icon { font-size: 4rem; }
+
+h1 { font-size: 1.8rem; font-weight: 900; margin: 20px 0 10px; color: var(--green-light); }
+p  { color: rgba(255,255,255,.72); line-height: 1.6; font-size: 1rem; }
+strong { color: #fff; }
+
+.note  { font-size: .85rem; color: rgba(255,255,255,.5); margin-bottom: 24px; }
+.error { font-size: .85rem; color: #ff9999; margin-top: 16px; }
+
+.btn-main,
+.btn-secondary {
+  display: block; width: 100%;
+  font-weight: 800; font-size: 1rem; padding: 14px 36px;
+  border-radius: 30px; border: none; cursor: pointer;
+  transition: background .2s, transform .15s; margin: 24px 0 12px;
+  &:disabled { opacity: .6; cursor: default; }
+}
+.btn-main {
+  background: var(--green); color: #fff;
+  &:hover:not(:disabled) { background: var(--green-dark); transform: scale(1.03); }
+}
+.btn-secondary {
+  background: transparent; color: #fff;
+  border: 1px solid rgba(255,255,255,.35);
+  font-weight: 600; font-size: .9rem;
+  &:hover:not(:disabled) { background: rgba(255,255,255,.08); }
+}
+.btn-home {
+  display: block; color: rgba(255,255,255,.6); font-size: .9rem;
+  &:hover { color: #fff; }
+}

@@ -25,6 +25,8 @@ export interface ProductVariant {
   cost?: number | null;
   margin?: number | null;
   marginPercent?: number | null;
+  /** Días que dura una unidad de esta variante; null = hereda del producto. */
+  repurchaseDays?: number | null;
 }
 
 export interface VariantCostHistory {
@@ -58,6 +60,8 @@ export interface SellerProduct {
   variantCount: number;
   thumbnailUrl?: string | null;
   freeShipping: boolean;
+  /** Días que dura una unidad antes de recomprar; null = sin recordatorio de recompra. */
+  repurchaseDays?: number | null;
 }
 
 export interface SellerProductDetail extends SellerProduct {
@@ -73,6 +77,12 @@ export interface CreateProductRequest {
   lineId?: number;
   categoryId: number;
   freeShipping?: boolean;
+  repurchaseDays?: number;
+}
+
+export interface UpdateProductRequest extends Partial<CreateProductRequest> {
+  /** Enviar repurchaseDays: null no borra el valor; hay que usar este flag. */
+  clearRepurchaseDays?: boolean;
 }
 
 export interface CreateVariantRequest {
@@ -83,6 +93,7 @@ export interface CreateVariantRequest {
   attributeValueIds: number[];
   cost?: number;
   costNotes?: string;
+  repurchaseDays?: number;
 }
 
 export interface UpdateVariantRequest {
@@ -92,6 +103,8 @@ export interface UpdateVariantRequest {
   cost?: number;
   costNotes?: string;
   clearCost?: boolean;
+  repurchaseDays?: number;
+  clearRepurchaseDays?: boolean;
 }
 
 export interface InventoryRequest {

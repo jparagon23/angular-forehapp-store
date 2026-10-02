@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   AdminCategory, Attribute, AttributeValue, Brand, BrandLine, Category, CategoryAttribute,
-  CreateProductRequest, CreateVariantRequest, UpdateVariantRequest,
+  CreateProductRequest, CreateVariantRequest, UpdateProductRequest, UpdateVariantRequest,
   InventoryRequest, MovementReason, MovementsPage,
   ProductImage, ProductVariant, SellerProduct, SellerProductDetail, VariantCostHistory,
 } from '../models/seller-product.model';
@@ -127,7 +127,7 @@ export class SellerProductService {
     return this.http.post<SellerProduct>(`${this.BASE}/stores/${storeId}/products`, req);
   }
 
-  updateProduct(storeId: number, id: number, req: Partial<CreateProductRequest>): Observable<SellerProduct> {
+  updateProduct(storeId: number, id: number, req: UpdateProductRequest): Observable<SellerProduct> {
     return this.http.patch<SellerProduct>(`${this.BASE}/stores/${storeId}/products/${id}`, req);
   }
 
