@@ -196,14 +196,14 @@ export class InventoryComponent implements OnInit {
 
   movReasonLabel(r: MovementReason): string {
     const map: Record<MovementReason, string> = {
-      RESTOCK: 'Reposición', RETURN: 'Devolución', ADJUSTMENT: 'Ajuste', SALE: 'Venta',
+      RESTOCK: 'Reposición', RETURN: 'Devolución', ADJUSTMENT: 'Ajuste', SALE: 'Venta', SUPPLIER_SYNC: 'Proveedor',
     };
     return map[r];
   }
 
   movReasonClass(r: MovementReason): string {
     const map: Record<MovementReason, string> = {
-      RESTOCK: 'mov-restock', RETURN: 'mov-return', ADJUSTMENT: 'mov-adj', SALE: 'mov-sale',
+      RESTOCK: 'mov-restock', RETURN: 'mov-return', ADJUSTMENT: 'mov-adj', SALE: 'mov-sale', SUPPLIER_SYNC: 'mov-supplier',
     };
     return map[r];
   }

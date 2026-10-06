@@ -51,6 +51,7 @@
       <button class="mov-pill" [class.mov-pill-on]="movReasonFilter() === 'RETURN'"     (click)="setMovFilter('RETURN')">Devolución</button>
       <button class="mov-pill" [class.mov-pill-on]="movReasonFilter() === 'ADJUSTMENT'" (click)="setMovFilter('ADJUSTMENT')">Ajuste</button>
       <button class="mov-pill" [class.mov-pill-on]="movReasonFilter() === 'SALE'"       (click)="setMovFilter('SALE')">Venta</button>
+      <button class="mov-pill" [class.mov-pill-on]="movReasonFilter() === 'SUPPLIER_SYNC'" (click)="setMovFilter('SUPPLIER_SYNC')">Proveedor</button>
     </div>
 
     <div class="mov-skeleton" *ngIf="movLoading()">
