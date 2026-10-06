@@ -464,7 +464,7 @@
       <!-- Optional: create account (only when email didn't exist) -->
       <div class="conf-create-account" *ngIf="emailExists() === false && !accountCreated()">
         <h3>¿Guardar tus datos para compras futuras?</h3>
-        <p>Crea una cuenta gratis — vinculamos tu pedido automáticamente.</p>
+        <p>Crea una cuenta gratis: te enviaremos un código a tu correo y, al verificarlo, vinculamos tu pedido.</p>
         <div class="conf-account-form">
           <input type="password" placeholder="Elige una contraseña (mín. 6 caracteres)"
                  [ngModel]="newPassword()" (ngModelChange)="newPassword.set($event)">

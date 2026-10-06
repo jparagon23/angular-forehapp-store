@@ -1,5 +1,6 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe, NgClass, NgFor, NgIf, TitleCasePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CurrencyCopPipe } from '../../../shared/pipes/currency-cop.pipe';
@@ -12,7 +13,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
 @Component({
   selector: 'app-seller-orders',
   standalone: true,
-  imports: [NgFor, NgIf, NgClass, DatePipe, DecimalPipe, TitleCasePipe, CurrencyCopPipe, ToastComponent],
+  imports: [NgFor, NgIf, NgClass, RouterLink, DatePipe, DecimalPipe, TitleCasePipe, CurrencyCopPipe, ToastComponent],
   templateUrl: './seller-orders.component.html',
   styleUrl: './seller-orders.component.scss',
 })
@@ -264,6 +265,40 @@ export class SellerOrdersComponent {
         this.setLoading(groupId, false);
       },
       error: () => this.setLoading(groupId, false),
+    });
+  }
+
+  /** Pago en efectivo o transferencia pendiente: el seller lo confirma cuando recibe el dinero. */
+  canConfirmPayment(g: SellerOrderGroupDetail): boolean {
+    return g.orderPaymentStatus === 'PENDING'
+      && (g.paymentMethod === 'CASH' || g.paymentMethod === 'TRANSFER')
+      && g.status !== 'CANCELLED';
+  }
+
+  confirmPayment(groupId: number) {
+    const storeId = this.storeId();
+    if (!storeId) return;
+    this.setLoading(groupId, true);
+    this.orderService.confirmSellerPayment(storeId, groupId).subscribe({
+      next: () => {
+        this.setLoading(groupId, false);
+        this.showToast('Pago confirmado. Le avisamos al cliente por correo.', 'success');
+        this.refreshGroup(storeId, groupId);
+      },
+      error: err => {
+        this.setLoading(groupId, false);
+        const code = apiCode(err);
+        if (code === 'PAYMENT_ORDER_NOT_PENDING') {
+          this.showToast('Este pago ya estaba confirmado.', 'error');
+          this.refreshGroup(storeId, groupId);
+        } else if (code === 'ORDER_PAYMENT_OTHER_STORES') {
+          this.showToast('El pedido incluye productos de otras tiendas: el pago lo confirma el administrador.', 'error');
+        } else if (code === 'STORE_ACCESS_DENIED') {
+          this.showToast('Solo el dueño o el administrador de la tienda puede confirmar pagos.', 'error');
+        } else {
+          this.showToast(apiMessage(err, 'No se pudo confirmar el pago.'), 'error');
+        }
+      },
     });
   }
 

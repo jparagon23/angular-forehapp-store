@@ -1,0 +1,219 @@
+<div class="ao-page">
+
+  <div class="ao-header">
+    <div>
+      <h1 class="ao-title">Nuevo pedido</h1>
+      <p class="ao-sub">
+        Registra un pedido que un cliente te hizo por fuera de la app (WhatsApp, llamada…).
+        Le llegará el correo de confirmación y podrá ver el pedido si crea su cuenta con ese correo.
+      </p>
+    </div>
+    <a routerLink="/seller/orders" class="ao-back">← Pedidos</a>
+  </div>
+
+  <!-- ══ Pedido creado ══════════════════════════════════════════ -->
+  <section class="ao-card ao-done" *ngIf="created() as order">
+    <div class="ao-done-icon">✓</div>
+    <h2>Pedido #{{ order.orderId }} creado</h2>
+    <p *ngIf="order.paymentStatus === 'PAYMENT_CONFIRMED'">Quedó pagado y listo para preparar.</p>
+    <p *ngIf="order.paymentStatus === 'PENDING' && order.paymentMethod === 'CASH_ON_DELIVERY'">Quedó en preparación; el cliente paga al recibir.</p>
+    <p *ngIf="order.paymentStatus === 'PENDING' && (order.paymentMethod === 'TRANSFER' || order.paymentMethod === 'CASH')">
+      Cuando recibas el pago, confírmalo desde Pedidos con "Confirmar pago".
+    </p>
+
+    <div class="ao-link" *ngIf="order.checkoutUrl as url">
+      <p><strong>Envíale este link de pago al cliente:</strong></p>
+      <div class="ao-link-row">
+        <input type="text" [value]="url" readonly />
+        <button class="btn-primary" (click)="copyLink(url)">{{ copied() ? '¡Copiado!' : 'Copiar link' }}</button>
+      </div>
+      <p class="ao-hint">El pedido se confirma solo cuando el cliente pague por MercadoPago.</p>
+    </div>
+
+    <div class="ao-actions">
+      <a routerLink="/seller/orders" class="btn-ghost">Ver pedidos</a>
+      <button class="btn-primary" (click)="startOver()">Registrar otro pedido</button>
+    </div>
+  </section>
+
+  <ng-container *ngIf="!created()">
+
+    <!-- ══ 1. Cliente ════════════════════════════════════════════ -->
+    <section class="ao-card">
+      <h2 class="ao-card-title"><span>1</span> Cliente</h2>
+      <div class="ao-grid">
+        <label class="ao-field">
+          <span>Correo *</span>
+          <input type="email" [ngModel]="email()" (ngModelChange)="email.set($event); customer.set(null)"
+                 (blur)="onEmailBlur()" placeholder="cliente@correo.com" />
+        </label>
+        <label class="ao-field">
+          <span>Repite el correo *</span>
+          <input type="email" [ngModel]="emailConfirm()" (ngModelChange)="emailConfirm.set($event)"
+                 placeholder="Para evitar errores de escritura" />
+          <small class="ao-error" *ngIf="emailConfirm() && !emailsMatch()">Los correos no coinciden.</small>
+        </label>
+      </div>
+      <div class="ao-customer" *ngIf="lookingUp()">Buscando…</div>
+      <div class="ao-customer ao-customer-yes" *ngIf="customer()?.registered">
+        Tiene cuenta (<strong>{{ customer()!.displayName }}</strong>): el pedido quedará en su cuenta.
+      </div>
+      <div class="ao-customer" *ngIf="customer() && !customer()!.registered">
+        No tiene cuenta: quedará como pedido de invitado y podrá verlo si crea su cuenta con este correo.
+      </div>
+
+      <div class="ao-grid">
+        <label class="ao-field"><span>Nombre *</span>
+          <input type="text" [ngModel]="name()" (ngModelChange)="name.set($event)" /></label>
+        <label class="ao-field"><span>Apellido *</span>
+          <input type="text" [ngModel]="lastname()" (ngModelChange)="lastname.set($event)" /></label>
+        <label class="ao-field"><span>Teléfono *</span>
+          <input type="tel" [ngModel]="phone()" (ngModelChange)="phone.set($event)" placeholder="3001234567" /></label>
+      </div>
+    </section>
+
+    <!-- ══ 2. Productos ══════════════════════════════════════════ -->
+    <section class="ao-card">
+      <h2 class="ao-card-title"><span>2</span> Productos</h2>
+
+      <div class="ao-search">
+        <input type="search" placeholder="Busca un producto de tu tienda…"
+               [ngModel]="productQuery()" (ngModelChange)="productQuery.set($event); openProduct.set(null)" />
+        <ul class="ao-results" *ngIf="productMatches().length && !openProduct()">
+          <li *ngFor="let p of productMatches()">
+            <button (click)="pickProduct(p)">
+              <img *ngIf="p.thumbnailUrl" [src]="p.thumbnailUrl" alt="" />
+              <span><strong>{{ p.title }}</strong><small>{{ p.brand }} · {{ p.variantCount }} variante(s)</small></span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="ao-variants" *ngIf="openProduct() as p">
+        <div class="ao-variants-head">
+          <strong>{{ p.title }}</strong>
+          <button class="btn-ghost btn-sm" (click)="closeProduct()">Cerrar</button>
+        </div>
+        <div class="ao-muted" *ngIf="loadingVariants()">Cargando variantes…</div>
+        <div class="ao-variant" *ngFor="let v of openVariants()">
+          <span>{{ variantLabel(v) }}</span>
+          <span class="ao-muted">stock {{ v.stock }}</span>
+          <span>{{ v.price | currencyCop }}</span>
+          <button class="btn-primary btn-sm" (click)="addVariant(v)" [disabled]="v.stock <= 0">
+            {{ v.stock > 0 ? 'Agregar' : 'Sin stock' }}
+          </button>
+        </div>
+        <div class="ao-muted" *ngIf="!loadingVariants() && !openVariants().length">Este producto no tiene variantes activas.</div>
+      </div>
+
+      <table class="ao-lines" *ngIf="lines().length">
+        <thead><tr><th>Producto</th><th class="num">Precio</th><th class="num">Cantidad</th><th class="num">Subtotal</th><th></th></tr></thead>
+        <tbody>
+          <tr *ngFor="let l of lines()">
+            <td><strong>{{ l.productTitle }}</strong><br /><small class="ao-muted">{{ l.variantLabel }}</small></td>
+            <td class="num">{{ l.price | currencyCop }}</td>
+            <td class="num">
+              <input class="ao-qty" type="number" min="1" [max]="l.stock"
+                     [ngModel]="l.quantity" (ngModelChange)="setQuantity(l.variantId, $event)" />
+            </td>
+            <td class="num">{{ l.price * l.quantity | currencyCop }}</td>
+            <td><button class="ao-remove" (click)="removeLine(l.variantId)" title="Quitar">✕</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="ao-muted" *ngIf="!lines().length">Aún no agregas productos.</p>
+    </section>
+
+    <!-- ══ 3. Envío ═════════════════════════════════════════════ -->
+    <section class="ao-card">
+      <h2 class="ao-card-title"><span>3</span> Envío</h2>
+      <div class="ao-grid">
+        <label class="ao-field"><span>País</span>
+          <select [ngModel]="countryId()" (ngModelChange)="onCountryChange($event)">
+            <option [ngValue]="null">— Selecciona —</option>
+            <option *ngFor="let c of countries()" [ngValue]="c.id">{{ c.name }}</option>
+          </select></label>
+        <label class="ao-field"><span>Departamento</span>
+          <select [ngModel]="stateId()" (ngModelChange)="onStateChange($event)" [disabled]="!states().length">
+            <option [ngValue]="null">— Selecciona —</option>
+            <option *ngFor="let s of states()" [ngValue]="s.id">{{ s.name }}</option>
+          </select></label>
+        <label class="ao-field"><span>Ciudad *</span>
+          <select [ngModel]="cityId()" (ngModelChange)="onCityChange($event)" [disabled]="!cities().length">
+            <option [ngValue]="null">— Selecciona —</option>
+            <option *ngFor="let c of cities()" [ngValue]="c.id">{{ c.name }}</option>
+          </select></label>
+      </div>
+      <div class="ao-grid">
+        <label class="ao-field ao-field-wide"><span>Dirección *</span>
+          <input type="text" [ngModel]="address()" (ngModelChange)="address.set($event)" placeholder="Calle 1 # 2-3" /></label>
+        <label class="ao-field"><span>Complemento</span>
+          <input type="text" [ngModel]="complement()" (ngModelChange)="complement.set($event)" placeholder="Apto, torre…" /></label>
+        <label class="ao-field"><span>Referencia</span>
+          <input type="text" [ngModel]="reference()" (ngModelChange)="reference.set($event)" placeholder="Portería, color de la casa…" /></label>
+      </div>
+
+      <div class="ao-totals" *ngIf="lines().length && cityId()">
+        <div class="ao-muted" *ngIf="estimating()">Calculando envío…</div>
+        <p class="ao-error" *ngIf="estimateError()">{{ estimateError() }}</p>
+        <ng-container *ngIf="estimate() as est">
+          <div><span>Productos</span><span>{{ est.itemsTotal | currencyCop }}</span></div>
+          <div><span>Envío</span><span>{{ est.shippingTotal ? (est.shippingTotal | currencyCop) : 'Gratis' }}</span></div>
+          <div *ngIf="paymentMethod() === 'MERCADO_PAGO'"><span>Recargo MercadoPago</span><span>{{ est.mercadoPagoSurcharge | currencyCop }}</span></div>
+          <div class="ao-total"><span>Total</span><span>{{ total() | currencyCop }}</span></div>
+        </ng-container>
+      </div>
+    </section>
+
+    <!-- ══ 4. Pago ══════════════════════════════════════════════ -->
+    <section class="ao-card">
+      <h2 class="ao-card-title"><span>4</span> Pago</h2>
+      <div class="ao-pay">
+        <button *ngFor="let o of paymentOptions" class="ao-pay-opt"
+                [class.on]="paymentMethod() === o.value"
+                [disabled]="o.value === 'CASH_ON_DELIVERY' && !isCali()"
+                (click)="selectPayment(o.value)">
+          <strong>{{ o.label }}</strong>
+          <small>{{ o.value === 'CASH_ON_DELIVERY' && !isCali() ? 'Solo para envíos a Cali' : o.hint }}</small>
+        </button>
+      </div>
+      <label class="ao-check" *ngIf="canBeAlreadyPaid()">
+        <input type="checkbox" [ngModel]="alreadyPaid()" (ngModelChange)="alreadyPaid.set($event)" />
+        <span>El cliente ya pagó (el pedido queda pagado de una vez)</span>
+      </label>
+
+      <label class="ao-check ao-consent">
+        <input type="checkbox" [ngModel]="dataConsent()" (ngModelChange)="dataConsent.set($event)" />
+        <span>El cliente autorizó el uso de sus datos (correo, teléfono y dirección) para gestionar este pedido. *</span>
+      </label>
+    </section>
+
+    <!-- ══ Crear ════════════════════════════════════════════════ -->
+    <section class="ao-card ao-submit">
+      <p class="ao-error" *ngIf="submitError()">{{ submitError() }}</p>
+      <p class="ao-muted" *ngIf="missing().length">Falta: {{ missing().join(', ') }}.</p>
+      <button class="btn-primary btn-lg" (click)="review()" [disabled]="missing().length > 0">Revisar y crear pedido</button>
+    </section>
+  </ng-container>
+</div>
+
+<!-- ══ Confirmación antes de crear ═══════════════════════════ -->
+<div class="ao-overlay" *ngIf="reviewing()" (click)="reviewing.set(false)">
+  <div class="ao-modal" (click)="$event.stopPropagation()">
+    <h3>Confirma el pedido</h3>
+    <p class="ao-muted">La confirmación, con la dirección y el teléfono, se enviará a:</p>
+    <p class="ao-email">{{ email().trim() }}</p>
+    <ul class="ao-summary">
+      <li><span>Cliente</span><strong>{{ name() }} {{ lastname() }}</strong></li>
+      <li><span>Productos</span><strong>{{ lines().length }} ({{ itemsTotal() | currencyCop }})</strong></li>
+      <li><span>Pago</span><strong>{{ paymentLabel(paymentMethod()) }}{{ canBeAlreadyPaid() && alreadyPaid() ? ' · ya pagó' : '' }}</strong></li>
+      <li *ngIf="total() !== null"><span>Total</span><strong>{{ total() | currencyCop }}</strong></li>
+    </ul>
+    <div class="ao-actions">
+      <button class="btn-ghost" (click)="reviewing.set(false)" [disabled]="submitting()">Corregir</button>
+      <button class="btn-primary" (click)="submit()" [disabled]="submitting()">
+        {{ submitting() ? 'Creando…' : 'Sí, crear pedido' }}
+      </button>
+    </div>
+  </div>
+</div>
