@@ -69,6 +69,11 @@ export class OrderService {
     return this.http.patch<void>(`${this.base}/stores/${storeId}/order-groups/${groupId}/remove-shipping-cost`, { reason });
   }
 
+  /** Confirma un pago en efectivo o por transferencia de un pedido que es solo de esta tienda. */
+  confirmSellerPayment(storeId: number, groupId: number): Observable<void> {
+    return this.http.patch<void>(`${this.base}/stores/${storeId}/order-groups/${groupId}/confirm-payment`, {});
+  }
+
   // Admin panel (mock)
   getOrders(): Observable<Order[]> {
     return of(MOCK_ORDERS);

@@ -1,10 +1,11 @@
 <app-toast [message]="toastMsg()" [type]="toastType()"></app-toast>
 
-<div class="so-header">
+<div class="so-header so-header-row">
   <div>
     <h1 class="so-title">Pedidos</h1>
     <p class="so-sub">Revisa y gestiona los pedidos de tus clientes</p>
   </div>
+  <a routerLink="new" class="so-btn so-btn-new">+ Nuevo pedido</a>
 </div>
 
 <!-- Tabs -->
@@ -88,12 +89,21 @@
         </svg>
         {{ paymentLabel(g) }}
       </span>
+      <span class="so-channel-badge" *ngIf="g.channel === 'ASSISTED'" title="Registrado por la tienda a nombre del cliente">Asistido</span>
 
       <!-- Action area -->
       <div class="so-card-actions" (click)="$event.stopPropagation()">
 
+        <!-- Efectivo / transferencia pendiente: confirmar el pago recibido -->
+        <button *ngIf="canConfirmPayment(g) && !cancelMode().has(g.groupId)"
+                class="so-btn so-btn-confirm-payment"
+                [disabled]="actionLoading().has(g.groupId)"
+                (click)="confirmPayment(g.groupId)">
+          {{ actionLoading().has(g.groupId) ? 'Confirmando...' : 'Confirmar pago' }}
+        </button>
+
         <!-- PENDING: marcar en preparación -->
-        <button *ngIf="g.status === 'PENDING' && !cancelMode().has(g.groupId)"
+        <button *ngIf="g.status === 'PENDING' && !canConfirmPayment(g) && !cancelMode().has(g.groupId)"
                 class="so-btn so-btn-prepare"
                 [disabled]="actionLoading().has(g.groupId)"
                 (click)="confirmPrepare(g.groupId)">

@@ -14,6 +14,7 @@ import { ShippingEstimateGroup, ShippingEstimateResponse } from '../../core/mode
 import { Country, State, City } from '../../core/models/location.model';
 import { OrderResponse, PaymentMethod } from '../../core/models/order.model';
 import { AuthResponse } from '../../core/models/auth.model';
+import { apiCode, apiMessage } from '../../core/models/api-error.model';
 import { AuthUser, loginSuccess } from '../../store/auth/auth.actions';
 import { CurrencyCopPipe } from '../../shared/pipes/currency-cop.pipe';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
@@ -466,22 +467,15 @@ export class GuestCheckoutComponent implements OnInit {
     this.guestCheckout.createAccount({ email: this.email().trim(), password: pwd })
       .pipe(take(1))
       .subscribe({
-        next: (res: AuthResponse) => {
-          const role = resolveRole(res.storeRoles);
-          const user: AuthUser = {
-            userId: res.userId,
-            name:   res.name,
-            email:  res.email,
-            role,
-            storeRoles: res.storeRoles,
-          };
-          this.tokenStore.setTokens(res.access_token, res.refresh_token, user);
-          this.store.dispatch(loginSuccess({ user }));
+        // El correo se verifica con un código antes de vincular el pedido a la cuenta
+        next: res => {
           this.creatingAccount.set(false);
-          this.accountCreated.set(true);
+          this.router.navigate(['/verify-code'], { queryParams: { userId: res.userId } });
         },
         error: err => {
-          this.accountError.set(err.error?.message ?? 'No se pudo crear la cuenta.');
+          this.accountError.set(apiCode(err) === 'AUTH_EMAIL_ALREADY_REGISTERED'
+            ? 'Este correo ya tiene una cuenta. Inicia sesión para ver tu pedido.'
+            : apiMessage(err, 'No se pudo crear la cuenta.'));
           this.creatingAccount.set(false);
         },
       });

@@ -3,8 +3,9 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ShippingEstimateResponse } from '../models/cart.model';
-import { AuthResponse } from '../models/auth.model';
-import { CreateAccountRequest, GuestEstimateRequest, GuestOrderRequest, OrderResponse } from '../models/order.model';
+import {
+  CreateAccountRequest, CreateAccountResponse, GuestEstimateRequest, GuestOrderRequest, OrderResponse,
+} from '../models/order.model';
 
 @Injectable({ providedIn: 'root' })
 export class GuestCheckoutService {
@@ -19,7 +20,8 @@ export class GuestCheckoutService {
     return this.http.post<OrderResponse>(`${this.BASE}/checkout/guest`, body);
   }
 
-  createAccount(body: CreateAccountRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.BASE}/checkout/guest/create-account`, body);
+  /** Envía un código al correo; la sesión se inicia en /verify-code y ahí se vinculan sus pedidos. */
+  createAccount(body: CreateAccountRequest): Observable<CreateAccountResponse> {
+    return this.http.post<CreateAccountResponse>(`${this.BASE}/checkout/guest/create-account`, body);
   }
 }

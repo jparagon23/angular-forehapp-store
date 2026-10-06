@@ -101,6 +101,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/seller/orders/seller-orders.component').then(m => m.SellerOrdersComponent),
       },
       {
+        path: 'orders/new',
+        loadComponent: () => import('./features/seller/orders/new/assisted-order.component').then(m => m.AssistedOrderComponent),
+      },
+      {
         path: 'coupons',
         loadComponent: () => import('./features/seller/coupons/seller-coupons.component').then(m => m.SellerCouponsComponent),
       },

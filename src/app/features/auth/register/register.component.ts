@@ -1,7 +1,7 @@
 import { Component, ElementRef, inject, NgZone, OnInit, AfterViewInit, ViewChild } from '@angular/core';
 import { AbstractControl, FormBuilder, ValidationErrors, Validators, ReactiveFormsModule } from '@angular/forms';
 import { emailValidator } from '../../../core/utils/email.utils';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgIf } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { AuthApiService } from '../../../core/services/auth-api.service';
@@ -30,6 +30,7 @@ function passwordsMatch(ctrl: AbstractControl): ValidationErrors | null {
 export class RegisterComponent implements OnInit, AfterViewInit {
   private fb          = inject(FormBuilder);
   private router      = inject(Router);
+  private route       = inject(ActivatedRoute);
   private authService = inject(AuthApiService);
   private tokenStore  = inject(TokenStore);
   private store       = inject(Store);
@@ -39,7 +40,12 @@ export class RegisterComponent implements OnInit, AfterViewInit {
 
   @ViewChild('googleBtn') private googleBtnRef!: ElementRef<HTMLDivElement>;
 
-  ngOnInit() { this.seo.set({ title: 'Crear Cuenta' }); }
+  ngOnInit() {
+    this.seo.set({ title: 'Crear Cuenta' });
+    // El correo de confirmación de un pedido de invitado enlaza a /register?email=...
+    const email = this.route.snapshot.queryParamMap.get('email');
+    if (email) this.form.patchValue({ email });
+  }
 
   ngAfterViewInit() {
     if (typeof google === 'undefined' || !environment.googleClientId) return;
