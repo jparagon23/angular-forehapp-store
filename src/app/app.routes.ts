@@ -112,6 +112,10 @@ export const routes: Routes = [
         path: 'catalog-requests',
         loadComponent: () => import('./features/seller/catalog-requests/seller-catalog-requests.component').then(m => m.SellerCatalogRequestsComponent),
       },
+      {
+        path: 'supplier-sync',
+        loadComponent: () => import('./features/seller/supplier-sync/seller-supplier-sync.component').then(m => m.SellerSupplierSyncComponent),
+      },
     ],
   },
   {

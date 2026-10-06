@@ -1,0 +1,237 @@
+<div class="ss-page">
+
+  <div class="ss-header">
+    <div>
+      <h1 class="ss-title">Sincronización con Profitness</h1>
+      <p class="ss-sub">
+        Cada día a las 7:00 a. m. se revisa el catálogo de Profitness. Las variantes con pareja confirmada
+        se apagan cuando Profitness está agotado, vuelven cuando hay stock y su costo se actualiza.
+      </p>
+    </div>
+  </div>
+
+  <!-- ══ Configuración ══════════════════════════════════════════ -->
+  <section class="ss-card" *ngIf="config() as cfg">
+    <h2 class="ss-card-title">Configuración</h2>
+    <div class="cfg-row">
+      <label class="cfg-switch">
+        <input type="checkbox" [ngModel]="configEnabled()" (ngModelChange)="configEnabled.set($event)" />
+        <span>Sincronizar esta tienda con Profitness</span>
+      </label>
+
+      <div class="cfg-modes" [class.cfg-disabled]="!configEnabled()">
+        <label class="cfg-mode" [class.on]="configMode() === 'PREVIEW'">
+          <input type="radio" name="mode" value="PREVIEW" [ngModel]="configMode()" (ngModelChange)="configMode.set($event)" [disabled]="!configEnabled()" />
+          <strong>Vista previa</strong>
+          <span>Solo reporta lo que haría. No cambia stock ni costos.</span>
+        </label>
+        <label class="cfg-mode" [class.on]="configMode() === 'APPLY'">
+          <input type="radio" name="mode" value="APPLY" [ngModel]="configMode()" (ngModelChange)="configMode.set($event)" [disabled]="!configEnabled()" />
+          <strong>Aplicar</strong>
+          <span>Apaga lo agotado, reactiva lo repuesto y actualiza costos.</span>
+        </label>
+      </div>
+
+      <button class="btn-primary" (click)="saveConfig()" [disabled]="!configDirty() || savingConfig()">
+        {{ savingConfig() ? 'Guardando…' : 'Guardar' }}
+      </button>
+    </div>
+  </section>
+
+  <!-- ══ Última sincronización ══════════════════════════════════ -->
+  <section class="ss-card">
+    <h2 class="ss-card-title">Sincronizaciones</h2>
+
+    <div class="ss-empty-inline" *ngIf="!runs().length">
+      Todavía no hay sincronizaciones. La primera aparecerá después de la próxima ejecución diaria.
+    </div>
+
+    <ng-container *ngIf="selectedRun() as run">
+      <div class="run-list">
+        <button *ngFor="let r of runs()" class="run-chip" [class.on]="r.id === run.id" (click)="selectRun(r)">
+          {{ r.startedAt | date:'dd/MM HH:mm' }}
+          <span class="run-dot" [class.applied]="r.status === 'APPLIED'" [class.preview]="r.status === 'PREVIEW'" [class.aborted]="r.status === 'ABORTED'"></span>
+        </button>
+      </div>
+
+      <div class="run-banner" [class.applied]="run.status === 'APPLIED'" [class.preview]="run.status === 'PREVIEW'" [class.aborted]="run.status === 'ABORTED'">
+        <strong>{{ runStatusLabel(run) }}</strong> · {{ run.startedAt | date:'dd/MM/yyyy HH:mm' }}
+        <span *ngIf="run.status === 'PREVIEW'"> — esto es lo que haría la sincronización; no se cambió nada.</span>
+        <span *ngIf="run.status === 'ABORTED'"> — detenida por seguridad, no se aplicó ningún cambio: {{ run.abortReason }}</span>
+      </div>
+
+      <div class="run-stats">
+        <div class="stat"><span>{{ run.supplierItems }}</span>Productos en Profitness</div>
+        <div class="stat"><span>{{ run.supplierOutOfStock }}</span>Agotados en Profitness</div>
+        <div class="stat"><span>{{ run.confirmedLinks }}</span>Parejas confirmadas</div>
+        <div class="stat bad"><span>{{ run.disabled }}</span>Apagadas</div>
+        <div class="stat good"><span>{{ run.reenabled }}</span>Reactivadas</div>
+        <div class="stat"><span>{{ run.costUpdates }}</span>Costos actualizados</div>
+        <div class="stat bad"><span>{{ run.marginAlerts }}</span>Margen &lt; {{ minMargin }}%</div>
+        <div class="stat warn"><span>{{ run.brokenLinks }}</span>Parejas rotas</div>
+        <div class="stat warn"><span>{{ run.ordersAtRisk }}</span>Pedidos afectados</div>
+      </div>
+
+      <div class="ss-loading" *ngIf="loadingEvents()"><div class="spinner"></div> Cargando detalle…</div>
+
+      <details class="ev-group" *ngFor="let g of eventGroups()" [class]="'ev-group tone-' + g.tone">
+        <summary>{{ g.label }} <span class="ev-count">{{ g.events.length }}</span></summary>
+        <div class="ss-table-wrap">
+          <table class="ss-table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Variante</th>
+                <th>Profitness</th>
+                <th *ngIf="g.oldLabel">{{ g.oldLabel }}</th>
+                <th *ngIf="g.newLabel">{{ g.newLabel }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let e of g.events">
+                <td class="td-strong">{{ e.productTitle ?? '—' }}</td>
+                <td>{{ e.variantLabel ?? '—' }}</td>
+                <td>
+                  {{ e.supplierItemName ?? '—' }}
+                  <span class="badge badge-muted" *ngIf="e.unconfirmed">sin confirmar</span>
+                </td>
+                <td *ngIf="g.oldLabel">{{ g.type === 'ORDER_AT_RISK' ? '#' + e.oldValue : (e.oldValue ?? '—') }}</td>
+                <td *ngIf="g.newLabel">{{ e.newValue ?? '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </ng-container>
+  </section>
+
+  <!-- ══ Parejas ════════════════════════════════════════════════ -->
+  <section class="ss-card">
+    <h2 class="ss-card-title">Parejas con Profitness</h2>
+    <p class="ss-card-hint">
+      Solo las parejas <strong>confirmadas</strong> cambian stock y costos. Las sugeridas las propone el sistema
+      por similitud de nombre: revísalas antes de confirmarlas.
+    </p>
+
+    <div class="ss-tabs">
+      <button *ngFor="let t of tabs" class="ss-tab" [class.active]="activeTab() === t.value" (click)="setTab(t.value)">
+        {{ t.label }}
+      </button>
+    </div>
+
+    <div class="links-toolbar">
+      <input class="links-filter" type="search" placeholder="Filtrar por producto, SKU o nombre en Profitness…"
+             [ngModel]="filterText()" (ngModelChange)="filterText.set($event)" />
+      <ng-container *ngIf="activeTab() === 'SUGGESTED' && links().length">
+        <button class="btn-ghost" (click)="selectHighScore()">Seleccionar similitud ≥ {{ highScore * 100 | number:'1.0-0' }}%</button>
+        <button class="btn-primary" (click)="confirmSelected()" [disabled]="!selected().size || confirming()">
+          {{ confirming() ? 'Confirmando…' : 'Confirmar seleccionadas (' + selected().size + ')' }}
+        </button>
+      </ng-container>
+    </div>
+
+    <div class="ss-loading" *ngIf="loadingLinks()"><div class="spinner"></div> Cargando…</div>
+    <div class="ss-error" *ngIf="!loadingLinks() && linksError()">{{ linksError() }}</div>
+    <div class="ss-empty-inline" *ngIf="!loadingLinks() && !linksError() && !visibleLinks().length">
+      No hay variantes en esta pestaña.
+    </div>
+
+    <div class="ss-table-wrap" *ngIf="!loadingLinks() && visibleLinks().length">
+      <table class="ss-table links-table">
+        <thead>
+          <tr>
+            <th *ngIf="activeTab() === 'SUGGESTED' || activeTab() === 'REJECTED'" class="th-check">
+              <input type="checkbox" (change)="toggleAll()"
+                     [checked]="selectableIds().length > 0 && selected().size === selectableIds().length" />
+            </th>
+            <th>Producto en ForehApp</th>
+            <th>Producto en Profitness</th>
+            <th class="num">Precio venta</th>
+            <th class="num">Precio Profitness</th>
+            <th class="num">Margen</th>
+            <th class="num" *ngIf="activeTab() === 'SUGGESTED'">Similitud</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let l of visibleLinks()" [class.row-busy]="busyVariant() === l.variant.variantId">
+            <td *ngIf="activeTab() === 'SUGGESTED' || activeTab() === 'REJECTED'" class="th-check">
+              <input type="checkbox" [checked]="isSelected(l)" (change)="toggle(l)" />
+            </td>
+            <td>
+              <div class="td-strong">{{ l.variant.productTitle }}</div>
+              <div class="td-sub">
+                {{ l.variant.attributes ?? l.variant.sku ?? ('Variante #' + l.variant.variantId) }}
+                · stock {{ l.variant.stock }}
+                <span class="badge badge-muted" *ngIf="!l.variant.active">inactiva</span>
+                <span class="badge badge-bad" *ngIf="l.disabledBySync">apagada por sincronización</span>
+              </div>
+            </td>
+            <td>
+              <ng-container *ngIf="l.supplierItem as it; else noItem">
+                <div>{{ it.name }}</div>
+                <div class="td-sub">
+                  {{ it.brand ?? '' }}
+                  <span class="badge badge-bad" *ngIf="it.outOfStock">agotado</span>
+                </div>
+              </ng-container>
+              <ng-template #noItem><span class="td-sub">—</span></ng-template>
+            </td>
+            <td class="num">{{ l.variant.price | currencyCop }}</td>
+            <td class="num">{{ l.supplierItem?.price != null ? (l.supplierItem!.price! | currencyCop) : '—' }}</td>
+            <td class="num" [class.margin-low]="marginIsLow(l)">
+              {{ l.marginPercent != null ? (l.marginPercent | number:'1.1-1') + '%' : '—' }}
+            </td>
+            <td class="num" *ngIf="activeTab() === 'SUGGESTED'">
+              <span class="score" [class.score-high]="(l.score ?? 0) >= highScore">
+                {{ l.score != null ? ((l.score * 100) | number:'1.0-0') + '%' : '—' }}
+              </span>
+            </td>
+            <td class="td-actions">
+              <button *ngIf="activeTab() === 'SUGGESTED' || activeTab() === 'REJECTED'"
+                      class="btn-sm btn-ok" (click)="confirm([l.linkId!])" [disabled]="confirming()">Confirmar</button>
+              <button *ngIf="activeTab() !== 'NOT_SUPPLIED'"
+                      class="btn-sm" (click)="openPicker(l)">{{ l.supplierItem ? 'Cambiar' : 'Emparejar' }}</button>
+              <button *ngIf="activeTab() === 'SUGGESTED' || activeTab() === 'CONFIRMED'"
+                      class="btn-sm btn-bad" (click)="reject(l)">Descartar</button>
+              <button *ngIf="activeTab() === 'SUGGESTED' || activeTab() === 'UNLINKED'"
+                      class="btn-sm" (click)="markNotSupplied(l)">No se compra</button>
+              <button *ngIf="activeTab() === 'CONFIRMED' || activeTab() === 'NOT_SUPPLIED'"
+                      class="btn-sm" (click)="unlink(l)">Quitar</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- ══ Modal: elegir producto de Profitness ═══════════════════ -->
+<div class="picker-overlay" *ngIf="pickerFor() as target" (click)="closePicker()">
+  <div class="picker" (click)="$event.stopPropagation()">
+    <div class="picker-head">
+      <div>
+        <h3>Elegir producto de Profitness</h3>
+        <p>{{ target.variant.productTitle }} · {{ target.variant.attributes ?? target.variant.sku ?? '' }}</p>
+      </div>
+      <button class="picker-close" (click)="closePicker()">✕</button>
+    </div>
+    <input class="picker-input" type="search" placeholder="Buscar en el catálogo de Profitness…"
+           [ngModel]="pickerQuery()" (ngModelChange)="onPickerInput($event)" />
+    <div class="ss-loading" *ngIf="pickerLoading()"><div class="spinner"></div> Buscando…</div>
+    <div class="ss-empty-inline" *ngIf="!pickerLoading() && !pickerResults().length">Sin resultados.</div>
+    <ul class="picker-list" *ngIf="!pickerLoading() && pickerResults().length">
+      <li *ngFor="let it of pickerResults()">
+        <button (click)="pick(it)" [disabled]="busyVariant() === target.variant.variantId">
+          <span class="picker-name">{{ it.name }}</span>
+          <span class="picker-meta">
+            {{ it.brand ?? '' }} · {{ it.price != null ? (it.price | currencyCop) : 'sin precio' }}
+            <span class="badge badge-bad" *ngIf="it.outOfStock">agotado</span>
+          </span>
+        </button>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<app-toast [message]="toastMsg()" [type]="toastType()"></app-toast>

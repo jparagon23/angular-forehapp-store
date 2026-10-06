@@ -1,0 +1,192 @@
+.ss-page {
+  padding: 28px 32px;
+  @media (max-width: 640px) { padding: 20px 16px; }
+}
+
+.ss-header { margin-bottom: 20px; }
+.ss-title  { font-size: 1.3rem; font-weight: 800; color: var(--dark); margin: 0 0 4px; }
+.ss-sub    { font-size: .84rem; color: #888; margin: 0; max-width: 760px; line-height: 1.5; }
+
+.ss-card {
+  background: #fff; border: 1.5px solid #eaf2ea; border-radius: 12px;
+  padding: 20px 22px; margin-bottom: 20px;
+}
+.ss-card-title { font-size: 1rem; font-weight: 800; color: var(--dark); margin: 0 0 12px; }
+.ss-card-hint  { font-size: .82rem; color: #888; margin: -6px 0 14px; }
+
+// ── Configuración ────────────────────────────────────────────
+.cfg-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+.cfg-switch {
+  display: flex; align-items: center; gap: 8px;
+  font-size: .9rem; font-weight: 600; color: var(--dark); cursor: pointer;
+  input { width: 18px; height: 18px; accent-color: var(--green); }
+}
+.cfg-modes { display: flex; gap: 10px; flex-wrap: wrap; flex: 1; min-width: 280px;
+  &.cfg-disabled { opacity: .5; }
+}
+.cfg-mode {
+  flex: 1; min-width: 200px; display: grid; grid-template-columns: auto 1fr; gap: 2px 8px;
+  padding: 10px 12px; border: 1.5px solid #e2eee2; border-radius: 9px; cursor: pointer;
+  input { grid-row: span 2; align-self: center; accent-color: var(--green); }
+  strong { font-size: .86rem; color: var(--dark); }
+  span   { font-size: .76rem; color: #888; }
+  &.on { border-color: var(--green); background: #f4fbf2; }
+}
+
+// ── Historial ────────────────────────────────────────────────
+.run-list { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.run-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 20px; border: 1.5px solid #e2eee2;
+  background: #fff; font-size: .78rem; color: #666; cursor: pointer;
+  &.on { border-color: var(--green); color: var(--dark); font-weight: 700; }
+}
+.run-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #bbb;
+  &.applied { background: #2e7d32; }
+  &.preview { background: #f57f17; }
+  &.aborted { background: #c62828; }
+}
+.run-banner {
+  padding: 10px 14px; border-radius: 9px; font-size: .84rem; margin-bottom: 14px;
+  &.applied { background: #e8f5e9; color: #1b5e20; }
+  &.preview { background: #fff8e1; color: #8a5a00; }
+  &.aborted { background: #fdecea; color: #b71c1c; }
+}
+.run-stats {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px; margin-bottom: 14px;
+}
+.stat {
+  padding: 10px 12px; border-radius: 9px; background: #f7faf7;
+  font-size: .76rem; color: #777;
+  span { display: block; font-size: 1.2rem; font-weight: 800; color: var(--dark); }
+  &.bad span  { color: #c62828; }
+  &.good span { color: #2e7d32; }
+  &.warn span { color: #e65100; }
+}
+
+.ev-group {
+  border: 1.5px solid #eaf2ea; border-radius: 9px; margin-bottom: 8px; overflow: hidden;
+  summary {
+    padding: 10px 14px; cursor: pointer; font-size: .86rem; font-weight: 700; color: var(--dark);
+    background: #fafdf8;
+  }
+  &.tone-bad summary  { color: #c62828; }
+  &.tone-good summary { color: #2e7d32; }
+  &.tone-warn summary { color: #e65100; }
+}
+.ev-count {
+  display: inline-block; margin-left: 6px; padding: 0 8px; border-radius: 10px;
+  background: #eee; color: #555; font-size: .74rem;
+}
+
+// ── Parejas ──────────────────────────────────────────────────
+.ss-tabs {
+  display: flex; gap: 4px; margin-bottom: 14px;
+  border-bottom: 2px solid #eaf2ea; flex-wrap: wrap;
+}
+.ss-tab {
+  padding: 8px 14px; border: none; background: none;
+  font-size: .84rem; font-weight: 600; color: #888;
+  cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px;
+  &:hover { color: var(--dark); }
+  &.active { color: var(--green); border-bottom-color: var(--green); }
+}
+
+.links-toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.links-filter {
+  flex: 1; min-width: 220px; padding: 8px 12px;
+  border: 1.5px solid #e2eee2; border-radius: 8px; font-size: .86rem;
+  &:focus { outline: none; border-color: var(--green); }
+}
+
+.ss-table-wrap { overflow-x: auto; }
+.ss-table {
+  width: 100%; border-collapse: collapse; font-size: .84rem;
+  th {
+    text-align: left; padding: 9px 12px; background: #f4fbf2; color: #555;
+    font-weight: 700; border-bottom: 2px solid #e2eee2; white-space: nowrap;
+  }
+  td { padding: 10px 12px; border-bottom: 1px solid #eaf2ea; vertical-align: top; }
+  .num { text-align: right; white-space: nowrap; }
+}
+.links-table tr:hover td { background: #fafdf8; }
+.row-busy { opacity: .5; pointer-events: none; }
+.th-check { width: 32px; input { accent-color: var(--green); } }
+.td-strong { font-weight: 600; color: var(--dark); }
+.td-sub    { font-size: .76rem; color: #888; margin-top: 2px; }
+.td-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.margin-low { color: #c62828; font-weight: 700; }
+.score { color: #888; &.score-high { color: #2e7d32; font-weight: 700; } }
+
+.badge {
+  display: inline-block; margin-left: 4px; padding: 1px 7px; border-radius: 10px;
+  font-size: .7rem; font-weight: 700;
+  &.badge-bad   { background: #fdecea; color: #c62828; }
+  &.badge-muted { background: #eee; color: #666; }
+}
+
+// ── Botones ──────────────────────────────────────────────────
+.btn-primary {
+  padding: 8px 16px; border: none; border-radius: 8px;
+  background: var(--green); color: #fff; font-weight: 700; font-size: .84rem; cursor: pointer;
+  &:hover:not(:disabled) { background: var(--green-dark); }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}
+.btn-ghost {
+  padding: 8px 14px; border: 1.5px solid #e2eee2; border-radius: 8px;
+  background: #fff; color: #555; font-weight: 600; font-size: .82rem; cursor: pointer;
+  &:hover { border-color: var(--green); color: var(--dark); }
+}
+.btn-sm {
+  padding: 4px 10px; border: 1.5px solid #e2eee2; border-radius: 7px;
+  background: #fff; color: #555; font-size: .76rem; font-weight: 700; cursor: pointer; white-space: nowrap;
+  &:hover:not(:disabled) { border-color: #999; color: var(--dark); }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+  &.btn-ok  { border-color: #a5d6a7; color: #2e7d32; background: #f1f8f1; }
+  &.btn-bad { border-color: #fca5a5; color: #dc2626; background: #fef2f2; }
+}
+
+// ── Estados ──────────────────────────────────────────────────
+.ss-loading { display: flex; align-items: center; gap: 10px; color: #aaa; font-size: .86rem; padding: 16px 0; }
+.spinner {
+  width: 16px; height: 16px; border: 2.5px solid #e0e0e0; border-top-color: var(--green);
+  border-radius: 50%; animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.ss-error {
+  padding: 12px 16px; border-radius: 9px; background: #fff2f2;
+  border: 1.5px solid #ffc9c9; color: #c0392b; font-size: .86rem; font-weight: 600;
+}
+.ss-empty-inline { font-size: .86rem; color: #aaa; padding: 12px 0; }
+
+// ── Modal ────────────────────────────────────────────────────
+.picker-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1000;
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.picker {
+  background: #fff; border-radius: 12px; width: 100%; max-width: 560px;
+  max-height: 80vh; display: flex; flex-direction: column; padding: 18px 20px;
+}
+.picker-head {
+  display: flex; justify-content: space-between; gap: 12px; margin-bottom: 12px;
+  h3 { margin: 0 0 2px; font-size: 1rem; color: var(--dark); }
+  p  { margin: 0; font-size: .8rem; color: #888; }
+}
+.picker-close { border: none; background: none; font-size: 1.1rem; color: #999; cursor: pointer; }
+.picker-input {
+  padding: 9px 12px; border: 1.5px solid #e2eee2; border-radius: 8px; font-size: .88rem; margin-bottom: 8px;
+  &:focus { outline: none; border-color: var(--green); }
+}
+.picker-list {
+  list-style: none; margin: 0; padding: 0; overflow-y: auto;
+  li button {
+    width: 100%; text-align: left; padding: 10px 8px; border: none; border-bottom: 1px solid #f0f0f0;
+    background: none; cursor: pointer; display: flex; flex-direction: column; gap: 2px;
+    &:hover:not(:disabled) { background: #f4fbf2; }
+  }
+}
+.picker-name { font-size: .86rem; font-weight: 600; color: var(--dark); }
+.picker-meta { font-size: .76rem; color: #888; }

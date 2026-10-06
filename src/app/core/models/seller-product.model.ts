@@ -112,7 +112,8 @@ export interface InventoryRequest {
   reason: 'RESTOCK' | 'RETURN' | 'ADJUSTMENT';
 }
 
-export type MovementReason = 'RESTOCK' | 'RETURN' | 'ADJUSTMENT' | 'SALE';
+/** SUPPLIER_SYNC: ajuste automático de la sincronización con el proveedor (no se puede crear a mano). */
+export type MovementReason = 'RESTOCK' | 'RETURN' | 'ADJUSTMENT' | 'SALE' | 'SUPPLIER_SYNC';
 
 export interface InventoryMovement {
   id: number;
