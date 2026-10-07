@@ -77,7 +77,16 @@
       <div class="so-order-id">#{{ g.orderId }}</div>
       <div class="so-buyer">{{ g.buyerName | titlecase }}</div>
       <div class="so-date" *ngIf="relevantDate(g)">{{ relevantDate(g) | date:'dd MMM' }}</div>
-      <div class="so-total">{{ g.orderTotal | currencyCop }}</div>
+      <div class="so-total">
+        {{ g.orderTotal | currencyCop }}
+        <ng-container *ngIf="g.status !== 'CANCELLED'">
+          <span class="so-total-profit" *ngIf="profit(g) as pf">
+            <span *ngIf="pf.complete" [class.so-neg]="pf.profit < 0" title="Venta de productos − costo (solo tú lo ves)">
+              Ganancia {{ pf.profit | currencyCop }}
+            </span>
+          </span>
+        </ng-container>
+      </div>
 
       <span class="so-badge" [ngClass]="statusClass(g.status)">
         {{ statusLabel(g.status) }}<ng-container *ngIf="g.status !== 'CANCELLED'"> · <span [ngClass]="paymentClass(g)">{{ paymentLabel(g) }}</span></ng-container>
@@ -189,11 +198,14 @@
                 </td>
                 <td>
                   {{ item.unitPrice | currencyCop }}
-                  <div class="so-item-cost" *ngIf="item.unitCost != null">Costo: {{ item.unitCost | currencyCop }}</div>
+                  <div class="so-item-cost" *ngIf="item.unitCost != null">Costo {{ item.unitCost | currencyCop }} c/u</div>
+                  <div class="so-item-cost so-item-nocost" *ngIf="item.unitCost == null">Sin costo registrado</div>
                 </td>
                 <td>
                   <strong>{{ item.subtotal | currencyCop }}</strong>
-                  <div class="so-item-margin" *ngIf="item.unitMargin != null">Margen: {{ item.unitMargin | currencyCop }}</div>
+                  <div class="so-item-margin" *ngIf="item.unitCost != null" [class.so-neg]="lineProfit(item)! < 0">
+                    Ganancia {{ lineProfit(item) | currencyCop }}
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -241,25 +253,32 @@
             <span>Cupón <span class="so-coupon-code">{{ g.couponCode }}</span></span>
             <span class="so-coupon-discount">− {{ g.couponDiscount | currencyCop }}</span>
           </div>
-          <ng-container *ngIf="g.totalCost != null">
-            <div class="so-breakdown-divider"></div>
-            <div class="so-breakdown-row so-margin-row">
-              <span>Costo total</span>
-              <span>{{ g.totalCost | currencyCop }}</span>
-            </div>
-            <div class="so-breakdown-row so-margin-row" *ngIf="g.totalMargin != null">
-              <span>Margen estimado</span>
-              <span [class.so-margin-neg]="g.totalMargin < 0">
-                {{ g.totalMargin | currencyCop }}
-                <span *ngIf="g.marginPercent != null"> ({{ g.marginPercent | number:'1.1-1' }}%)</span>
-              </span>
-            </div>
-          </ng-container>
           <div class="so-breakdown-divider"></div>
           <div class="so-breakdown-row so-breakdown-total">
             <span>Total a cobrar</span>
             <strong>{{ g.orderTotal | currencyCop }}</strong>
           </div>
+        </div>
+
+        <!-- Rentabilidad: solo la ve el seller -->
+        <div class="so-profit" *ngIf="profit(g) as pf">
+          <div class="so-profit-head">
+            <span>Tu ganancia</span>
+            <small>Solo tú ves esto</small>
+          </div>
+          <ng-container *ngIf="pf.known">
+            <div class="so-profit-row"><span>Venta de productos{{ pf.complete ? '' : ' con costo' }}</span><span>{{ pf.sales | currencyCop }}</span></div>
+            <div class="so-profit-row"><span>Costo</span><span>− {{ pf.cost | currencyCop }}</span></div>
+            <div class="so-profit-row" *ngIf="pf.productDiscount > 0"><span>Descuento del cupón</span><span>− {{ pf.productDiscount | currencyCop }}</span></div>
+            <div class="so-profit-row so-profit-total" [class.so-neg]="pf.profit < 0">
+              <span>Ganancia</span>
+              <strong>{{ pf.profit | currencyCop }}<small *ngIf="pf.percent != null"> · {{ pf.percent | number:'1.0-1' }}%</small></strong>
+            </div>
+          </ng-container>
+          <p class="so-profit-note" *ngIf="pf.missing > 0">
+            {{ pf.missing }} producto{{ pf.missing !== 1 ? 's' : '' }} sin costo registrado{{ pf.known ? (pf.missing !== 1 ? ' (no entran en el cálculo)' : ' (no entra en el cálculo)') : '' }}.
+            Agrégale el costo en Mis productos para ver la ganancia completa.
+          </p>
         </div>
       </section>
 

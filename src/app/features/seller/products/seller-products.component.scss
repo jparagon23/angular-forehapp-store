@@ -573,3 +573,11 @@
   border-radius: 8px; background: #e3f2fd; color: #1565c0; white-space: nowrap;
   &--out { background: #fff3e0; color: #e65100; }
 }
+
+// Costo y ganancia por variante (solo el seller)
+.sp-nocost { color: #bbb; font-size: .78rem; font-style: italic; }
+.sp-profit {
+  color: #2e7d32; font-weight: 700; white-space: nowrap;
+  small { display: block; font-weight: 600; font-size: .7rem; color: #66a266; }
+  &--neg { color: #c62828; small { color: #c62828; } }
+}

@@ -11,6 +11,19 @@ import { selectActiveSellerStoreId } from '../../../store/seller/seller.selector
 import { ToastComponent } from '../../../shared/components/toast/toast.component';
 import { OrderItemsEditorComponent } from './edit-items/order-items-editor.component';
 
+interface OrderProfit {
+  /** Al menos una línea tiene costo. */
+  known: boolean;
+  /** Todas las líneas tienen costo. */
+  complete: boolean;
+  missing: number;
+  sales: number;
+  cost: number;
+  productDiscount: number;
+  profit: number;
+  percent: number | null;
+}
+
 /** Paso pendiente de un pedido activo (sub-filtros de "Por atender"). */
 type OrderStep = 'PAY' | 'PREPARE' | 'SHIP' | 'TRANSIT';
 type NextActionKind = 'CONFIRM_PAYMENT' | 'PREPARE' | 'SHIP' | 'DELIVER';
@@ -220,6 +233,39 @@ export class SellerOrdersComponent {
       events.push({ at: c.changedAt, kind: c.type, title: `${this.changeTypeLabel(c.type)}: ${this.changeText(c)}`, detail: c.reason });
     }
     return events.sort((a, b) => b.at.localeCompare(a.at));
+  }
+
+  /**
+   * Ganancia del pedido para el seller: venta de productos − costo, solo con las líneas que tienen costo.
+   * El descuento del cupón sobre productos (no el de envío gratis) se resta aparte.
+   */
+  profit(g: SellerOrderGroupDetail): OrderProfit {
+    let sales = 0, cost = 0, missing = 0;
+    for (const i of g.items) {
+      if (i.unitCost == null) { missing++; continue; }
+      sales += i.subtotal;
+      cost += i.unitCost * i.quantity;
+    }
+    const shippingCovered = Math.max(0, g.shippingCost - (g.shippingChargedNet ?? g.shippingCost));
+    const productDiscount = Math.max(0, (g.couponDiscount ?? 0) - shippingCovered);
+    // Con líneas sin costo no se sabe a qué productos aplica el descuento: se deja fuera
+    const discount = missing === 0 ? productDiscount : 0;
+    const revenue = sales - discount;
+    const net = revenue - cost;
+    return {
+      known: g.items.length > missing,
+      complete: missing === 0,
+      missing,
+      sales,
+      cost,
+      productDiscount: discount,
+      profit: net,
+      percent: revenue > 0 ? (net / revenue) * 100 : null,
+    };
+  }
+
+  lineProfit(i: { unitCost: number | null; unitPrice: number; quantity: number }): number | null {
+    return i.unitCost == null ? null : (i.unitPrice - i.unitCost) * i.quantity;
   }
 
   paymentMethodLabel(g: SellerOrderGroupDetail): string {

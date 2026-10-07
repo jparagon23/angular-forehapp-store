@@ -1,6 +1,6 @@
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { AsyncPipe, DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, DatePipe, DecimalPipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { CurrencyCopPipe } from '../../../shared/pipes/currency-cop.pipe';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -31,7 +31,7 @@ import { SellerProductService } from '../../../core/services/seller-product.serv
 @Component({
   selector: 'app-seller-products',
   standalone: true,
-  imports: [AsyncPipe, NgFor, NgIf, NgClass, RouterLink, CurrencyCopPipe, DatePipe, FormsModule, ReactiveFormsModule, ToastComponent],
+  imports: [AsyncPipe, NgFor, NgIf, NgClass, RouterLink, CurrencyCopPipe, DatePipe, DecimalPipe, FormsModule, ReactiveFormsModule, ToastComponent],
   templateUrl: './seller-products.component.html',
   styleUrl: './seller-products.component.scss',
 })
