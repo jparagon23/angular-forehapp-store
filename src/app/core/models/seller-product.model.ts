@@ -19,7 +19,14 @@ export interface ProductVariant {
   sku: string | null;
   price: number;
   compareAtPrice?: number;
+  /** Unidades que la tienda tiene de verdad. */
   stock: number;
+  /** Lo que falte de stock propio lo despacha el proveedor. */
+  dropship?: boolean;
+  /** El proveedor lo tiene ahora (solo cuenta con dropship). */
+  supplierAvailable?: boolean;
+  /** Activa y con stock propio o del proveedor. */
+  sellable?: boolean;
   active: boolean;
   attributes: VariantAttribute[];
   cost?: number | null;
@@ -94,6 +101,8 @@ export interface CreateVariantRequest {
   cost?: number;
   costNotes?: string;
   repurchaseDays?: number;
+  dropship?: boolean;
+  supplierAvailable?: boolean;
 }
 
 export interface UpdateVariantRequest {
@@ -105,6 +114,36 @@ export interface UpdateVariantRequest {
   clearCost?: boolean;
   repurchaseDays?: number;
   clearRepurchaseDays?: boolean;
+  dropship?: boolean;
+  supplierAvailable?: boolean;
+}
+
+// ── Despacho: stock propio vs dropshipping ──────────────────────────────────
+
+/** Cómo se despacha una variante; en el back son dos campos (dropship + supplierAvailable). */
+export type FulfillmentMode = 'OWN' | 'DROPSHIP' | 'DROPSHIP_OUT';
+
+export const FULFILLMENT_OPTIONS: { value: FulfillmentMode; label: string; hint: string }[] = [
+  { value: 'OWN',          label: 'Solo stock propio',            hint: 'Se vende solo lo que tienes en bodega.' },
+  { value: 'DROPSHIP',     label: 'Dropship – proveedor tiene',   hint: 'Primero tu stock; lo que falte lo despacha el proveedor.' },
+  { value: 'DROPSHIP_OUT', label: 'Dropship – proveedor agotado', hint: 'Solo se vende tu stock hasta que el proveedor vuelva a tener.' },
+];
+
+export function fulfillmentOf(v: Pick<ProductVariant, 'dropship' | 'supplierAvailable'>): FulfillmentMode {
+  if (!v.dropship) return 'OWN';
+  return v.supplierAvailable === false ? 'DROPSHIP_OUT' : 'DROPSHIP';
+}
+
+/** "Solo stock propio" no toca la disponibilidad del proveedor (la sincronización la sigue llevando). */
+export function fulfillmentFlags(mode: FulfillmentMode): { dropship: boolean; supplierAvailable?: boolean } {
+  if (mode === 'OWN') return { dropship: false };
+  return { dropship: true, supplierAvailable: mode !== 'DROPSHIP_OUT' };
+}
+
+/** Se puede vender: usa el dato del back y, si falta (back anterior), lo calcula. */
+export function isSellable(v: ProductVariant): boolean {
+  if (v.sellable !== undefined) return v.sellable;
+  return v.active && (v.stock > 0 || (!!v.dropship && v.supplierAvailable !== false));
 }
 
 export interface InventoryRequest {

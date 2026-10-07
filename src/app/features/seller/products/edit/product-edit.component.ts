@@ -7,12 +7,7 @@ import { filter, take } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { SellerProductService } from '../../../../core/services/seller-product.service';
-import {
-  Category, CategoryAttribute,
-  InventoryMovement, InventoryRequest, MovementReason, MovementsPage,
-  ProductImage, ProductVariant, SellerProduct, SellerProductDetail, UpdateProductRequest, UpdateVariantRequest,
-  VariantCostHistory,
-} from '../../../../core/models/seller-product.model';
+import { Category, CategoryAttribute, InventoryMovement, InventoryRequest, MovementReason, MovementsPage, ProductImage, ProductVariant, SellerProduct, SellerProductDetail, UpdateProductRequest, UpdateVariantRequest, VariantCostHistory, FulfillmentMode, FULFILLMENT_OPTIONS, fulfillmentOf, fulfillmentFlags } from '../../../../core/models/seller-product.model';
 import { selectActiveSellerStoreId } from '../../../../store/seller/seller.selectors';
 
 const REPURCHASE_DAYS_VALIDATORS = [Validators.min(1), Validators.max(365), Validators.pattern(/^\d+$/)];
@@ -63,7 +58,12 @@ export class ProductEditComponent implements OnInit {
     cost:           [null as number | null],
     costNotes:      ['', Validators.maxLength(255)],
     repurchaseDays: [null as number | null, REPURCHASE_DAYS_VALIDATORS],
+    fulfillment:    ['OWN' as FulfillmentMode],
   });
+  readonly fulfillmentOptions = FULFILLMENT_OPTIONS;
+  readonly fulfillmentOf = fulfillmentOf;
+  changingFulfillmentId = signal<number | null>(null);
+  fulfillmentError      = signal<string | null>(null);
   addingVariant      = signal(false);
   variantError       = signal<string | null>(null);
   togglingVariantId  = signal<number | null>(null);
@@ -306,7 +306,7 @@ export class ProductEditComponent implements OnInit {
     if (this.variantForm.invalid) return;
     const storeId = this.storeId();
     if (!storeId) return;
-    const { sku, price, compareAtPrice, stock, cost, costNotes, repurchaseDays } = this.variantForm.value;
+    const { sku, price, compareAtPrice, stock, cost, costNotes, repurchaseDays, fulfillment } = this.variantForm.value;
     const attributeValueIds = Object.values(this.selectedAttrValues)
       .filter((id): id is number => id !== null && id !== 0);
 
@@ -319,16 +319,34 @@ export class ProductEditComponent implements OnInit {
       cost: cost ?? undefined,
       costNotes: costNotes || undefined,
       repurchaseDays: repurchaseDays ?? undefined,
+      ...fulfillmentFlags(fulfillment ?? 'OWN'),
     }).subscribe({
       next: variant => {
         this.variants.update(v => [...v, variant]);
-        this.variantForm.reset();
+        this.variantForm.reset({ fulfillment: 'OWN' });
         this.selectedAttrValues = {};
         this.addingVariant.set(false);
       },
       error: err => {
         this.variantError.set(err.error?.message ?? 'SKU duplicado u otro error');
         this.addingVariant.set(false);
+      },
+    });
+  }
+
+  changeFulfillment(v: ProductVariant, mode: FulfillmentMode) {
+    const storeId = this.storeId();
+    if (!storeId || mode === fulfillmentOf(v)) return;
+    this.changingFulfillmentId.set(v.id);
+    this.fulfillmentError.set(null);
+    this.service.updateVariant(storeId, this.productId, v.id, fulfillmentFlags(mode)).subscribe({
+      next: updated => {
+        this.variants.update(vs => vs.map(x => x.id === updated.id ? updated : x));
+        this.changingFulfillmentId.set(null);
+      },
+      error: err => {
+        this.fulfillmentError.set(err.error?.message ?? 'No se pudo cambiar el despacho.');
+        this.changingFulfillmentId.set(null);
       },
     });
   }

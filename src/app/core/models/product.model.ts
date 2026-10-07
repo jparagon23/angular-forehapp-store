@@ -10,7 +10,10 @@ export interface DetailVariant {
   sku: string | null;
   price: number;
   compareAtPrice: number | null;
-  stock: number;
+  /** Se puede comprar ahora (stock propio o del proveedor; el comprador no ve la diferencia). */
+  available: boolean;
+  /** Tope de unidades; null = sin tope. */
+  maxQuantity: number | null;
   attributes: DetailVariantAttribute[];
 }
 

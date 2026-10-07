@@ -27,6 +27,8 @@ export interface OrderItemResponse {
   unitCost: number | null;
   totalCost: number | null;
   unitMargin: number | null;
+  /** Solo vista del seller: unidades a pedir al proveedor (null para el comprador). */
+  dropshipQuantity?: number | null;
 }
 
 // ── Buyer-facing ─────────────────────────────────────────────────────────────
@@ -103,6 +105,8 @@ export interface SellerOrderGroupDetail {
   totalMargin: number | null;
   marginPercent: number | null;
   channel?: OrderChannel;
+  /** Unidades del grupo a pedir al proveedor; 0 = todo sale de bodega. */
+  dropshipUnits?: number;
 }
 
 // ── Guest checkout ────────────────────────────────────────────────────────────

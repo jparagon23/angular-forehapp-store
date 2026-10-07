@@ -635,3 +635,16 @@
   color: #aaa;
   margin-top: 3px;
 }
+
+// ── Despacho (stock propio / dropship) ──
+.variant-dropship {
+  font-size: .74rem; font-weight: 600; padding: 2px 8px; border-radius: 10px;
+  background: #e3f2fd; color: #1565c0;
+  &--out { background: #fff3e0; color: #e65100; }
+}
+.variant-fulfillment {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px;
+  label { font-size: .78rem; font-weight: 600; color: #666; }
+  select { padding: 5px 8px; border: 1.5px solid #e2eee2; border-radius: 6px; font-size: .82rem; }
+  .field-hint { flex-basis: 100%; }
+}

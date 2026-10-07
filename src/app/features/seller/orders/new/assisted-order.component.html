@@ -97,10 +97,10 @@
         <div class="ao-muted" *ngIf="loadingVariants()">Cargando variantes…</div>
         <div class="ao-variant" *ngFor="let v of openVariants()">
           <span>{{ variantLabel(v) }}</span>
-          <span class="ao-muted">stock {{ v.stock }}</span>
+          <span class="ao-muted">{{ stockLabel(v) }}</span>
           <span>{{ v.price | currencyCop }}</span>
-          <button class="btn-primary btn-sm" (click)="addVariant(v)" [disabled]="v.stock <= 0">
-            {{ v.stock > 0 ? 'Agregar' : 'Sin stock' }}
+          <button class="btn-primary btn-sm" (click)="addVariant(v)" [disabled]="!isSellable(v)">
+            {{ isSellable(v) ? 'Agregar' : 'Sin stock' }}
           </button>
         </div>
         <div class="ao-muted" *ngIf="!loadingVariants() && !openVariants().length">Este producto no tiene variantes activas.</div>
@@ -113,7 +113,7 @@
             <td><strong>{{ l.productTitle }}</strong><br /><small class="ao-muted">{{ l.variantLabel }}</small></td>
             <td class="num">{{ l.price | currencyCop }}</td>
             <td class="num">
-              <input class="ao-qty" type="number" min="1" [max]="l.stock"
+              <input class="ao-qty" type="number" min="1" [max]="l.max"
                      [ngModel]="l.quantity" (ngModelChange)="setQuantity(l.variantId, $event)" />
             </td>
             <td class="num">{{ l.price * l.quantity | currencyCop }}</td>

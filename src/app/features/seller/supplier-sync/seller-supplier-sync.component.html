@@ -5,7 +5,8 @@
       <h1 class="ss-title">Sincronización con Profitness</h1>
       <p class="ss-sub">
         Cada día a las 6:30 a. m. se revisa el catálogo de Profitness. Las variantes con pareja confirmada
-        se apagan cuando Profitness está agotado, vuelven cuando hay stock y su costo se actualiza.
+        se venden por dropship mientras Profitness tenga; si se agota, solo se vende tu stock propio.
+        También se actualiza su costo. Tu stock propio nunca se modifica.
       </p>
     </div>
   </div>
@@ -23,12 +24,12 @@
         <label class="cfg-mode" [class.on]="configMode() === 'PREVIEW'">
           <input type="radio" name="mode" value="PREVIEW" [ngModel]="configMode()" (ngModelChange)="configMode.set($event)" [disabled]="!configEnabled()" />
           <strong>Vista previa</strong>
-          <span>Solo reporta lo que haría. No cambia stock ni costos.</span>
+          <span>Solo reporta lo que haría. No cambia disponibilidad ni costos.</span>
         </label>
         <label class="cfg-mode" [class.on]="configMode() === 'APPLY'">
           <input type="radio" name="mode" value="APPLY" [ngModel]="configMode()" (ngModelChange)="configMode.set($event)" [disabled]="!configEnabled()" />
           <strong>Aplicar</strong>
-          <span>Apaga lo agotado, reactiva lo repuesto y actualiza costos.</span>
+          <span>Marca lo agotado en Profitness, lo vuelve a habilitar cuando hay y actualiza costos.</span>
         </label>
       </div>
 
@@ -64,8 +65,8 @@
         <div class="stat"><span>{{ run.supplierItems }}</span>Productos en Profitness</div>
         <div class="stat"><span>{{ run.supplierOutOfStock }}</span>Agotados en Profitness</div>
         <div class="stat"><span>{{ run.confirmedLinks }}</span>Parejas confirmadas</div>
-        <div class="stat bad"><span>{{ run.disabled }}</span>Apagadas</div>
-        <div class="stat good"><span>{{ run.reenabled }}</span>Reactivadas</div>
+        <div class="stat bad"><span>{{ run.disabled }}</span>Se agotaron</div>
+        <div class="stat good"><span>{{ run.reenabled }}</span>Volvieron</div>
         <div class="stat"><span>{{ run.costUpdates }}</span>Costos actualizados</div>
         <div class="stat bad"><span>{{ run.marginAlerts }}</span>Margen &lt; {{ minMargin }}%</div>
         <div class="stat warn"><span>{{ run.brokenLinks }}</span>Parejas rotas</div>
@@ -109,7 +110,8 @@
   <section class="ss-card">
     <h2 class="ss-card-title">Parejas con Profitness</h2>
     <p class="ss-card-hint">
-      Solo las parejas <strong>confirmadas</strong> cambian stock y costos. Las sugeridas las propone el sistema
+      Solo las parejas <strong>confirmadas</strong> se sincronizan, y al confirmarlas la variante pasa a dropship
+      (puedes cambiarla a "Solo stock propio" en el producto). Las sugeridas las propone el sistema
       por similitud de nombre: revísalas antes de confirmarlas.
     </p>
 
@@ -162,9 +164,10 @@
               <div class="td-strong">{{ l.variant.productTitle }}</div>
               <div class="td-sub">
                 {{ l.variant.attributes ?? l.variant.sku ?? ('Variante #' + l.variant.variantId) }}
-                · stock {{ l.variant.stock }}
+                · stock propio {{ l.variant.stock }}
                 <span class="badge badge-muted" *ngIf="!l.variant.active">inactiva</span>
-                <span class="badge badge-bad" *ngIf="l.disabledBySync">apagada por sincronización</span>
+                <span class="badge badge-muted" *ngIf="l.status === 'CONFIRMED' && l.variant.dropship === false">solo stock propio</span>
+                <span class="badge badge-bad" *ngIf="l.disabledBySync">agotado en Profitness</span>
               </div>
             </td>
             <td>

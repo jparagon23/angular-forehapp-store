@@ -99,9 +99,6 @@ export class InventoryComponent implements OnInit {
     const req: InventoryRequest = { quantity: qty, reason: this.adminReason() };
     this.sellerService.adminAdjustInventory(product.id, varId, req).subscribe({
       next: () => {
-        this.modalVariants.update(vs =>
-          vs.map(v => v.id === varId ? { ...v, stock: v.stock + qty! } : v)
-        );
         this.adminQty.set(null);
         this.adminError.set('');
         this.adminSuccess.set('Inventario actualizado.');
@@ -114,9 +111,10 @@ export class InventoryComponent implements OnInit {
     });
   }
 
-  currentVariantStock(): number {
+  // La vista pública no expone cantidades; el stock exacto lo ve el seller en su inventario
+  currentVariantAvailable(): boolean {
     const id = this.selectedVarId();
-    return this.modalVariants().find(v => v.id === id)?.stock ?? 0;
+    return !!this.modalVariants().find(v => v.id === id)?.available;
   }
 
   // ── Movements modal methods ──────────────────────────────
