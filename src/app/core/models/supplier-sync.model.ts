@@ -29,7 +29,7 @@ export interface SupplierLink {
   status: SupplierLinkStatus | null;
   /** Similitud del emparejador (0–1); null si la pareja la hizo el seller. */
   score: number | null;
-  /** true = la sincronización tiene la variante en stock 0 ahora. */
+  /** true = variante dropship y Profitness está agotado: solo se vende el stock propio. */
   disabledBySync: boolean;
   variant: {
     variantId: number;
@@ -40,6 +40,8 @@ export interface SupplierLink {
     attributes: string | null;
     active: boolean;
     stock: number;
+    dropship?: boolean;
+    supplierAvailable?: boolean;
     price: number;
   };
   supplierItem: SupplierItem | null;

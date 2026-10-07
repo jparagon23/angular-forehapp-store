@@ -54,12 +54,12 @@
         <label>Variante</label>
         <select [ngModel]="selectedVarId()" (ngModelChange)="selectedVarId.set(+$event)">
           <option *ngFor="let v of modalVariants()" [value]="v.id">
-            {{ v.sku ?? '—' }} — Stock: {{ v.stock }} uds.
+            {{ v.sku ?? '—' }} — {{ v.available ? 'Disponible' : 'Agotado' }}
           </option>
         </select>
       </div>
       <div style="font-size:.83rem;color:#888;margin-bottom:16px">
-        Stock actual: <strong>{{ currentVariantStock() }}</strong> uds.
+        Estado actual: <strong>{{ currentVariantAvailable() ? 'Disponible' : 'Agotado' }}</strong>
       </div>
 
       <div class="form-grid">
@@ -121,7 +121,7 @@
         <label>Variante</label>
         <select [ngModel]="movSelectedId()" (ngModelChange)="onMovVariantChange(+$event)">
           <option *ngFor="let v of movVariants()" [value]="v.id">
-            {{ v.sku ?? '—' }} — Stock: {{ v.stock }} uds.
+            {{ v.sku ?? '—' }} — {{ v.available ? 'Disponible' : 'Agotado' }}
           </option>
         </select>
       </div>

@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { Product, ProductImage, ProductStore, ProductVariations } from '../models/product.model';
+import { DetailVariant, Product, ProductImage, ProductStore, ProductVariations } from '../models/product.model';
 import { Brand, Category } from '../models/seller-product.model';
 
 // Formato del listado público (sin variantes detalladas)
@@ -140,6 +140,7 @@ export class ProductService {
         const images: ProductImage[] = (raw.images ?? []).map((img: any) => ({
           id: img.id, url: img.url, displayOrder: img.displayOrder ?? 0,
         }));
+        const variants: DetailVariant[] = (raw.variants ?? []).map((v: any) => toDetailVariant(v));
         return {
           id:         raw.id,
           emoji:      EMOJI_MAP[raw.category] ?? '📦',
@@ -150,11 +151,12 @@ export class ProductService {
           desc:       raw.description ?? raw.line ?? '',
           cat:        raw.category,
           price:      minPrice,
-          stock:      raw.variants?.reduce((s: number, v: any) => s + v.stock, 0) ?? 0,
+          // El detalle no expone cantidades: 1 = hay algo disponible, 0 = agotado
+          stock:      variants.some(v => v.available) ? 1 : 0,
           status:     raw.status === 'ACTIVE' ? 'Activo' : raw.status === 'DRAFT' ? 'Borrador' : 'Agotado',
           freeShipping: raw.freeShipping ?? false,
           variations,
-          variants:   raw.variants ?? [],
+          variants,
           store:      raw.store ? (raw.store as ProductStore) : undefined,
         } as Product;
       })
@@ -223,4 +225,21 @@ export class ProductService {
       variations,
     };
   }
+}
+
+/**
+ * Variante pública. Acepta también la respuesta anterior (con stock) mientras conviven
+ * versiones del back durante un despliegue.
+ */
+function toDetailVariant(v: any): DetailVariant {
+  const legacy = v.available === undefined;
+  return {
+    id: v.id,
+    sku: v.sku ?? null,
+    price: v.price,
+    compareAtPrice: v.compareAtPrice ?? null,
+    available: legacy ? (v.stock ?? 0) > 0 : !!v.available,
+    maxQuantity: legacy ? (v.stock ?? 0) : (v.maxQuantity ?? null),
+    attributes: v.attributes ?? [],
+  };
 }

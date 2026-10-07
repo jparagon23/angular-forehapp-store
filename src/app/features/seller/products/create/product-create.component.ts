@@ -6,10 +6,7 @@ import { forkJoin } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { SellerProductService } from '../../../../core/services/seller-product.service';
-import {
-  Brand, BrandLine, Category, CategoryAttribute,
-  ProductImage, ProductVariant, SellerProduct,
-} from '../../../../core/models/seller-product.model';
+import { Brand, BrandLine, Category, CategoryAttribute, ProductImage, ProductVariant, SellerProduct, FulfillmentMode, FULFILLMENT_OPTIONS, fulfillmentOf, fulfillmentFlags, isSellable } from '../../../../core/models/seller-product.model';
 import { selectActiveSellerStoreId } from '../../../../store/seller/seller.selectors';
 import { CurrencyCopPipe } from '../../../../shared/pipes/currency-cop.pipe';
 import { ToastComponent } from '../../../../shared/components/toast/toast.component';
@@ -71,7 +68,10 @@ export class ProductCreateComponent implements OnInit {
     cost:           [null as number | null],
     costNotes:      ['', Validators.maxLength(255)],
     repurchaseDays: [null as number | null, REPURCHASE_DAYS_VALIDATORS],
+    fulfillment:    ['OWN' as FulfillmentMode],
   });
+  readonly fulfillmentOptions = FULFILLMENT_OPTIONS;
+  readonly fulfillmentOf = fulfillmentOf;
   selectedAttrValues: Record<number, number | null> = {};
   variants           = signal<ProductVariant[]>([]);
   addingVariant      = signal(false);
@@ -101,7 +101,7 @@ export class ProductCreateComponent implements OnInit {
   toastMsg      = signal('');
   toastType     = signal<'success' | 'error'>('success');
 
-  get hasStock(): boolean   { return this.variants().some(v => v.stock > 0); }
+  get hasStock(): boolean   { return this.variants().some(v => isSellable(v)); }
   get canPublish(): boolean { return this.variants().length > 0 && this.images().length > 0 && this.hasStock; }
 
   // Label dinámico: indica al seller que "Continuar" también guardará el form si tiene datos
@@ -234,7 +234,7 @@ export class ProductCreateComponent implements OnInit {
     const storeId = this.storeId();
     if (!storeId) return;
     const productId = this.draftProduct()!.id;
-    const { sku, price, compareAtPrice, stock, cost, costNotes, repurchaseDays } = this.variantForm.value;
+    const { sku, price, compareAtPrice, stock, cost, costNotes, repurchaseDays, fulfillment } = this.variantForm.value;
     const attributeValueIds = Object.values(this.selectedAttrValues)
       .filter((id): id is number => id !== null && id !== 0);
 
@@ -249,10 +249,11 @@ export class ProductCreateComponent implements OnInit {
       cost: cost ?? undefined,
       costNotes: costNotes || undefined,
       repurchaseDays: repurchaseDays ?? undefined,
+      ...fulfillmentFlags(fulfillment ?? 'OWN'),
     }).subscribe({
       next: variant => {
         this.variants.update(v => [...v, variant]);
-        this.variantForm.reset();
+        this.variantForm.reset({ fulfillment: 'OWN' });
         this.selectedAttrValues = {};
         this.addingVariant.set(false);
         this.justAddedVariantId.set(variant.id);

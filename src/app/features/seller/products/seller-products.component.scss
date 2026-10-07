@@ -567,3 +567,9 @@
   // Inventory modal full width
   .inv-modal { padding: 20px 18px; }
 }
+
+.sp-dropship {
+  display: inline-block; margin-left: 4px; font-size: .7rem; font-weight: 600; padding: 1px 6px;
+  border-radius: 8px; background: #e3f2fd; color: #1565c0; white-space: nowrap;
+  &--out { background: #fff3e0; color: #e65100; }
+}

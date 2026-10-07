@@ -304,7 +304,13 @@
                       </td>
                       <td>{{ v.price | currencyCop }}</td>
                       <td>{{ v.compareAtPrice ? (v.compareAtPrice | currencyCop) : '—' }}</td>
-                      <td [class.sp-stock-warn]="v.stock === 0">{{ v.stock }}</td>
+                      <td [class.sp-stock-warn]="v.stock === 0 && !v.dropship">
+                        {{ v.stock }}
+                        <span class="sp-dropship" *ngIf="v.dropship" [class.sp-dropship--out]="v.supplierAvailable === false"
+                              [title]="v.supplierAvailable === false ? 'Proveedor agotado: solo se vende el stock propio' : 'Lo que falte lo despacha el proveedor'">
+                          {{ v.supplierAvailable === false ? '+ prov. agotado' : '+ dropship' }}
+                        </span>
+                      </td>
                       <td>
                         <div class="sp-actions">
                           <button class="btn-action btn-inv"  [disabled]="!v.active" (click)="openInvModal(p, v, $event)">Ajustar</button>

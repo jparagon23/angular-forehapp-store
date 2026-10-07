@@ -194,7 +194,8 @@
         <span class="variant-compare" *ngIf="v.compareAtPrice">
           <s>{{ v.compareAtPrice | currencyCop }}</s>
         </span>
-        <span>Stock: {{ v.stock }}</span>
+        <span>Stock propio: {{ v.stock }}</span>
+        <span *ngIf="v.dropship">{{ v.supplierAvailable === false ? 'Dropship · proveedor agotado' : 'Dropship' }}</span>
         <span *ngIf="v.repurchaseDays">Recompra: {{ v.repurchaseDays }} días</span>
         <span class="variant-attrs" *ngIf="v.attributes?.length">
           <ng-container *ngFor="let a of v.attributes; let last = last">
@@ -230,8 +231,16 @@
         <span class="field-hint">Precio original antes de descuento, en COP</span>
       </div>
       <div class="form-group">
-        <label>Stock <span class="req">*</span></label>
+        <label>Despacho</label>
+        <select formControlName="fulfillment">
+          <option *ngFor="let o of fulfillmentOptions" [value]="o.value">{{ o.label }}</option>
+        </select>
+        <span class="field-hint">Con dropship no hace falta inventar stock: el proveedor despacha lo que falte.</span>
+      </div>
+      <div class="form-group">
+        <label>Stock propio <span class="req">*</span></label>
         <input formControlName="stock" type="number" min="0" step="1" placeholder="0" />
+        <span class="field-hint" *ngIf="variantForm.get('fulfillment')?.value !== 'OWN'">Lo que tienes en bodega; puede ser 0.</span>
         <span class="form-error" *ngIf="variantForm.get('stock')?.touched && variantForm.get('stock')?.invalid">Stock >= 0 requerido.</span>
       </div>
       <div class="form-group">
@@ -386,7 +395,7 @@
     <div class="pub-item">
       <span class="pub-label">Stock disponible</span>
       <strong [class.pub-ok]="hasStock" [class.pub-warn]="!hasStock">
-        {{ hasStock ? 'Sí' : 'No — al menos 1 variante debe tener stock > 0' }}
+        {{ hasStock ? 'Sí' : 'No — al menos 1 variante debe tener stock propio o ser dropship con proveedor disponible' }}
       </strong>
     </div>
   </div>

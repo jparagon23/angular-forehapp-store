@@ -27,11 +27,12 @@ interface EventGroup {
 
 const EVENT_GROUPS: Omit<EventGroup, 'events'>[] = [
   { type: 'MARGIN_ALERT',  label: 'Margen bajo',                              oldLabel: 'Venta / proveedor', newLabel: 'Margen',      tone: 'bad'  },
-  { type: 'DISABLED',      label: 'Apagadas (agotadas en Profitness)',        oldLabel: 'Stock anterior',    newLabel: 'Stock',       tone: 'bad'  },
-  { type: 'REENABLED',     label: 'Reactivadas',                              oldLabel: 'Stock anterior',    newLabel: 'Stock',       tone: 'good' },
-  { type: 'ORDER_AT_RISK', label: 'Pedidos abiertos con productos agotados',  oldLabel: 'Pedido',            newLabel: 'Cantidad',    tone: 'warn' },
+  { type: 'DISABLED',      label: 'Agotadas en Profitness (solo se vende tu stock)', oldLabel: null,         newLabel: 'Stock propio', tone: 'bad'  },
+  { type: 'REENABLED',     label: 'Disponibles de nuevo en Profitness',       oldLabel: null,                newLabel: 'Stock propio', tone: 'good' },
+  { type: 'ORDER_AT_RISK', label: 'Pedidos abiertos con unidades por pedir a Profitness', oldLabel: 'Pedido', newLabel: 'Por pedir',  tone: 'warn' },
   { type: 'BROKEN_LINK',   label: 'Parejas rotas (ya no están en Profitness)', oldLabel: null,               newLabel: null,          tone: 'warn' },
   { type: 'COST_UPDATED',  label: 'Costos actualizados',                      oldLabel: 'Costo anterior',    newLabel: 'Costo nuevo', tone: 'info' },
+  // Solo aparece en corridas anteriores al modelo de dropship
   { type: 'RELEASED',      label: 'Repuestas a mano',                         oldLabel: null,                newLabel: 'Stock',       tone: 'info' },
 ];
 
@@ -150,8 +151,8 @@ export class SellerSupplierSyncComponent {
     const goingLive = this.configEnabled() && this.configMode() === 'APPLY'
       && !(this.config()?.enabled && this.config()?.mode === 'APPLY');
     if (goingLive && !confirm(
-      'A partir de la próxima sincronización se pondrán en stock 0 las variantes confirmadas que estén ' +
-      'agotadas en Profitness, se reactivarán cuando vuelvan y se actualizarán sus costos. ¿Continuar?')) {
+      'A partir de la próxima sincronización las variantes confirmadas se marcarán como agotadas o disponibles ' +
+      'según Profitness (tu stock propio no se toca) y se actualizarán sus costos. ¿Continuar?')) {
       return;
     }
     this.savingConfig.set(true);
@@ -283,10 +284,6 @@ export class SellerSupplierSyncComponent {
   unlink(link: SupplierLink) {
     const storeId = this.storeId();
     if (!storeId) return;
-    if (link.disabledBySync && !confirm(
-      'La sincronización tiene esta variante en stock 0. Al quitar la pareja se le devolverá el stock. ¿Continuar?')) {
-      return;
-    }
     this.busyVariant.set(link.variant.variantId);
     this.svc.unlink(storeId, link.variant.variantId).subscribe({
       next: () => this.afterRowAction(link, 'Pareja quitada.'),

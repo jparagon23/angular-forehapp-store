@@ -90,6 +90,9 @@
         {{ paymentLabel(g) }}
       </span>
       <span class="so-channel-badge" *ngIf="g.channel === 'ASSISTED'" title="Registrado por la tienda a nombre del cliente">Asistido</span>
+      <span class="so-dropship-badge" *ngIf="g.dropshipUnits" title="Unidades que no salen de tu bodega">
+        Pedir al proveedor: {{ g.dropshipUnits }} ud{{ g.dropshipUnits !== 1 ? 's' : '' }}.
+      </span>
 
       <!-- Action area -->
       <div class="so-card-actions" (click)="$event.stopPropagation()">
@@ -270,7 +273,12 @@
                 </span>
               </div>
             </td>
-            <td>{{ item.quantity }}</td>
+            <td>
+              {{ item.quantity }}
+              <div class="so-item-dropship" *ngIf="item.dropshipQuantity">
+                {{ item.dropshipQuantity === item.quantity ? 'Todo' : item.dropshipQuantity }} por pedir al proveedor
+              </div>
+            </td>
             <td>
               {{ item.unitPrice | currencyCop }}
               <div class="so-item-cost" *ngIf="item.unitCost != null">Costo: {{ item.unitCost | currencyCop }}</div>

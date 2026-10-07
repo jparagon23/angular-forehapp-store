@@ -28,6 +28,9 @@ const COLOR_HEX: Record<string, string> = {
   'Verde Lacoste': '#00843d', 'Rojo Oscuro': '#7b1a1a',
 };
 
+/** Tope de cantidad en la UI cuando la variante no tiene límite (dropship). */
+const MAX_QTY = 99;
+
 @Component({
   selector: 'app-product-detail',
   standalone: true,
@@ -176,7 +179,7 @@ export class ProductDetailComponent implements OnInit {
             '@type': 'Offer',
             price: p.price,
             priceCurrency: 'COP',
-            availability: p.stock > 0
+            availability: p.stock > 0 || !!p.variants?.some(v => v.available)
               ? 'https://schema.org/InStock'
               : 'https://schema.org/OutOfStock',
             url: environment.siteUrl + this.router.url,
@@ -281,7 +284,7 @@ export class ProductDetailComponent implements OnInit {
       v.attributes.some(a => a.attribute === groupName && a.value === value) &&
       v.attributes.every(a => a.attribute === groupName || !sel[a.attribute] || sel[a.attribute] === a.value)
     );
-    return matching.length === 0 || matching.every(v => v.stock === 0);
+    return matching.length === 0 || matching.every(v => !v.available);
   }
 
   selectAttribute(name: string, value: string) {
@@ -300,24 +303,29 @@ export class ProductDetailComponent implements OnInit {
     return Math.round((1 - price / compareAt) * 100);
   }
 
-  availableStock(product: Product): number | null {
+  /** null mientras falte elegir alguna opción. */
+  selection(product: Product): { available: boolean; max: number } | null {
     const groups = this.attributeGroups();
     const sel = this.selectedAttributes();
     const allSelected = !groups.length || groups.every(g => !!sel[g.name]);
     if (!allSelected) return null;
-    const variant = this.selectedVariant(product);
-    return variant ? variant.stock : product.stock;
+    const variant = this.selectedVariant(product) ?? (groups.length ? null : product.variants?.[0] ?? null);
+    if (!variant) return { available: product.stock > 0, max: MAX_QTY };
+    return { available: variant.available, max: variant.maxQuantity ?? MAX_QTY };
+  }
+
+  canIncrease(product: Product): boolean {
+    const s = this.selection(product);
+    return !!s && s.available && this.qty() < s.max;
   }
 
   changeQty(delta: number, product: Product) {
-    const stock = this.availableStock(product);
-    const max = stock ?? 999;
+    const max = this.selection(product)?.max ?? MAX_QTY;
     this.qty.set(Math.min(max, Math.max(1, this.qty() + delta)));
   }
 
   canAdd(product: Product): boolean {
-    const stock = this.availableStock(product);
-    return stock !== null && stock > 0;
+    return !!this.selection(product)?.available;
   }
 
   hintText(product: Product): string {
@@ -325,7 +333,7 @@ export class ProductDetailComponent implements OnInit {
     const sel = this.selectedAttributes();
     const missing = groups.filter(g => !sel[g.name]).map(g => g.name);
     if (missing.length) return `* Selecciona: ${missing.join(', ')}`;
-    if (this.availableStock(product) === 0) return 'Sin stock disponible';
+    if (this.selection(product)?.available === false) return 'Sin stock disponible';
     return '';
   }
 

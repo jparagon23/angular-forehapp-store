@@ -12,7 +12,7 @@ import { SellerProductService } from '../../../../core/services/seller-product.s
 import { AssistedCustomer, OrderResponse, PaymentMethod } from '../../../../core/models/order.model';
 import { ShippingEstimateResponse } from '../../../../core/models/cart.model';
 import { City, Country, State } from '../../../../core/models/location.model';
-import { ProductVariant, SellerProduct } from '../../../../core/models/seller-product.model';
+import { ProductVariant, SellerProduct, isSellable } from '../../../../core/models/seller-product.model';
 import { apiCode, apiMessage } from '../../../../core/models/api-error.model';
 import { CouponValidationResponse } from '../../../../core/models/coupon.model';
 import { emailValidator } from '../../../../core/utils/email.utils';
@@ -24,7 +24,8 @@ interface OrderLine {
   productTitle: string;
   variantLabel: string;
   price: number;
-  stock: number;
+  /** Tope de unidades; null = sin tope (dropship con proveedor disponible). */
+  max: number | null;
   quantity: number;
 }
 
@@ -191,6 +192,13 @@ export class AssistedOrderComponent {
     });
   }
 
+  readonly isSellable = isSellable;
+
+  stockLabel(v: ProductVariant): string {
+    if (!v.dropship) return `stock ${v.stock}`;
+    return v.supplierAvailable === false ? `stock ${v.stock} · proveedor agotado` : `stock ${v.stock} + proveedor`;
+  }
+
   variantLabel(v: ProductVariant): string {
     const attrs = v.attributes.map(a => `${a.attribute}: ${a.value}`).join(' · ');
     return attrs || v.sku || `Variante #${v.id}`;
@@ -198,14 +206,15 @@ export class AssistedOrderComponent {
 
   addVariant(v: ProductVariant) {
     const product = this.openProduct();
-    if (!product || v.stock <= 0) return;
+    if (!product || !isSellable(v)) return;
     const existing = this.lines().find(l => l.variantId === v.id);
     if (existing) {
       this.setQuantity(v.id, existing.quantity + 1);
     } else {
       this.lines.update(ls => [...ls, {
         variantId: v.id, productTitle: product.title, variantLabel: this.variantLabel(v),
-        price: v.price, stock: v.stock, quantity: 1,
+        price: v.price, quantity: 1,
+        max: v.dropship && v.supplierAvailable !== false ? null : v.stock,
       }]);
       this.refreshEstimate();
     }
@@ -213,7 +222,7 @@ export class AssistedOrderComponent {
 
   setQuantity(variantId: number, quantity: number) {
     this.lines.update(ls => ls.map(l => l.variantId === variantId
-      ? { ...l, quantity: Math.max(1, Math.min(Math.floor(quantity) || 1, l.stock)) }
+      ? { ...l, quantity: Math.max(1, Math.min(Math.floor(quantity) || 1, l.max ?? Number.MAX_SAFE_INTEGER)) }
       : l));
     this.refreshEstimate();
   }
