@@ -3,11 +3,17 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { DateRange, GroupBy, ReportSummary, RevenuePoint, SellerSales, TopProduct } from '../models/report.model';
+import { AdminDashboard } from '../models/admin-dashboard.model';
 
 @Injectable({ providedIn: 'root' })
 export class ReportService {
   private readonly BASE = environment.apiBaseUrl;
   private http = inject(HttpClient);
+
+  /** Inicio del admin: últimos `days` días vs los anteriores, trabajo pendiente y alertas. */
+  getAdminDashboard(days: number): Observable<AdminDashboard> {
+    return this.http.get<AdminDashboard>(`${this.BASE}/admin/reports/dashboard`, { params: { days: String(days) } });
+  }
 
   getAdminSummary(range: DateRange): Observable<ReportSummary> {
     return this.http.get<ReportSummary>(`${this.BASE}/admin/reports/summary`, {
