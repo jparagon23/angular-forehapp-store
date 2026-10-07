@@ -1,0 +1,120 @@
+<app-admin-topbar title="Tráfico"></app-admin-topbar>
+
+<div class="content">
+  <div class="tr-head">
+    <div>
+      <p class="tr-sub" *ngIf="data() as d">
+        Del {{ d.from | date:'d MMM' }} al {{ d.to | date:'d MMM yyyy' }}, comparado con los {{ d.days }} días anteriores.
+      </p>
+      <p class="tr-note">Medición propia y anónima. No cuenta robots ni las visitas a los paneles de admin y vendedor.</p>
+    </div>
+    <div class="tr-right">
+      <span class="tr-live" *ngIf="data() as d" title="Sesiones con actividad en los últimos 5 minutos">
+        <span class="tr-dot"></span> {{ d.liveNow }} en la tienda ahora
+      </span>
+      <div class="tr-periods">
+        <button *ngFor="let p of PERIODS" [class.on]="days() === p" (click)="setDays(p)">{{ p }} días</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tr-error" *ngIf="error()">
+    {{ error() }} <button class="btn btn-outline btn-sm" (click)="load()">Reintentar</button>
+  </div>
+
+  <div class="kpi-grid" [class.tr-loading]="loading()">
+    <div class="kpi-card" *ngFor="let k of kpis()" [title]="k.hint">
+      <div class="kpi-top">
+        <span class="kpi-label">{{ k.label }}</span>
+        <span class="kpi-badge" [class.up]="k.change.good === true" [class.down]="k.change.good === false"
+              [class.flat]="k.change.good === null">{{ k.change.text }}</span>
+      </div>
+      <div class="kpi-val">{{ k.value }}</div>
+      <div class="tr-hint">{{ k.hint }}</div>
+    </div>
+  </div>
+
+  <ng-container *ngIf="data() as d">
+    <div class="tr-empty-state" *ngIf="!hasData()">
+      Aún no hay visitas en este período. La medición empieza a contar desde que se publica esta versión de la tienda.
+    </div>
+
+    <ng-container *ngIf="hasData()">
+      <div class="tr-card">
+        <div class="tr-card-head"><h3>Visitas por día</h3></div>
+        <apx-chart [series]="chartSeries()" [chart]="chart" [stroke]="stroke" [fill]="fill" [xaxis]="xaxis"
+                   [yaxis]="yaxis" [grid]="grid" [dataLabels]="dataLabels" [tooltip]="tooltip" [legend]="legend"
+                   [colors]="colors"></apx-chart>
+      </div>
+
+      <div class="tr-grid">
+        <!-- Embudo -->
+        <div class="tr-card">
+          <div class="tr-card-head"><h3>Embudo de compra</h3><span class="tr-muted">Sesiones</span></div>
+          <div class="tr-funnel">
+            <div class="tr-step" *ngFor="let s of funnelSteps()">
+              <div class="tr-step-top">
+                <span>{{ s.label }}</span>
+                <strong>{{ s.value }}</strong>
+              </div>
+              <div class="tr-bar"><div [style.width.%]="s.width"></div></div>
+              <div class="tr-step-meta">
+                {{ fmtPct(s.ofTotal, 1) }} del total
+                <ng-container *ngIf="s.fromPrev != null"> · {{ fmtPct(s.fromPrev) }} del paso anterior</ng-container>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Origen y dispositivo -->
+        <div class="tr-card">
+          <div class="tr-card-head"><h3>De dónde llegan</h3></div>
+          <div class="tr-share" *ngFor="let s of sources()">
+            <div class="tr-share-top"><span>{{ s.label }}</span><span>{{ fmtPct(s.share) }} · {{ s.sessions }}</span></div>
+            <div class="tr-bar tr-bar-thin"><div [style.width.%]="s.share"></div></div>
+            <div class="tr-step-meta">Conversión {{ fmtPct(s.conversion, 1) }}</div>
+          </div>
+
+          <div class="tr-card-head tr-mt"><h3>Dispositivo</h3></div>
+          <div class="tr-devices">
+            <div *ngFor="let dv of devices()">
+              <strong>{{ fmtPct(dv.share) }}</strong>
+              <span>{{ dv.label }}</span>
+              <small>Conversión {{ fmtPct(dv.conversion, 1) }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tr-grid">
+        <div class="table-card">
+          <div class="table-header"><h3>Páginas más vistas</h3></div>
+          <table>
+            <thead><tr><th>Página</th><th>Vistas</th><th>Sesiones</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let p of d.topPages">
+                <td>
+                  <span class="tr-page">{{ pageLabel(p) }}</span>
+                  <small class="tr-path" *ngIf="pageLabel(p) !== p.path">{{ p.path }}</small>
+                </td>
+                <td>{{ p.views }}</td>
+                <td>{{ p.sessions }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="tr-card">
+          <div class="tr-card-head"><h3>Resumen</h3></div>
+          <div class="tr-stat"><span>Páginas vistas</span><strong>{{ d.current.pageViews }}</strong></div>
+          <div class="tr-stat"><span>Visitantes que volvieron</span><strong>{{ d.current.returningVisitors }}</strong></div>
+          <div class="tr-stat"><span>Compras desde la tienda</span><strong>{{ d.funnel.purchased }}</strong></div>
+          <p class="tr-muted tr-mt">
+            Para saber qué publicación o campaña trae ventas, agrega <code>?utm_source=instagram&amp;utm_campaign=nombre</code>
+            al final de los links que compartes.
+          </p>
+        </div>
+      </div>
+    </ng-container>
+  </ng-container>
+</div>

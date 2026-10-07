@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { DateRange, GroupBy, ReportSummary, RevenuePoint, SellerSales, TopProduct } from '../models/report.model';
 import { AdminDashboard } from '../models/admin-dashboard.model';
+import { TrafficReport } from '../models/traffic.model';
 
 @Injectable({ providedIn: 'root' })
 export class ReportService {
@@ -13,6 +14,11 @@ export class ReportService {
   /** Inicio del admin: últimos `days` días vs los anteriores, trabajo pendiente y alertas. */
   getAdminDashboard(days: number): Observable<AdminDashboard> {
     return this.http.get<AdminDashboard>(`${this.BASE}/admin/reports/dashboard`, { params: { days: String(days) } });
+  }
+
+  /** Tráfico de la tienda: últimos `days` días vs los anteriores. */
+  getTraffic(days: number): Observable<TrafficReport> {
+    return this.http.get<TrafficReport>(`${this.BASE}/admin/reports/traffic`, { params: { days: String(days) } });
   }
 
   getAdminSummary(range: DateRange): Observable<ReportSummary> {

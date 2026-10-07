@@ -24,6 +24,7 @@ import { validateEmail, EmailValidationResult } from '../../core/utils/email.uti
 import { CouponService } from '../../core/services/coupon.service';
 import { AppliedCoupon, CouponValidationResponse } from '../../core/models/coupon.model';
 import { AmbassadorService } from '../../core/services/ambassador.service';
+import { TrafficTrackerService } from '../../core/services/traffic-tracker.service';
 
 @Component({
   selector: 'app-guest-checkout',
@@ -35,6 +36,7 @@ import { AmbassadorService } from '../../core/services/ambassador.service';
 export class GuestCheckoutComponent implements OnInit {
   private guestCart        = inject(GuestCartService);
   private guestCheckout    = inject(GuestCheckoutService);
+  private tracker          = inject(TrafficTrackerService);
   private couponService    = inject(CouponService);
   private authApi          = inject(AuthApiService);
   private locationService  = inject(LocationService);
@@ -429,6 +431,7 @@ export class GuestCheckoutComponent implements OnInit {
     this.guestCheckout.createOrder(body).pipe(take(1)).subscribe({
       next: order => {
         this.submitting.set(false);
+        this.tracker.purchase(order.orderId);
         this.guestCart.clear();
         this.store.dispatch(loadCart());
         this.createdOrder.set(order);
