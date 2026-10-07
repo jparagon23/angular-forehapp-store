@@ -3,6 +3,7 @@ import { Router, RouterOutlet, NavigationStart, NavigationEnd, NavigationCancel,
 import { NgIf } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
+import { TrafficTrackerService } from './core/services/traffic-tracker.service';
 
 @Component({
   selector: 'app-root',
@@ -35,6 +36,7 @@ export class AppComponent {
   navigating = signal(false);
 
   constructor() {
+    inject(TrafficTrackerService).start();
     this.router.events.pipe(
       takeUntilDestroyed(),
     ).subscribe(event => {

@@ -1,9 +1,10 @@
 import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
-import { catchError, filter, map, of, switchMap, withLatestFrom } from 'rxjs';
+import { catchError, filter, map, of, switchMap, tap, withLatestFrom } from 'rxjs';
 import { CartService } from '../../core/services/cart.service';
 import { GuestCartService } from '../../core/services/guest-cart.service';
+import { TrafficTrackerService } from '../../core/services/traffic-tracker.service';
 import { loginSuccess } from '../auth/auth.actions';
 import { selectAuthUser } from '../auth/auth.selectors';
 import * as CartActions from './cart.actions';
@@ -15,6 +16,7 @@ export class CartEffects {
   private store    = inject(Store);
   private cartSvc  = inject(CartService);
   private guestSvc = inject(GuestCartService);
+  private tracker  = inject(TrafficTrackerService);
 
   /* ── Carga inicial del carrito desde localStorage al arrancar ── */
   initCart$ = createEffect(() =>
@@ -95,6 +97,15 @@ export class CartEffects {
     )
   );
 
+
+  /* ── Medición: agregó al carrito ──────────────────────────────── */
+  trackAddToCart$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(CartActions.addCartItemSuccess),
+      tap(() => this.tracker.addToCart()),
+    ),
+    { dispatch: false }
+  );
 
   /* ── Actualizar cantidad ─────────────────────────────────────── */
   updateCartItem$ = createEffect(() =>
