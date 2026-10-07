@@ -205,6 +205,10 @@
             {{ v.supplierAvailable === false ? 'Dropship · proveedor agotado' : 'Dropship' }}
           </span>
           <span *ngIf="v.cost != null" class="variant-cost">Costo: $ {{ v.cost | number:'1.2-2' }}</span>
+          <span *ngIf="v.cost == null" class="variant-cost">Sin costo registrado</span>
+          <span *ngIf="v.margin != null" class="variant-margin" [class.variant-margin--neg]="v.margin < 0">
+            Ganancia: $ {{ v.margin | number:'1.2-2' }}
+          </span>
           <span *ngIf="v.marginPercent != null" class="variant-margin" [class.variant-margin--neg]="v.marginPercent < 0">
             Margen: {{ v.marginPercent | number:'1.1-1' }}%
           </span>

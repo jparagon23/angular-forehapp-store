@@ -338,3 +338,27 @@
   .so-modal { padding: 22px 18px 20px; }
   .so-modal-actions { flex-direction: column-reverse; .so-btn { width: 100%; text-align: center; } }
 }
+
+// ── Ganancia (solo seller) ──
+.so-total { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.2; }
+.so-total-profit { font-size: .7rem; font-weight: 600; color: #2e7d32; }
+.so-total-profit-missing { color: #aaa; font-weight: 500; }
+.so-neg { color: #c62828 !important; }
+.so-item-nocost { color: #c0c0c0; font-style: italic; }
+
+.so-profit {
+  margin-top: 12px; border: 1px solid #dcefdc; background: #f6fbf6; border-radius: 10px; padding: 10px 14px;
+}
+.so-profit-head {
+  display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px;
+  span { font-size: .78rem; font-weight: 800; color: #2e7d32; text-transform: uppercase; letter-spacing: .5px; }
+  small { font-size: .7rem; color: #9aa; }
+}
+.so-profit-row {
+  display: flex; justify-content: space-between; font-size: .83rem; color: #666; padding: 2px 0;
+}
+.so-profit-total {
+  border-top: 1px solid #dcefdc; margin-top: 4px; padding-top: 6px; color: #1b5e20; font-size: .92rem;
+  strong small { font-weight: 600; font-size: .78rem; }
+}
+.so-profit-note { margin: 6px 0 0; font-size: .76rem; color: #8a6d00; }

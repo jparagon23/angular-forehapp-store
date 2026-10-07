@@ -88,6 +88,8 @@ export interface SellerOrderGroupDetail {
   orderPaymentStatus: OrderApiStatus;
   subtotal: number;
   shippingCost: number;
+  /** Envío que paga el cliente (envío menos lo que cubrió un cupón de envío gratis). */
+  shippingChargedNet?: number;
   orderTotal: number;
   couponCode: string | null;
   couponDiscount: number | null;

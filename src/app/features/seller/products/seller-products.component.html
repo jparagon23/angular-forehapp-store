@@ -283,6 +283,8 @@
                     <th>Estado</th>
                     <th>Atributos</th>
                     <th>Precio</th>
+                    <th>Costo</th>
+                    <th>Ganancia</th>
                     <th>Precio tachado</th>
                     <th>Stock</th>
                     <th></th>
@@ -303,6 +305,17 @@
                         </span>
                       </td>
                       <td>{{ v.price | currencyCop }}</td>
+                      <td>
+                        <span *ngIf="v.cost != null">{{ v.cost | currencyCop }}</span>
+                        <span *ngIf="v.cost == null" class="sp-nocost" title="Agrega el costo con el botón Precio">Sin costo</span>
+                      </td>
+                      <td>
+                        <span *ngIf="v.margin != null" class="sp-profit" [class.sp-profit--neg]="v.margin < 0">
+                          {{ v.margin | currencyCop }}
+                          <small *ngIf="v.marginPercent != null">{{ v.marginPercent | number:'1.0-1' }}%</small>
+                        </span>
+                        <span *ngIf="v.margin == null" class="sp-nocost">—</span>
+                      </td>
                       <td>{{ v.compareAtPrice ? (v.compareAtPrice | currencyCop) : '—' }}</td>
                       <td [class.sp-stock-warn]="v.stock === 0 && !v.dropship">
                         {{ v.stock }}
@@ -345,7 +358,7 @@
                     </tr>
                     <!-- Fila de edición de precio -->
                     <tr *ngIf="editingVariantId() === v.id" class="sp-price-edit-row">
-                      <td colspan="7">
+                      <td colspan="9">
                         <form [formGroup]="editPriceForm" (ngSubmit)="saveVariantPrice(p, v)" novalidate class="sp-price-edit-form">
                           <div class="sp-price-inputs">
                             <div class="sp-price-field">
