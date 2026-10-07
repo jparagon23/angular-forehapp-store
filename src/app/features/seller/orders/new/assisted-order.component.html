@@ -159,6 +159,7 @@
         <ng-container *ngIf="estimate() as est">
           <div><span>Productos</span><span>{{ est.itemsTotal | currencyCop }}</span></div>
           <div><span>Envío</span><span>{{ est.shippingTotal ? (est.shippingTotal | currencyCop) : 'Gratis' }}</span></div>
+          <div class="ao-discount" *ngIf="couponDiscount() > 0"><span>Cupón {{ coupon()!.code }}</span><span>− {{ couponDiscount() | currencyCop }}</span></div>
           <div *ngIf="paymentMethod() === 'MERCADO_PAGO'"><span>Recargo MercadoPago</span><span>{{ est.mercadoPagoSurcharge | currencyCop }}</span></div>
           <div class="ao-total"><span>Total</span><span>{{ total() | currencyCop }}</span></div>
         </ng-container>
@@ -177,6 +178,22 @@
           <small>{{ o.value === 'CASH_ON_DELIVERY' && !isCali() ? 'Solo para envíos a Cali' : o.hint }}</small>
         </button>
       </div>
+      <div class="ao-coupon">
+        <span class="ao-coupon-label">Cupón <small>(opcional)</small></span>
+        <div class="ao-coupon-row" *ngIf="!coupon()">
+          <input type="text" placeholder="Ej: ENVIOGRATIS" [ngModel]="couponInput()" (ngModelChange)="couponInput.set($event)"
+                 (keydown.enter)="applyCoupon()" />
+          <button class="btn-ghost" (click)="applyCoupon()" [disabled]="validatingCoupon() || !couponInput().trim()">
+            {{ validatingCoupon() ? 'Validando…' : 'Aplicar' }}
+          </button>
+        </div>
+        <div class="ao-coupon-applied" *ngIf="coupon() as c">
+          <span><strong>{{ c.code }}</strong> · {{ couponLabel(c) }}<ng-container *ngIf="!c.isDonation"> · − {{ c.discountAmount | currencyCop }}</ng-container></span>
+          <button class="ao-remove" (click)="removeCoupon()" title="Quitar cupón">✕</button>
+        </div>
+        <p class="ao-error" *ngIf="couponError()">{{ couponError() }}</p>
+      </div>
+
       <label class="ao-check" *ngIf="canBeAlreadyPaid()">
         <input type="checkbox" [ngModel]="alreadyPaid()" (ngModelChange)="alreadyPaid.set($event)" />
         <span>El cliente ya pagó (el pedido queda pagado de una vez)</span>
@@ -207,6 +224,7 @@
       <li><span>Cliente</span><strong>{{ name() }} {{ lastname() }}</strong></li>
       <li><span>Productos</span><strong>{{ lines().length }} ({{ itemsTotal() | currencyCop }})</strong></li>
       <li><span>Pago</span><strong>{{ paymentLabel(paymentMethod()) }}{{ canBeAlreadyPaid() && alreadyPaid() ? ' · ya pagó' : '' }}</strong></li>
+      <li *ngIf="coupon() as c"><span>Cupón</span><strong>{{ c.code }} · {{ couponLabel(c) }}</strong></li>
       <li *ngIf="total() !== null"><span>Total</span><strong>{{ total() | currencyCop }}</strong></li>
     </ul>
     <div class="ao-actions">

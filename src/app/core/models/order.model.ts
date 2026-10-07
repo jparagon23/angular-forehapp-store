@@ -161,6 +161,8 @@ export interface AssistedOrderRequest {
   alreadyPaid: boolean;
   /** El cliente autorizó el uso de sus datos. Obligatorio. */
   dataConsent: boolean;
+  /** Opcional; se aplica sobre los productos y el envío de la tienda (ej. envío gratis). */
+  couponCode?: string;
 }
 
 export interface AssistedCustomer {

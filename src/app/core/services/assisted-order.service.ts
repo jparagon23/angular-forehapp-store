@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AssistedCustomer, AssistedOrderRequest, OrderResponse } from '../models/order.model';
+import { CouponValidationResponse } from '../models/coupon.model';
 
 /** Pedidos que el seller registra a nombre de un cliente que pidió por fuera de la app. */
 @Injectable({ providedIn: 'root' })
@@ -14,6 +15,12 @@ export class AssistedOrderService {
     return this.http.get<AssistedCustomer>(`${this.base}/stores/${storeId}/assisted-orders/customer`, {
       params: { email },
     });
+  }
+
+  /** Valida el cupón con las reglas que usará el pedido (la cuenta del cliente o su correo como invitado). */
+  validateCoupon(storeId: number, body: { email: string; code: string; orderAmount: number; shippingCost: number }):
+      Observable<CouponValidationResponse> {
+    return this.http.post<CouponValidationResponse>(`${this.base}/stores/${storeId}/assisted-orders/coupon/validate`, body);
   }
 
   /** checkoutUrl en la respuesta es el link de MercadoPago para enviarle al cliente (solo MERCADO_PAGO). */
