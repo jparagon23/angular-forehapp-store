@@ -1,37 +1,142 @@
 <app-admin-topbar title="Dashboard"></app-admin-topbar>
 
 <div class="content">
-  <div class="kpi-grid">
-    <div class="kpi-card" *ngFor="let k of kpis">
-      <div class="kpi-top">
-        <span class="kpi-icon">{{ k.icon }}</span>
-        <span class="kpi-badge" [class.up]="k.up" [class.down]="!k.up">{{ k.badge }}</span>
-      </div>
-      <div class="kpi-val">{{ k.val }}</div>
-      <div class="kpi-label">{{ k.label }}</div>
+  <div class="db-head">
+    <p class="db-sub" *ngIf="data() as d">
+      Del {{ d.period.from | date:'d MMM' }} al {{ d.period.to | date:'d MMM yyyy' }}, comparado con los {{ d.period.days }} días anteriores.
+      <span class="db-note">Ventas = pedidos no cancelados, pagados o contraentrega.</span>
+    </p>
+    <div class="db-periods">
+      <button *ngFor="let p of PERIODS" [class.on]="days() === p" (click)="setDays(p)">{{ p }} días</button>
     </div>
   </div>
 
-  <div class="alert alert-warn" *ngIf="(lowStock$ | async)?.length">
-    ⚠️ {{ (lowStock$ | async)?.length }} productos con stock bajo.
-    <a routerLink="../inventory">Ver inventario →</a>
+  <div class="db-error" *ngIf="error()">
+    {{ error() }} <button class="btn btn-outline btn-sm" (click)="load()">Reintentar</button>
   </div>
 
-  <div class="table-card">
-    <div class="table-header"><h3>Pedidos recientes</h3></div>
-    <table>
-      <thead>
-        <tr><th>Orden</th><th>Cliente</th><th>Fecha</th><th>Total</th><th>Estado</th></tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let o of recentOrders$ | async">
-          <td><strong>{{ o.id }}</strong></td>
-          <td>{{ o.customer }}</td>
-          <td>{{ o.date }}</td>
-          <td>{{ o.total }}</td>
-          <td><span class="status-badge" [class]="statusClass(o.status)">{{ o.status }}</span></td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- KPIs -->
+  <div class="kpi-grid" [class.db-loading]="loading()">
+    <ng-container *ngIf="kpis().length; else kpiSkeleton">
+      <div class="kpi-card" *ngFor="let k of kpis()" [attr.title]="k.hint ?? null">
+        <div class="kpi-top">
+          <span class="kpi-icon">{{ k.icon }}</span>
+          <span class="kpi-badge" [class.up]="k.change.up === true" [class.down]="k.change.up === false"
+                [class.flat]="k.change.up === null">{{ k.change.text }}</span>
+        </div>
+        <div class="kpi-val">{{ k.value }}</div>
+        <div class="kpi-label">{{ k.label }}<span class="db-hint" *ngIf="k.hint"> ⓘ</span></div>
+        <div class="db-kpi-note" *ngIf="k.hint">Parcial: {{ k.hint }}</div>
+      </div>
+    </ng-container>
+    <ng-template #kpiSkeleton>
+      <div class="kpi-card db-skeleton" *ngFor="let i of [1,2,3,4,5,6]"></div>
+    </ng-template>
   </div>
+
+  <ng-container *ngIf="data() as d">
+    <!-- Requiere atención -->
+    <div class="db-card db-attention">
+      <div class="db-card-head">
+        <h3>Requiere atención</h3>
+        <span class="db-muted">Ahora mismo</span>
+      </div>
+      <div class="db-pipeline">
+        <div><strong>{{ d.operations.awaitingPayment }}</strong><span>Esperando pago</span></div>
+        <div><strong>{{ d.operations.toPrepare }}</strong><span>Por preparar</span></div>
+        <div><strong>{{ d.operations.toShip }}</strong><span>Por enviar</span></div>
+        <div><strong>{{ d.operations.inTransit }}</strong><span>En camino</span></div>
+      </div>
+      <ul class="db-alerts" *ngIf="alerts().length">
+        <li *ngFor="let a of alerts()" [attr.data-tone]="a.tone">
+          <span>{{ a.text }}</span>
+          <a *ngIf="a.link" [routerLink]="a.link">Ver →</a>
+        </li>
+      </ul>
+      <p class="db-ok" *ngIf="!alerts().length">Todo al día ✓</p>
+    </div>
+
+    <div class="db-grid">
+      <!-- Ventas por día -->
+      <div class="db-card db-chart">
+        <div class="db-card-head"><h3>Ventas por día</h3></div>
+        <apx-chart *ngIf="hasSales()"
+          [series]="chartSeries()" [chart]="chart" [stroke]="stroke" [fill]="fill" [xaxis]="xaxis" [yaxis]="yaxis"
+          [grid]="grid" [dataLabels]="dataLabels" [tooltip]="tooltip" [colors]="colors">
+        </apx-chart>
+        <p class="db-empty" *ngIf="!hasSales()">Sin ventas en este período.</p>
+      </div>
+
+      <!-- Más vendidos -->
+      <div class="db-card">
+        <div class="db-card-head"><h3>Más vendidos</h3></div>
+        <ol class="db-top" *ngIf="d.topProducts.length; else noTop">
+          <li *ngFor="let p of d.topProducts">
+            <span class="db-top-title">{{ p.title }}</span>
+            <span class="db-top-meta">{{ p.units }} ud{{ p.units !== 1 ? 's' : '' }} · {{ p.revenue | currencyCop }}</span>
+          </li>
+        </ol>
+        <ng-template #noTop><p class="db-empty">Sin ventas en este período.</p></ng-template>
+      </div>
+    </div>
+
+    <!-- Pedidos recientes -->
+    <div class="table-card">
+      <div class="table-header"><h3>Pedidos recientes</h3></div>
+      <div class="db-table-wrap">
+        <table>
+          <thead>
+            <tr><th>Pedido</th><th>Cliente</th><th>Tienda</th><th>Fecha</th><th>Pago</th><th>Total</th><th>Estado</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let o of d.recentOrders">
+              <td><strong>#{{ o.orderId }}</strong><span class="db-tag" *ngIf="o.channel === 'ASSISTED'">Asistido</span></td>
+              <td>{{ o.buyerName ?? '—' }}</td>
+              <td>{{ o.stores ?? '—' }}</td>
+              <td>{{ o.createdAt | date:'d MMM, h:mm a' }}</td>
+              <td>{{ paymentLabel(o.paymentMethod) }}</td>
+              <td>{{ o.total | currencyCop }}</td>
+              <td><span class="status-badge" [class]="'status-badge ' + statusLabel(o).css">{{ statusLabel(o).text }}</span></td>
+            </tr>
+            <tr *ngIf="!d.recentOrders.length"><td colspan="7" class="db-empty">Aún no hay pedidos.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Catálogo, reseñas y proveedor -->
+    <div class="db-grid db-grid-3">
+      <div class="db-card">
+        <div class="db-card-head"><h3>Catálogo</h3></div>
+        <div class="db-stat"><span>Productos activos</span><strong>{{ d.catalog.activeProducts }}</strong></div>
+        <div class="db-stat"><span>Agotados</span><strong>{{ d.catalog.outOfStockProducts }}</strong></div>
+        <div class="db-stat"><span>Variantes sin costo</span><strong>{{ d.catalog.variantsWithoutCost }}</strong></div>
+        <div class="db-stat"><span>Stock propio bajo</span><strong>{{ d.catalog.lowOwnStock }}</strong></div>
+      </div>
+
+      <div class="db-card">
+        <div class="db-card-head"><h3>Reseñas</h3></div>
+        <div class="db-rating" *ngIf="d.reviews.average != null; else noReviews">
+          <strong>{{ d.reviews.average | number:'1.1-1' }}</strong> <span>★</span>
+          <small>{{ d.reviews.approved }} reseña{{ d.reviews.approved !== 1 ? 's' : '' }} aprobada{{ d.reviews.approved !== 1 ? 's' : '' }}</small>
+        </div>
+        <ng-template #noReviews><p class="db-empty">Aún no hay reseñas aprobadas.</p></ng-template>
+        <div class="db-stat"><span>Por moderar</span><strong>{{ d.reviews.pending }}</strong></div>
+      </div>
+
+      <div class="db-card">
+        <div class="db-card-head"><h3>Sincronización Profitness</h3></div>
+        <ng-container *ngIf="d.supplierSync as s; else noSync">
+          <div class="db-stat"><span>Última corrida</span><strong>{{ s.startedAt | date:'d MMM, h:mm a' }}</strong></div>
+          <div class="db-stat"><span>Estado</span>
+            <strong [class.db-bad]="s.status === 'ABORTED'">{{ s.status === 'APPLIED' ? 'Aplicada' : s.status === 'PREVIEW' ? 'Vista previa' : 'Detenida' }}</strong>
+          </div>
+          <div class="db-stat"><span>Se agotaron / volvieron</span><strong>{{ s.disabled }} / {{ s.reenabled }}</strong></div>
+          <div class="db-stat"><span>Costos actualizados</span><strong>{{ s.costUpdates }}</strong></div>
+          <div class="db-stat"><span>Alertas de margen</span><strong [class.db-bad]="s.marginAlerts > 0">{{ s.marginAlerts }}</strong></div>
+        </ng-container>
+        <ng-template #noSync><p class="db-empty">Aún no ha corrido.</p></ng-template>
+      </div>
+    </div>
+  </ng-container>
 </div>
