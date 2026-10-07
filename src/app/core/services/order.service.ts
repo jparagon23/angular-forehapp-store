@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { Order, OrderResponse, OrderStatus, OrderSummaryDto, PaymentMethod, SellerOrderGroupDetail } from '../models/order.model';
+import { EditOrderItemLine, EditOrderItemsResult, Order, OrderItemChange, OrderResponse, OrderStatus, OrderSummaryDto, PaymentMethod, SellerOrderGroupDetail } from '../models/order.model';
 import { environment } from '../../../environments/environment';
 
 const MOCK_ORDERS: Order[] = [
@@ -63,6 +63,20 @@ export class OrderService {
 
   cancelSellerGroup(storeId: number, groupId: number, reason: string): Observable<void> {
     return this.http.patch<void>(`${this.base}/stores/${storeId}/order-groups/${groupId}/cancel`, { reason });
+  }
+
+  /** Reemplaza la lista de productos del grupo (antes de enviarlo). Le llega un correo al comprador. */
+  editSellerGroupItems(storeId: number, groupId: number, reason: string, items: EditOrderItemLine[]): Observable<EditOrderItemsResult> {
+    return this.http.put<EditOrderItemsResult>(`${this.base}/stores/${storeId}/order-groups/${groupId}/items`, { reason, items });
+  }
+
+  getSellerGroupItemChanges(storeId: number, groupId: number): Observable<OrderItemChange[]> {
+    return this.http.get<OrderItemChange[]>(`${this.base}/stores/${storeId}/order-groups/${groupId}/item-changes`);
+  }
+
+  /** La diferencia que dejó una edición de un pedido pagado ya se cobró o devolvió por fuera. */
+  settleSellerBalance(storeId: number, groupId: number): Observable<void> {
+    return this.http.patch<void>(`${this.base}/stores/${storeId}/order-groups/${groupId}/settle-balance`, {});
   }
 
   removeShippingCost(storeId: number, groupId: number, reason: string): Observable<void> {
