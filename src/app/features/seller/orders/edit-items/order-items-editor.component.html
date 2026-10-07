@@ -1,0 +1,113 @@
+<div class="oe-backdrop" (click)="closed.emit()">
+  <div class="oe-modal" (click)="$event.stopPropagation()" role="dialog" aria-label="Editar productos del pedido">
+    <div class="oe-head">
+      <div>
+        <h3>Editar productos · Pedido #{{ group.orderId }}</h3>
+        <p class="oe-muted">Reemplaza, cambia cantidades o precios, quita o agrega productos. Al guardar le enviamos un correo al cliente con los cambios.</p>
+      </div>
+      <button class="oe-close" (click)="closed.emit()" title="Cerrar">✕</button>
+    </div>
+
+    <table class="oe-lines">
+      <thead>
+        <tr><th>Producto</th><th class="num">Cantidad</th><th class="num">Precio unit.</th><th class="num">Subtotal</th><th></th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let l of lines(); trackBy: trackLine" [class.oe-changed]="lineStatus(l)">
+          <td>
+            <div class="oe-label">{{ l.label }}</div>
+            <div class="oe-was" *ngIf="lineStatus(l) === 'Reemplazado'">Antes: {{ l.original!.label }}</div>
+            <span class="oe-tag" *ngIf="lineStatus(l) as st" [attr.data-kind]="st">{{ st }}</span>
+          </td>
+          <td class="num">
+            <input class="oe-qty" type="number" min="1" step="1" [ngModel]="l.quantity" (ngModelChange)="setQuantity(l.key, $event)" />
+          </td>
+          <td class="num">
+            <input class="oe-price" type="number" min="0" step="0.01" [ngModel]="l.unitPrice" (ngModelChange)="setPrice(l.key, $event)" />
+            <div class="oe-was" *ngIf="l.original && l.original.unitPrice !== l.unitPrice">Antes: {{ l.original.unitPrice | currencyCop }}</div>
+          </td>
+          <td class="num">{{ l.unitPrice * l.quantity | currencyCop }}</td>
+          <td class="oe-actions">
+            <button class="oe-link" (click)="openPicker(l.key)">Cambiar producto</button>
+            <button class="oe-link" *ngIf="lineStatus(l) && l.original" (click)="restoreLine(l.key)">Deshacer</button>
+            <button class="oe-link oe-danger" (click)="removeLine(l.key)">Quitar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="oe-removed" *ngIf="removedCount() > 0">
+      {{ removedCount() }} producto{{ removedCount() !== 1 ? 's' : '' }} se retira{{ removedCount() !== 1 ? 'n' : '' }} del pedido.
+      <button class="oe-link" (click)="restoreRemoved()">Deshacer</button>
+    </div>
+    <div class="oe-error" *ngIf="!lines().length">El pedido debe quedar con al menos un producto. Si no hay nada que ofrecer, cancela el pedido.</div>
+
+    <button class="oe-add" *ngIf="pickerFor() === null" (click)="openPicker('add')">+ Agregar producto</button>
+
+    <!-- Selector de producto -->
+    <div class="oe-picker" *ngIf="pickerFor() !== null">
+      <div class="oe-picker-head">
+        <strong>{{ pickerFor() === 'add' ? 'Agregar producto' : 'Elegir el producto de reemplazo' }}</strong>
+        <button class="oe-link" (click)="closePicker()">Cancelar</button>
+      </div>
+      <input class="oe-search" type="text" placeholder="Buscar por nombre o marca…" [ngModel]="productQuery()"
+             (ngModelChange)="productQuery.set($event)" *ngIf="!openProduct()" />
+      <div class="oe-matches" *ngIf="!openProduct()">
+        <button class="oe-match" *ngFor="let p of productMatches()" (click)="pickProduct(p)">
+          <strong>{{ p.title }}</strong> <span class="oe-muted">{{ p.brand }}</span>
+        </button>
+        <div class="oe-muted" *ngIf="productQuery().trim() && !productMatches().length">Sin resultados.</div>
+      </div>
+      <div *ngIf="openProduct() as p">
+        <div class="oe-picker-head">
+          <span>{{ p.title }}</span>
+          <button class="oe-link" (click)="openProduct.set(null)">← Otro producto</button>
+        </div>
+        <div class="oe-muted" *ngIf="loadingVariants()">Cargando variantes…</div>
+        <div class="oe-variant" *ngFor="let v of openVariants()">
+          <span>{{ variantLabel(v) }}</span>
+          <span class="oe-muted">{{ stockLabel(v) }}</span>
+          <span>{{ v.price | currencyCop }}</span>
+          <button class="oe-btn" (click)="chooseVariant(v)" [disabled]="!isSellable(v)">{{ isSellable(v) ? 'Elegir' : 'Sin stock' }}</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="oe-summary">
+      <div><span>Subtotal antes</span><span>{{ group.subtotal | currencyCop }}</span></div>
+      <div><span>Subtotal ahora</span><strong>{{ subtotal() | currencyCop }}</strong></div>
+      <div [class.oe-up]="difference() > 0" [class.oe-down]="difference() < 0">
+        <span>Diferencia</span><span>{{ difference() > 0 ? '+' : difference() < 0 ? '−' : '' }}{{ (difference() < 0 ? -difference() : difference()) | currencyCop }}</span>
+      </div>
+      <p class="oe-note" *ngIf="difference() !== 0">
+        <ng-container *ngIf="paid()">
+          El pedido ya está pagado: quedará {{ difference() > 0 ? 'una diferencia por cobrar' : 'un saldo a favor del cliente' }}
+          que arreglas por fuera y luego marcas como saldado.
+        </ng-container>
+        <ng-container *ngIf="!paid() && group.paymentMethod === 'MERCADO_PAGO'">
+          El pedido aún no está pagado: le enviaremos al cliente un link nuevo de MercadoPago con el nuevo total.
+        </ng-container>
+        <ng-container *ngIf="!paid() && group.paymentMethod !== 'MERCADO_PAGO'">
+          El pedido aún no está pagado: se actualiza el valor que debe pagar.
+        </ng-container>
+        El envío y el descuento del cupón no cambian.
+      </p>
+    </div>
+
+    <label class="oe-reason">
+      <span>Motivo del cambio <small>(lo verá el cliente en el correo)</small></span>
+      <textarea rows="2" maxlength="500" placeholder="Ej: No teníamos el sabor chocolate; acordamos por WhatsApp cambiarlo por vainilla."
+                [ngModel]="reason()" (ngModelChange)="reason.set($event)"></textarea>
+    </label>
+
+    <div class="oe-error" *ngIf="invalidLine()">Revisa las cantidades (entero desde 1) y los precios (no negativos).</div>
+    <div class="oe-error" *ngIf="error()">{{ error() }}</div>
+
+    <div class="oe-footer">
+      <button class="oe-btn-ghost" (click)="closed.emit()" [disabled]="saving()">Cancelar</button>
+      <button class="oe-btn" (click)="save()" [disabled]="!canSave()">
+        {{ saving() ? 'Guardando…' : 'Guardar y avisar al cliente' }}
+      </button>
+    </div>
+  </div>
+</div>

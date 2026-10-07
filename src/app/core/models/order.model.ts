@@ -107,6 +107,50 @@ export interface SellerOrderGroupDetail {
   channel?: OrderChannel;
   /** Unidades del grupo a pedir al proveedor; 0 = todo sale de bodega. */
   dropshipUnits?: number;
+  /** Tras editar un pedido ya pagado: positivo = el cliente debe, negativo = saldo a favor del cliente. */
+  balanceDue?: number | null;
+  /** Última vez que el seller cambió los productos (null = nunca). */
+  itemsEditedAt?: string | null;
+}
+
+// ── Edición de productos de un pedido (seller) ─────────────────────────────────
+
+/** Una línea del pedido tal como debe quedar: con itemId se conserva/cambia, sin itemId se agrega. */
+export interface EditOrderItemLine {
+  itemId?: number;
+  variantId: number;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface EditOrderItemsResult {
+  orderId: number;
+  groupId: number;
+  groupSubtotal: number;
+  orderTotalBefore: number;
+  orderTotal: number;
+  /** Solo pedidos pagados: positivo = por cobrar, negativo = saldo a favor; null = sin diferencia. */
+  balanceDue: number | null;
+  /** Link nuevo de MercadoPago si el pedido no estaba pagado y cambió el total. */
+  paymentUrl: string | null;
+}
+
+export type OrderItemChangeType = 'REPLACED' | 'UPDATED' | 'ADDED' | 'REMOVED';
+
+export interface OrderItemChange {
+  id: number;
+  editId: string;
+  type: OrderItemChangeType;
+  oldLabel: string | null;
+  oldQuantity: number | null;
+  oldUnitPrice: number | null;
+  newLabel: string | null;
+  newQuantity: number | null;
+  newUnitPrice: number | null;
+  reason: string;
+  orderTotalBefore: number;
+  orderTotalAfter: number;
+  changedAt: string;
 }
 
 // ── Guest checkout ────────────────────────────────────────────────────────────
