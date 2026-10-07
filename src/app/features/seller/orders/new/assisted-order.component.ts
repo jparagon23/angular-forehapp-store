@@ -14,6 +14,7 @@ import { ShippingEstimateResponse } from '../../../../core/models/cart.model';
 import { City, Country, State } from '../../../../core/models/location.model';
 import { ProductVariant, SellerProduct } from '../../../../core/models/seller-product.model';
 import { apiCode, apiMessage } from '../../../../core/models/api-error.model';
+import { CouponValidationResponse } from '../../../../core/models/coupon.model';
 import { emailValidator } from '../../../../core/utils/email.utils';
 import { selectActiveSellerStoreId } from '../../../../store/seller/seller.selectors';
 import { CurrencyCopPipe } from '../../../../shared/pipes/currency-cop.pipe';
@@ -103,10 +104,26 @@ export class AssistedOrderComponent {
   dataConsent   = signal(false);
 
   canBeAlreadyPaid = computed(() => this.paymentMethod() === 'CASH' || this.paymentMethod() === 'TRANSFER');
+
+  // ── Cupón ────────────────────────────────────────────────────
+  couponInput    = signal('');
+  coupon         = signal<CouponValidationResponse | null>(null);
+  couponError    = signal('');
+  validatingCoupon = signal(false);
+
+  couponDiscount = computed(() => {
+    const c = this.coupon();
+    return c && !c.isDonation ? c.discountAmount : 0;
+  });
+
   total = computed(() => {
     const est = this.estimate();
     if (!est) return null;
-    return this.paymentMethod() === 'MERCADO_PAGO' ? est.mercadoPagoGrandTotal : est.grandTotal;
+    const afterCoupon = Math.max(0, est.grandTotal - this.couponDiscount());
+    if (this.paymentMethod() !== 'MERCADO_PAGO') return afterCoupon;
+    // El recargo de MercadoPago se calcula sobre el total ya con el descuento
+    const rate = est.grandTotal > 0 ? est.mercadoPagoSurcharge / est.grandTotal : 0;
+    return Math.round(afterCoupon * (1 + rate) * 100) / 100;
   });
 
   // ── Envío del formulario ─────────────────────────────────────
@@ -249,12 +266,74 @@ export class AssistedOrderComponent {
     if (!cityId || !items.length) return;
     this.estimating.set(true);
     this.checkoutService.estimateShipping({ cityId, items }).pipe(take(1)).subscribe({
-      next: est => { this.estimate.set(est); this.estimating.set(false); },
+      next: est => {
+        this.estimate.set(est);
+        this.estimating.set(false);
+        // Productos o envío cambiaron: el descuento hay que recalcularlo
+        if (this.coupon()) this.applyCoupon(this.coupon()!.code);
+      },
       error: err => {
         this.estimateError.set(apiMessage(err, 'No se pudo calcular el envío.'));
         this.estimating.set(false);
       },
     });
+  }
+
+  // ── Cupón ────────────────────────────────────────────────────
+
+  applyCoupon(code = this.couponInput()) {
+    const storeId = this.storeId();
+    const est = this.estimate();
+    const clean = code.trim().toUpperCase();
+    this.couponError.set('');
+    if (!clean) return;
+    if (!storeId || !est || !this.emailValid()) {
+      this.couponError.set('Primero ingresa el correo del cliente, los productos y la ciudad.');
+      return;
+    }
+    this.validatingCoupon.set(true);
+    this.assistedService.validateCoupon(storeId, {
+      email: this.email().trim(), code: clean, orderAmount: est.itemsTotal, shippingCost: est.shippingTotal,
+    }).pipe(take(1)).subscribe({
+      next: res => {
+        this.coupon.set(res);
+        this.couponInput.set(res.code);
+        this.validatingCoupon.set(false);
+      },
+      error: err => {
+        this.coupon.set(null);
+        this.validatingCoupon.set(false);
+        this.couponError.set(apiCode(err) === 'COUPON_NOT_FOUND'
+          ? 'Ese cupón no existe.'
+          : this.couponMessage(apiMessage(err, 'No se pudo aplicar el cupón.')));
+      },
+    });
+  }
+
+  removeCoupon() {
+    this.coupon.set(null);
+    this.couponInput.set('');
+    this.couponError.set('');
+  }
+
+  couponLabel(c: CouponValidationResponse): string {
+    if (c.isDonation) return `Cupón de donación${c.foundationName ? ' (' + c.foundationName + ')' : ''}`;
+    if (c.discountType === 'FREE_SHIPPING') return 'Envío gratis';
+    if (c.discountType === 'PERCENTAGE') return `${c.discountValue}% de descuento`;
+    return 'Descuento';
+  }
+
+  /** Los mensajes del back vienen en inglés; traducimos los de las reglas de cupón. */
+  private couponMessage(msg: string): string {
+    if (msg.includes('already used')) return 'El cliente ya usó este cupón.';
+    if (msg.includes('expired')) return 'El cupón está vencido.';
+    if (msg.includes('not yet valid')) return 'El cupón todavía no está vigente.';
+    if (msg.includes('not active')) return 'El cupón no está activo.';
+    if (msg.includes('not valid for this store')) return 'El cupón no es válido para esta tienda.';
+    if (msg.includes('usage limit')) return 'El cupón ya alcanzó su límite de usos.';
+    if (msg.includes('minimum')) return 'El pedido no alcanza el monto mínimo del cupón.';
+    if (msg.includes('assigned to a specific user')) return 'Este cupón está asignado a otro cliente.';
+    return msg;
   }
 
   // ── Pago ─────────────────────────────────────────────────────
@@ -297,6 +376,7 @@ export class AssistedOrderComponent {
       paymentMethod: method,
       alreadyPaid: this.canBeAlreadyPaid() && this.alreadyPaid(),
       dataConsent: this.dataConsent(),
+      couponCode: this.coupon()?.code,
     }).pipe(take(1)).subscribe({
       next: order => {
         this.submitting.set(false);
@@ -326,6 +406,7 @@ export class AssistedOrderComponent {
     this.address.set(''); this.complement.set(''); this.reference.set('');
     this.paymentMethod.set(null); this.alreadyPaid.set(false); this.dataConsent.set(false);
     this.estimate.set(null);
+    this.removeCoupon();
   }
 
   private errorMessage(err: unknown): string {
@@ -336,6 +417,8 @@ export class AssistedOrderComponent {
       case 'ASSISTED_ORDER_ALREADY_PAID_METHOD': return '"Ya pagó" solo aplica a efectivo o transferencia.';
       case 'ASSISTED_ORDER_VARIANT_NOT_IN_STORE': return 'Uno de los productos no pertenece a esta tienda.';
       case 'STORE_ACCESS_DENIED':               return 'Solo el dueño o el administrador de la tienda puede registrar pedidos.';
+      case 'COUPON_NOT_FOUND':                  return 'El cupón no existe.';
+      case 'COUPON_INVALID':                    return this.couponMessage(apiMessage(err, 'El cupón no es válido.'));
       default:                                  return apiMessage(err, 'No se pudo crear el pedido.');
     }
   }
