@@ -25,6 +25,13 @@ export class GoogleAuthService {
     );
   }
 
+  /** Text for a failed Google sign-in; accounts deleted in ForehApp get their own message. */
+  errorMessage(err: unknown, fallback: string): string {
+    return apiCode(err) === 'AUTH_ACCOUNT_DISABLED'
+      ? 'Esta cuenta está desactivada. Si crees que es un error, escríbenos.'
+      : fallback;
+  }
+
   applySession(res: AuthResponse): AuthUser {
     const role = resolveRole(res.storeRoles);
     const user: AuthUser = {

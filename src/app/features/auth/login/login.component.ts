@@ -103,9 +103,9 @@ export class LoginComponent implements OnInit, AfterViewInit {
         const redirect = this.route.snapshot.queryParams['redirect'] ?? '/';
         this.router.navigateByUrl(redirect);
       },
-      error: () => {
+      error: err => {
         this.googleLoading = false;
-        this.googleError = 'No se pudo iniciar sesión con Google. Inténtalo de nuevo.';
+        this.googleError = this.googleAuth.errorMessage(err, 'No se pudo iniciar sesión con Google. Inténtalo de nuevo.');
       },
     });
   }
