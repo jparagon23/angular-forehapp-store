@@ -1,9 +1,9 @@
-import { Component, computed, DestroyRef, HostListener, inject, PLATFORM_ID, signal } from '@angular/core';
+import { afterNextRender, Component, computed, DestroyRef, HostListener, inject, NgZone, PLATFORM_ID, signal } from '@angular/core';
 import { Router, RouterLink, NavigationEnd } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { AsyncPipe, isPlatformBrowser, NgFor, NgIf, TitleCasePipe, UpperCasePipe } from '@angular/common';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { filter, map, startWith, take, debounceTime, distinctUntilChanged, switchMap, catchError, of } from 'rxjs';
 import { selectCartCount } from '../../../store/cart/cart.selectors';
 import { selectWishlistCount } from '../../../store/wishlist/wishlist.selectors';
@@ -35,19 +35,28 @@ export class NavbarComponent {
   private productService = inject(ProductService);
   private destroyRef     = inject(DestroyRef);
   private platformId     = inject(PLATFORM_ID);
+  private zone           = inject(NgZone);
 
   accountOpen  = false;
   locationOpen = false;
   private addrLoaded = false;
 
+  // The server never sees the session, so it renders the logged-out navbar. The first
+  // browser render must match that HTML or hydration leaves the server blocks behind
+  // ("Hola, ingresa" next to "Hola, Juan Pablo"); the real session shows right after.
+  private hydrated$ = new BehaviorSubject(false);
+  private afterHydration<T>(source$: Observable<T>): Observable<T | null> {
+    return this.hydrated$.pipe(switchMap(ready => ready ? source$ : of(null)));
+  }
+
   cartCount$        = this.store.select(selectCartCount);
   wishlistCount$    = this.store.select(selectWishlistCount);
-  isLoggedIn$       = this.store.select(selectIsLoggedIn);
-  authUser$         = this.store.select(selectAuthUser);
-  userRole$         = this.store.select(selectUserRole);
-  canShop$          = this.store.select(selectCanShop);
-  hasSeller$        = this.store.select(selectHasSeller);
-  hasAdmin$         = this.store.select(selectHasAdmin);
+  isLoggedIn$       = this.afterHydration(this.store.select(selectIsLoggedIn));
+  authUser$         = this.afterHydration(this.store.select(selectAuthUser));
+  userRole$         = this.afterHydration(this.store.select(selectUserRole));
+  canShop$          = this.afterHydration(this.store.select(selectCanShop));
+  hasSeller$        = this.afterHydration(this.store.select(selectHasSeller));
+  hasAdmin$         = this.afterHydration(this.store.select(selectHasAdmin));
   addresses$        = this.store.select(selectAllAddresses);
   defaultAddress$   = this.store.select(selectDefaultAddress);
   addressesLoading$ = this.store.select(selectAddressesLoading);
@@ -82,6 +91,8 @@ export class NavbarComponent {
   highlightIdx = signal(-1);
 
   constructor() {
+    // Next tick, so the switch is not part of the render that hydrates the server HTML
+    afterNextRender(() => this.zone.run(() => setTimeout(() => this.hydrated$.next(true))));
     this.store.dispatch(loadCategories());
 
     this.searchSubject.pipe(
@@ -181,7 +192,7 @@ export class NavbarComponent {
   }
 
   goToOrders() {
-    this.isLoggedIn$.pipe(take(1)).subscribe(loggedIn => {
+    this.store.select(selectIsLoggedIn).pipe(take(1)).subscribe(loggedIn => {
       if (loggedIn) this.router.navigate(['/orders']);
       else this.router.navigate(['/login'], { queryParams: { redirect: '/orders' } });
     });
@@ -195,7 +206,7 @@ export class NavbarComponent {
   openLocation() {
     this.locationOpen = true;
     if (!this.addrLoaded) {
-      this.isLoggedIn$.pipe(take(1)).subscribe(loggedIn => {
+      this.store.select(selectIsLoggedIn).pipe(take(1)).subscribe(loggedIn => {
         if (loggedIn) {
           this.store.dispatch(loadAddresses());
           this.addrLoaded = true;
