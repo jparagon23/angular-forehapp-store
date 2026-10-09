@@ -14,6 +14,7 @@ import { loadAddresses, deleteAddress, setDefaultAddress } from '../../../store/
 import { selectAllAddresses, selectDefaultAddress, selectAddressesLoading } from '../../../store/addresses/addresses.selectors';
 import { Address } from '../../../core/models/address.model';
 import { TokenStore } from '../../../core/services/token-store.service';
+import { AuthApiService } from '../../../core/services/auth-api.service';
 import { ProductService } from '../../../core/services/product.service';
 import { Product } from '../../../core/models/product.model';
 import { CurrencyCopPipe } from '../../pipes/currency-cop.pipe';
@@ -32,6 +33,7 @@ export class NavbarComponent {
   private store          = inject(Store);
   private router         = inject(Router);
   private tokenStore     = inject(TokenStore);
+  private authApi        = inject(AuthApiService);
   private productService = inject(ProductService);
   private destroyRef     = inject(DestroyRef);
   private platformId     = inject(PLATFORM_ID);
@@ -186,6 +188,9 @@ export class NavbarComponent {
   openCart() { this.store.dispatch(openCart()); }
 
   logOut() {
+    // Close the session on the server too; the local logout does not wait for it
+    const refreshToken = this.tokenStore.refreshToken;
+    if (refreshToken) this.authApi.logout(refreshToken).subscribe({ error: () => {} });
     this.tokenStore.clearTokens();
     this.store.dispatch(logout());
     this.router.navigate(['/']);

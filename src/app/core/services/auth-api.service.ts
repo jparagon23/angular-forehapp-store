@@ -54,6 +54,11 @@ export class AuthApiService {
     return this.http.post<TokenResponse>(`${this.BASE}/auth/refresh-token`, { refreshToken });
   }
 
+  /** Closes this login on the server so its tokens stop working. */
+  logout(refreshToken: string): Observable<void> {
+    return this.http.post<void>(`${this.BASE}/auth/logout`, { refreshToken });
+  }
+
   getMe(): Observable<UserProfileResponse> {
     return this.http.get<UserProfileResponse>(`${this.BASE}/users/me`);
   }
