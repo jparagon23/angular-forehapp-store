@@ -128,9 +128,9 @@ export class RegisterComponent implements OnInit, AfterViewInit {
         this.googleAuth.applySession(res);
         this.router.navigate(['/']);
       },
-      error: () => {
+      error: err => {
         this.googleLoading = false;
-        this.googleError = 'No se pudo registrar con Google. Inténtalo de nuevo.';
+        this.googleError = this.googleAuth.errorMessage(err, 'No se pudo registrar con Google. Inténtalo de nuevo.');
       },
     });
   }
