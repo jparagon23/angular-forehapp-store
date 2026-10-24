@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { UserStats } from '../models/user-stats.model';
+import { UserSearchResult, UserStats } from '../models/user-stats.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -11,5 +11,10 @@ export class UserStatsService {
 
   getStats(): Observable<UserStats> {
     return this.http.get<UserStats>(`${this.base}/admin/users/stats`);
+  }
+
+  search(query: string): Observable<UserSearchResult[]> {
+    const params = new HttpParams().set('q', query);
+    return this.http.get<UserSearchResult[]>(`${this.base}/admin/users/search`, { params });
   }
 }
