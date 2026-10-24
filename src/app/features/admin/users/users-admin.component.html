@@ -6,6 +6,61 @@
     ⚠️ No se pudo cargar las estadísticas de usuarios.
   </div>
 
+  <!-- Buscar usuario (para conseguir el correo al registrar un pedido) -->
+  <div class="table-card search-card">
+    <div class="table-header">
+      <h3>Buscar usuario</h3>
+      <div class="search-wrap">
+        <input class="search-box" type="search" placeholder="🔍 Nombre, apellido, correo o teléfono"
+          [value]="searchQuery()" (input)="onSearch($any($event.target).value)" />
+        <button class="btn btn-outline btn-sm" *ngIf="searchQuery()" (click)="clearSearch()">Limpiar</button>
+      </div>
+    </div>
+
+    <div class="search-hint" *ngIf="searchQuery().trim().length > 0 && searchQuery().trim().length < 2">
+      Escribe al menos 2 caracteres.
+    </div>
+    <div class="search-hint" *ngIf="searching()">Buscando…</div>
+    <div class="alert alert-warn search-alert" *ngIf="searchError()">
+      ⚠️ No se pudo hacer la búsqueda. Intenta de nuevo.
+    </div>
+
+    <ng-container *ngIf="!searching() && searchResults() as results">
+      <div class="search-hint" *ngIf="results.length === 0 && !searchError()">
+        No se encontraron usuarios para "{{ searchQuery().trim() }}".
+      </div>
+      <div class="table-scroll" *ngIf="results.length > 0">
+        <table>
+          <thead>
+            <tr><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Cuenta</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of results">
+              <td><strong>{{ u.name }} {{ u.lastname }}</strong></td>
+              <td>
+                <div class="email-cell">
+                  <span>{{ u.email }}</span>
+                  <button class="btn btn-outline btn-sm copy-btn" (click)="copyEmail(u)">
+                    {{ copiedId() === u.id ? '✓ Copiado' : 'Copiar' }}
+                  </button>
+                </div>
+              </td>
+              <td>{{ u.phone || '—' }}</td>
+              <td>
+                <span class="account-badge" [class.store]="u.hasStoreAccount">
+                  {{ u.hasStoreAccount ? 'Tienda' : 'Solo ForehApp' }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="search-hint" *ngIf="results.length === 20">
+        Se muestran los primeros 20 resultados. Escribe algo más específico para afinar.
+      </div>
+    </ng-container>
+  </div>
+
   <ng-container *ngIf="stats$ | async as s">
 
     <!-- KPI grid -->

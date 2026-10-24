@@ -55,3 +55,51 @@
 
 .kpi-card.kpi-green { border-left: 4px solid var(--green); }
 .kpi-card.kpi-blue  { border-left: 4px solid #3b82f6; }
+
+.search-card { margin-bottom: 24px; }
+
+.search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: flex-end;
+
+  .search-box { width: 100%; max-width: 340px; }
+}
+
+.search-hint {
+  padding: 14px 22px;
+  color: var(--muted);
+  font-size: .88rem;
+}
+
+.search-alert { margin: 14px 22px; }
+
+.table-scroll { overflow-x: auto; }
+
+.email-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  span { word-break: break-all; }
+}
+
+.copy-btn { flex-shrink: 0; }
+
+.account-badge {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: .75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  background: #f0f0f0;
+  color: var(--muted);
+
+  &.store { background: #d4edda; color: #276749; }
+}
+
+@media (max-width: 600px) {
+  .search-card .table-header { flex-wrap: wrap; gap: 10px; }
+  .search-wrap { justify-content: stretch; .search-box { max-width: none; } }
+}
