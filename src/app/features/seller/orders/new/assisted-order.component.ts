@@ -1,5 +1,5 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import { DecimalPipe, NgFor, NgIf } from '@angular/common';
+import { DatePipe, DecimalPipe, NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
@@ -9,7 +9,7 @@ import { AssistedOrderService } from '../../../../core/services/assisted-order.s
 import { GuestCheckoutService } from '../../../../core/services/guest-checkout.service';
 import { LocationService } from '../../../../core/services/location.service';
 import { SellerProductService } from '../../../../core/services/seller-product.service';
-import { AssistedCustomer, OrderResponse, PaymentMethod } from '../../../../core/models/order.model';
+import { AssistedCustomer, AssistedLastOrder, OrderResponse, PaymentMethod } from '../../../../core/models/order.model';
 import { ShippingEstimateResponse } from '../../../../core/models/cart.model';
 import { City, Country, State } from '../../../../core/models/location.model';
 import { ProductVariant, SellerProduct, isSellable } from '../../../../core/models/seller-product.model';
@@ -39,7 +39,7 @@ const PAYMENT_OPTIONS: { value: PaymentMethod; label: string; hint: string }[] =
 @Component({
   selector: 'app-assisted-order',
   standalone: true,
-  imports: [NgFor, NgIf, FormsModule, RouterLink, DecimalPipe, CurrencyCopPipe],
+  imports: [NgFor, NgIf, FormsModule, RouterLink, DecimalPipe, DatePipe, CurrencyCopPipe],
   templateUrl: './assisted-order.component.html',
   styleUrl: './assisted-order.component.scss',
 })
@@ -61,6 +61,8 @@ export class AssistedOrderComponent {
   phone        = signal('');
   customer     = signal<AssistedCustomer | null>(null);
   lookingUp    = signal(false);
+  /** Pedido anterior del que se llenaron datos vacíos del formulario. */
+  prefilledFrom = signal<AssistedLastOrder | null>(null);
 
   emailValid   = computed(() => emailValidator({ value: this.email().trim() } as any) === null && !!this.email().trim());
   emailsMatch  = computed(() => this.email().trim().toLowerCase() === this.emailConfirm().trim().toLowerCase());
@@ -170,8 +172,48 @@ export class AssistedOrderComponent {
     if (!storeId || !this.emailValid()) return;
     this.lookingUp.set(true);
     this.assistedService.lookupCustomer(storeId, this.email().trim()).pipe(take(1)).subscribe({
-      next: c => { this.customer.set(c); this.lookingUp.set(false); },
+      next: c => {
+        this.customer.set(c);
+        this.lookingUp.set(false);
+        if (c.lastOrder) this.prefillFrom(c.lastOrder);
+        else this.prefilledFrom.set(null);
+      },
       error: () => this.lookingUp.set(false),
+    });
+  }
+
+  /** Llena solo lo que el vendedor no ha escrito; la dirección completa solo si aún no hay dirección. */
+  private prefillFrom(o: AssistedLastOrder) {
+    let filled = false;
+    const fill = (field: { (): string; set(v: string): void }, value: string | null) => {
+      if (!field().trim() && value) { field.set(value); filled = true; }
+    };
+    fill(this.name, o.name);
+    fill(this.lastname, o.lastname);
+    fill(this.phone, o.phone);
+
+    if (!this.address().trim() && o.shippingAddress) {
+      this.address.set(o.shippingAddress);
+      this.complement.set(o.shippingComplement ?? '');
+      this.reference.set(o.shippingReference ?? '');
+      filled = true;
+      if (o.countryId && o.stateId && o.cityId) this.selectLocation(o.countryId, o.stateId, o.cityId);
+    }
+    // Same order looked up again (email blurred twice): keep the notice even if nothing new was filled
+    this.prefilledFrom.set(filled || this.prefilledFrom()?.orderId === o.orderId ? o : null);
+  }
+
+  private selectLocation(countryId: number, stateId: number, cityId: number) {
+    this.countryId.set(countryId);
+    this.estimate.set(null);
+    this.locationService.getStates(countryId).pipe(take(1)).subscribe(ss => {
+      this.states.set(ss);
+      this.stateId.set(stateId);
+      this.cityId.set(null);
+      this.locationService.getCities(stateId).pipe(take(1)).subscribe(cs => {
+        this.cities.set(cs);
+        if (cs.some(c => c.id === cityId)) this.onCityChange(cityId);
+      });
     });
   }
 
@@ -411,6 +453,7 @@ export class AssistedOrderComponent {
     this.created.set(null);
     this.email.set(''); this.emailConfirm.set(''); this.name.set(''); this.lastname.set(''); this.phone.set('');
     this.customer.set(null);
+    this.prefilledFrom.set(null);
     this.lines.set([]);
     this.address.set(''); this.complement.set(''); this.reference.set('');
     this.paymentMethod.set(null); this.alreadyPaid.set(false); this.dataConsent.set(false);

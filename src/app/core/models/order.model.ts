@@ -219,6 +219,22 @@ export interface AssistedCustomer {
   registered: boolean;
   /** Nombre recortado ("Juan P."); null si no tiene cuenta. */
   displayName: string | null;
+  /** Datos del último pedido con este correo en la tienda del vendedor; null si no hay. */
+  lastOrder: AssistedLastOrder | null;
+}
+
+export interface AssistedLastOrder {
+  orderId: number;
+  createdAt: string;
+  name: string | null;
+  lastname: string | null;
+  phone: string | null;
+  shippingAddress: string | null;
+  shippingComplement: string | null;
+  shippingReference: string | null;
+  countryId: number | null;
+  stateId: number | null;
+  cityId: number | null;
 }
 
 // ── Admin panel (legacy mock) ─────────────────────────────────────────────────
