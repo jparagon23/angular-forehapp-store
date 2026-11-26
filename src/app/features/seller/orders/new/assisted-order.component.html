@@ -61,6 +61,10 @@
       <div class="ao-customer" *ngIf="customer() && !customer()!.registered">
         No tiene cuenta: quedará como pedido de invitado y podrá verlo si crea su cuenta con este correo.
       </div>
+      <div class="ao-customer ao-customer-yes" *ngIf="prefilledFrom() as prev">
+        Ya compró en tu tienda (pedido #{{ prev.orderId }} del {{ prev.createdAt | date:'dd/MM/yyyy' }}):
+        llenamos sus datos con los de ese pedido. Revisa que sigan vigentes.
+      </div>
 
       <div class="ao-grid">
         <label class="ao-field"><span>Nombre *</span>
